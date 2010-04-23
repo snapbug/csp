@@ -3,7 +3,7 @@
 !_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
-!_TAG_PROGRAM_VERSION	5.6	//
+!_TAG_PROGRAM_VERSION	5.8	//
 A_PRES	./source/param_block.h	/^	enum { A_TIME, A_PRES };$/;"	e	enum:CSP_param_block::__anon11
 A_TIME	./source/param_block.h	/^	enum { A_TIME, A_PRES };$/;"	e	enum:CSP_param_block::__anon11
 BAYESIAN	./source/generator_factory.h	/^		BAYESIAN,$/;"	e	enum:CSP_generator_factory::__anon4
@@ -137,8 +137,9 @@ argv	./source/param_block.h	/^	char **argv;$/;"	m	class:CSP_param_block
 average	./source/generator_item_avg.h	/^		double average;$/;"	m	struct:CSP_generator_item_avg::__anon7
 average_cmp	./source/generator_item_avg.c	/^int CSP_generator_item_avg::average_cmp(const void *a, const void *b)$/;"	f	class:CSP_generator_item_avg
 averages	./source/predictor_item_avg.h	/^	double *averages;$/;"	m	class:CSP_predictor_item_avg
-bot	./source/predictor_user_avg.h	/^	double *bot;$/;"	m	class:CSP_predictor_user_avg
-calculate_probability	./source/generator_naive_bayes.c	/^double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t user, uint64_t last_presented_position, uint64_t number_presented)$/;"	f	class:CSP_generator_naive_bayes
+base_probability	./source/generator_naive_bayes.h	/^	double base_probability;$/;"	m	class:CSP_generator_naive_bayes
+bot	./source/predictor_user_avg.h	/^	uint64_t *bot;$/;"	m	class:CSP_predictor_user_avg
+calculate_probability	./source/generator_naive_bayes.c	/^double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t non_ratable, uint64_t ratable)$/;"	f	class:CSP_generator_naive_bayes
 clip	./source/csp_types.h	35;"	d
 considered	./source/predictor_item_knn.h	/^		uint64_t considered; \/\/ whether we need to consider this is calculation (used as primary sort index)$/;"	m	struct:CSP_predictor_item_knn::__anon6
 constant	./source/predictor_constant.h	/^	double constant;$/;"	m	class:CSP_predictor_constant
@@ -157,11 +158,11 @@ entropy	./source/generator_entropy.h	/^		double entropy;$/;"	m	struct:CSP_genera
 entropy_cmp	./source/generator_entropy.c	/^int CSP_generator_entropy::entropy_cmp(const void *a, const void *b)$/;"	f	class:CSP_generator_entropy
 extra_data	./source/dataset_netflix.h	/^	uint64_t extra_data[100480507];$/;"	m	class:CSP_dataset_netflix
 extra_index	./source/dataset_netflix.h	/^	uint64_t extra_index[480189];$/;"	m	class:CSP_dataset_netflix
-generate	./source/generator_entropy.c	/^uint64_t *CSP_generator_entropy::generate(uint64_t user, uint64_t number_presented, uint64_t *number_generated)$/;"	f	class:CSP_generator_entropy
-generate	./source/generator_item_avg.c	/^uint64_t *CSP_generator_item_avg::generate(uint64_t user, uint64_t number_presented, uint64_t *number_generated)$/;"	f	class:CSP_generator_item_avg
-generate	./source/generator_naive_bayes.c	/^uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_presented, uint64_t *number_generated)$/;"	f	class:CSP_generator_naive_bayes
-generate	./source/generator_popularity.c	/^uint64_t *CSP_generator_popularity::generate(uint64_t user, uint64_t number_presented, uint64_t *number_generated)$/;"	f	class:CSP_generator_popularity
-generate	./source/generator_random.c	/^uint64_t *CSP_generator_random::generate(uint64_t user, uint64_t number_presented, uint64_t *number_generated)$/;"	f	class:CSP_generator_random
+generate	./source/generator_entropy.c	/^uint64_t *CSP_generator_entropy::generate(uint64_t user, uint64_t number_presented)$/;"	f	class:CSP_generator_entropy
+generate	./source/generator_item_avg.c	/^uint64_t *CSP_generator_item_avg::generate(uint64_t user, uint64_t number_presented)$/;"	f	class:CSP_generator_item_avg
+generate	./source/generator_naive_bayes.c	/^uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_presented)$/;"	f	class:CSP_generator_naive_bayes
+generate	./source/generator_popularity.c	/^uint64_t *CSP_generator_popularity::generate(uint64_t user, uint64_t number_presented)$/;"	f	class:CSP_generator_popularity
+generate	./source/generator_random.c	/^uint64_t *CSP_generator_random::generate(uint64_t user, uint64_t number_presented)$/;"	f	class:CSP_generator_random
 generation	./source/param_block.c	/^void CSP_param_block::generation(char *which)$/;"	f	class:CSP_param_block
 generation_method	./source/param_block.h	/^	uint64_t generation_method; \/\/ how are we going to generate the lists to present$/;"	m	class:CSP_param_block
 get_ratings	./source/dataset_netflix.c	/^uint64_t *CSP_dataset_netflix::get_ratings(uint64_t *count)$/;"	f	class:CSP_dataset_netflix
@@ -184,7 +185,7 @@ isinf	./source/csp_types.h	16;"	d
 isnan	./source/csp_types.h	15;"	d
 k	./source/predictor_item_knn.h	/^	uint64_t k;$/;"	m	class:CSP_predictor_item_knn
 k	./source/predictor_user_knn.h	/^	uint64_t k;$/;"	m	class:CSP_predictor_user_knn
-last_presented_position	./source/generator_naive_bayes.h	/^	uint64_t last_presented_position;$/;"	m	class:CSP_generator_naive_bayes
+last_presented_and_seen	./source/generator_naive_bayes.h	/^	uint64_t last_presented_and_seen;$/;"	m	class:CSP_generator_naive_bayes
 load_extra	./source/param_block.h	/^	uint64_t load_extra; \/\/ whether to load extra data$/;"	m	class:CSP_param_block
 loaded_extra	./source/dataset.h	/^	uint64_t loaded_extra; \/\/ whether we loaded the extra data -- useful for predictors to know, can make some faster if we have$/;"	m	class:CSP_dataset
 low	./source/metric_nmae.h	/^	uint64_t high, low;$/;"	m	class:CSP_metric_nmae
@@ -196,7 +197,6 @@ metrics	./source/metric_factory.c	/^} metrics[] = {$/;"	v	typeref:struct:__anon1
 metrics	./source/param_block.c	/^void CSP_param_block::metrics(char *which)$/;"	f	class:CSP_param_block
 metrics_to_use	./source/metric_factory.h	/^	uint64_t metrics_to_use;$/;"	m	class:CSP_metric_factory
 metrics_to_use	./source/param_block.h	/^	uint64_t metrics_to_use; \/\/ which metrics we are using$/;"	m	class:CSP_param_block
-mids	./source/generator_random.h	/^	uint64_t *mids;$/;"	m	class:CSP_generator_random
 minimum	./source/dataset.h	/^	uint64_t minimum, maximum; \/\/ min\/max allowed rating values$/;"	m	class:CSP_dataset
 most_entropic	./source/generator_entropy.h	/^	movie *most_entropic;$/;"	m	class:CSP_generator_entropy
 most_liked	./source/generator_item_avg.h	/^	movie *most_liked;$/;"	m	class:CSP_generator_item_avg
@@ -222,7 +222,6 @@ movie_id	./source/generator_naive_bayes.h	/^		uint64_t movie_id;$/;"	m	struct:CS
 movie_id	./source/generator_popularity.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_generator_popularity::__anon3
 movie_id	./source/predictor_item_knn.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_predictor_item_knn::__anon6
 movie_search	./source/csp.c	/^int movie_search(const void *a, const void *b)$/;"	f
-movie_search	./source/generator_naive_bayes.c	/^int CSP_generator_naive_bayes::movie_search(const void *a, const void *b)$/;"	f	class:CSP_generator_naive_bayes
 movie_time_alpha	./source/predictor_korbell.h	/^	double movie_alpha, user_alpha, movie_time_alpha, user_movie_average_alpha, user_movie_support_alpha, movie_user_average_alpha, movie_user_support_alpha;$/;"	m	class:CSP_predictor_korbell
 movie_time_average	./source/predictor_korbell.h	/^	double *movie_time_effect, *movie_time_bottom, *movie_time_average;$/;"	m	class:CSP_predictor_korbell
 movie_time_bottom	./source/predictor_korbell.h	/^	double *movie_time_effect, *movie_time_bottom, *movie_time_average;$/;"	m	class:CSP_predictor_korbell
@@ -314,6 +313,7 @@ testing_data	./source/dataset_netflix.h	/^	uint64_t testing_data[10183402]; \/\/
 testing_index	./source/dataset_netflix.h	/^	uint64_t testing_index[480189];$/;"	m	class:CSP_dataset_netflix
 testing_method	./source/param_block.h	/^	uint64_t testing_method; \/\/ which testing method to use (proportional\/fixed)$/;"	m	class:CSP_param_block
 top	./source/predictor_user_avg.h	/^	double *top;$/;"	m	class:CSP_predictor_user_avg
+total_ratings	./source/generator_naive_bayes.h	/^	uint64_t total_ratings;$/;"	m	class:CSP_generator_naive_bayes
 uint16_t	./source/csp_types.h	/^	typedef unsigned short uint16_t;$/;"	t
 uint32_t	./source/csp_types.h	/^	typedef unsigned int uint32_t;$/;"	t
 uint64_t	./source/csp_types.h	/^	typedef unsigned long long uint64_t;$/;"	t
@@ -341,7 +341,6 @@ user_movie_support_alpha	./source/predictor_korbell.h	/^	double movie_alpha, use
 user_movie_support_average	./source/predictor_korbell.h	/^	double *user_movie_support_effect, *user_movie_support_bottom, *user_movie_support_average;$/;"	m	class:CSP_predictor_korbell
 user_movie_support_bottom	./source/predictor_korbell.h	/^	double *user_movie_support_effect, *user_movie_support_bottom, *user_movie_support_average;$/;"	m	class:CSP_predictor_korbell
 user_movie_support_effect	./source/predictor_korbell.h	/^	double *user_movie_support_effect, *user_movie_support_bottom, *user_movie_support_average;$/;"	m	class:CSP_predictor_korbell
-user_rated	./source/generator_naive_bayes.c	/^int CSP_generator_naive_bayes::user_rated(const void *a, const void *b)$/;"	f	class:CSP_generator_naive_bayes
 user_rated	./source/predictor_item_knn.c	/^int user_rated(const void *a, const void *b)$/;"	f
 x	./source/predictor_item_knn.h	/^		double x;       \/\/ sum of ratings for movie X$/;"	m	struct:CSP_predictor_item_knn::__anon5
 xx	./source/predictor_item_knn.h	/^		double xx;      \/\/ squared sum of ratings for movie X$/;"	m	struct:CSP_predictor_item_knn::__anon5
