@@ -1,0 +1,54 @@
+SRCDIR = source
+BINDIR = bin
+OBJDIR = bin
+
+CFLAGS = /W4 -D_CRT_SECURE_NO_WARNINGS /nologo /Zi $(MINUS_D) /Ox /fp:fast /GL /Gy
+
+FIXED = /link /fixed:no
+WINDOWS_LIBS = user32.lib advapi32.lib kernel32.lib shlwapi.lib
+
+CC = @cl
+
+PARTS = \
+	$(OBJDIR)\dataset_netflix.obj \
+	$(OBJDIR)\generator_entropy.obj \
+	$(OBJDIR)\generator_item_avg.obj \
+	$(OBJDIR)\generator_naive_bayes.obj \
+	$(OBJDIR)\generator_popularity.obj \
+	$(OBJDIR)\generator_random.obj \
+	$(OBJDIR)\metric_factory.obj \
+	$(OBJDIR)\metric_mae.obj \
+	$(OBJDIR)\metric_nmae.obj \
+	$(OBJDIR)\metric_nrmse.obj \
+	$(OBJDIR)\metric_rmse.obj \
+	$(OBJDIR)\param_block.obj \
+	$(OBJDIR)\predictor_constant.obj \
+	$(OBJDIR)\predictor_global_avg.obj \
+	$(OBJDIR)\predictor_item_avg.obj \
+	$(OBJDIR)\predictor_item_knn.obj \
+	$(OBJDIR)\predictor_korbell.obj \
+	$(OBJDIR)\predictor_random.obj \
+	$(OBJDIR)\predictor_user_avg.obj \
+	$(OBJDIR)\predictor_user_knn.obj \
+	$(OBJDIR)\stats.obj
+
+CSP_TARGETS = \
+	$(BINDIR)\csp.exe
+
+all : $(PARTS) $(CSP_TARGETS)
+
+{$(SRCDIR)\}.c{$(OBJDIR)\}.obj:
+	$(CC) $(CFLAGS) /c /Tp $< /Fo$@
+
+{$(OBJDIR)\}.obj{$(BINDIR)\}.exe:
+	@echo Building $@...
+	$(CC) $(CFLAGS) $*.obj $(PARTS) $(WINDOWS_LIBS) $(EXTRA_LIBS) /Fe$@ $(FIXED)
+
+$(CSP_TARGETS) : $(PARTS)
+$(PARTS) : makefile.msc $(EXTRA_LIBS)
+
+.PHONY : clean
+clean :
+	del /s *.obj *.exe *.ilk *.pdb *.suo *.lib
+
+!include makefile.msc.dependencies

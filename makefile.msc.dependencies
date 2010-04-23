@@ -1,0 +1,24 @@
+# DO NOT DELETE
+
+bin/csp.obj: source/csp_types.h source/dataset_netflix.h source/dataset.h source/param_block.h source/generator_factory.h source/generator.h source/generator_random.h source/generator_entropy.h source/generator_popularity.h source/generator_item_avg.h source/generator_naive_bayes.h source/predictor_factory.h source/predictor.h source/predictor_random.h source/predictor_global_avg.h source/predictor_constant.h source/predictor_item_knn.h source/predictor_item_avg.h source/predictor_user_avg.h source/predictor_user_knn.h source/predictor_korbell.h source/metric_factory.h source/metric.h source/metric_mae.h source/metric_rmse.h source/stats.h
+bin/dataset_netflix.obj: source/dataset_netflix.h source/dataset.h source/csp_types.h source/param_block.h
+bin/generator_entropy.obj: source/generator_entropy.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h
+bin/generator_item_avg.obj: source/generator_item_avg.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h
+bin/generator_naive_bayes.obj: source/generator_naive_bayes.h source/generator_entropy.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h
+bin/generator_popularity.obj: source/generator_popularity.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h
+bin/generator_random.obj: source/generator_random.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h
+bin/metric_factory.obj: source/metric_factory.h source/metric.h source/csp_types.h source/metric_mae.h source/metric_nmae.h source/metric_rmse.h source/metric_nrmse.h
+bin/metric_mae.obj: source/metric_mae.h source/metric.h source/csp_types.h
+bin/metric_nmae.obj: source/metric_nmae.h source/metric.h source/csp_types.h
+bin/metric_nrmse.obj: source/metric_nrmse.h source/metric.h source/csp_types.h
+bin/metric_rmse.obj: source/metric_rmse.h source/metric.h source/csp_types.h
+bin/param_block.obj: source/csp_types.h source/generator_factory.h source/generator.h source/dataset.h source/param_block.h source/generator_random.h source/generator_entropy.h source/generator_popularity.h source/generator_item_avg.h source/generator_naive_bayes.h source/predictor_factory.h source/predictor.h source/predictor_random.h source/predictor_global_avg.h source/predictor_constant.h source/predictor_item_knn.h source/predictor_item_avg.h source/predictor_user_avg.h source/predictor_user_knn.h source/predictor_korbell.h source/metric_factory.h source/metric.h source/stats.h
+bin/predictor_constant.obj: source/predictor_constant.h source/predictor.h source/csp_types.h source/dataset.h source/param_block.h
+bin/predictor_global_avg.obj: source/predictor_global_avg.h source/predictor.h source/csp_types.h source/dataset.h source/param_block.h
+bin/predictor_item_avg.obj: source/predictor_item_avg.h source/predictor.h source/csp_types.h source/dataset.h source/param_block.h
+bin/predictor_item_knn.obj: source/predictor_item_knn.h source/predictor.h source/csp_types.h source/dataset.h source/param_block.h
+bin/predictor_korbell.obj: source/csp_types.h source/predictor_korbell.h source/predictor.h source/dataset.h source/param_block.h
+bin/predictor_random.obj: source/predictor_random.h source/predictor.h source/csp_types.h source/dataset.h source/param_block.h
+bin/predictor_user_avg.obj: source/predictor_user_avg.h source/predictor.h source/csp_types.h source/dataset.h source/param_block.h
+bin/predictor_user_knn.obj: source/predictor_user_knn.h source/predictor.h source/csp_types.h source/dataset.h source/param_block.h
+bin/stats.obj: source/csp_types.h source/stats.h
