@@ -27,8 +27,7 @@ private:
 	double *probabilities;
 	uint64_t last_presented_and_seen;
 	uint32_t *coraters;
-	uint64_t total_ratings;
-	double base_probability;
+	uint64_t number_ratings;
 };
 
 #endif /* GENERATOR_NAIVE_BAYES_H_ */

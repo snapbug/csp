@@ -78,10 +78,10 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	for (user = 0; user < dataset->number_users; user++)
+	for (user = 0; user < 100/*dataset->number_users*/; user++)
 	//if (false)
 	{
-		if (user % 1000 == 0) { fprintf(stderr, "\r%lu", user); fflush(stderr); }
+		/*if (user % 1000 == 0)*/ { fprintf(stderr, "\r%lu", user); fflush(stderr); }
 		
 		/*
 			Reset things for this user.
