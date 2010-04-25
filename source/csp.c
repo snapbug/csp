@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 	CSP_stats *stats;
 	//CSP_metric_factory *metric = new CSP_metric_factory;
 	//CSP_metric_rmse *metric = new CSP_metric_rmse;
-	CSP_metric_mae *metric = new CSP_metric_mae;
+	CSP_metric_mae *metric;
 	uint64_t *presentation_list, *key, *ratings, *test_ratings;
 	uint64_t position_up_to, last_presented_and_seen, number_seen;
 	uint64_t count, test_count, user, item, presented, rating;
@@ -44,8 +44,6 @@ int main(int argc, char **argv)
 	dataset = new CSP_dataset_netflix(params);
 	stats = new CSP_stats(params->stats);
 	
-	//metric->set_metrics(params->metrics_to_use);
-	//metric->set_limits(dataset->maximum, dataset->minimum);
 	average_error = NULL;
 	
 	sum_of_error = new double[dataset->number_items];
@@ -74,6 +72,10 @@ int main(int argc, char **argv)
 		case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
 		default: exit(puts("Unknown prediction method"));
 	}
+	
+	metric = new CSP_metric_mae(dataset, predictor);
+	//metric->set_metrics(params->metrics_to_use);
+	//metric->set_limits(dataset->maximum, dataset->minimum);
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
