@@ -18,7 +18,6 @@ PARTS = \
 	generator_naive_bayes.o \
 	generator_popularity.o \
 	generator_random.o \
-	metric_factory.o \
 	metric_mae.o \
 	metric_nmae.o \
 	metric_nrmse.o \

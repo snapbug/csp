@@ -11,12 +11,12 @@
 class CSP_metric_factory : public CSP_metric
 {
 public:
-	CSP_metric_factory();
+	CSP_metric_factory(CSP_dataset *dataset, CSP_predictor *predictor);
 	virtual ~CSP_metric_factory() {}
 
-	virtual void update(double predicted, double actual);
-	virtual double score(void);
-	virtual void reset(void);
+	//virtual void update(double predicted, double actual);
+	virtual double score(uint64_t user);
+	//virtual void reset(void);
 	virtual void set_limits(uint64_t high, uint64_t low);
 	
 	void print(uint64_t user, uint64_t added);

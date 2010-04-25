@@ -32,7 +32,7 @@ static uint64_t number_of_metrics = sizeof(metrics) / sizeof(*metrics);
 	CSP_METRIC_FACTORY::CSP_METRIC_FACTORY()
 	----------------------------------------
 */
-CSP_metric_factory::CSP_metric_factory() : CSP_metric()
+CSP_metric_factory::CSP_metric_factory(CSP_dataset *dataset, CSP_predictor *predictor) : CSP_metric(dataset, predictor)
 {
 	metrics_to_use = CSP_metric_factory::MAE;
 }
@@ -41,21 +41,22 @@ CSP_metric_factory::CSP_metric_factory() : CSP_metric()
 	CSP_METRIC_FACTORY::UPDATE()
 	----------------------------
 */
-void CSP_metric_factory::update(double predicted, double actual)
-{
-	uint64_t i;
-
-	for (i = 1; i < number_of_metrics; i++)
-		if (metrics_to_use & metrics[i].id)
-			metrics[i].metric->update(predicted, actual);
-}
+//void CSP_metric_factory::update(double predicted, double actual)
+//{
+//	uint64_t i;
+//
+//	for (i = 1; i < number_of_metrics; i++)
+//		if (metrics_to_use & metrics[i].id)
+//			metrics[i].metric->update(predicted, actual);
+//}
 
 /*
 	CSP_METRIC_FACTORY::SCORE()
 	---------------------------
 */
-double CSP_metric_factory::score(void)
+double CSP_metric_factory::score(uint64_t user)
 {
+	user = user;
 	return 1.0;
 }
 
@@ -63,14 +64,14 @@ double CSP_metric_factory::score(void)
 	CSP_METRIC_FACTORY::RESET()
 	---------------------------
 */
-void CSP_metric_factory::reset(void)
-{
-	uint64_t i;
-
-	for (i = 1; i < number_of_metrics; i++)
-		if (metrics_to_use & metrics[i].id)
-			metrics[i].metric->reset();
-}
+//void CSP_metric_factory::reset(void)
+//{
+//	uint64_t i;
+//
+//	for (i = 1; i < number_of_metrics; i++)
+//		if (metrics_to_use & metrics[i].id)
+//			metrics[i].metric->reset();
+//}
 
 /*
 	CSP_METRIC_FACTORY::SET_LIMITS()
