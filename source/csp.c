@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	for (user = 0; user < dataset->number_users; user++)
+	for (user = 0; user < dataset->number_users; user+=10)
 	//if (false)
 	{
 		if (user % 1000 == 0) { fprintf(stderr, "\r%lu", user); fflush(stderr); }
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 		//printf("AUC\t%lu\t%f\n", user, auc);
 	}
 	
-	for (item = 0; item < dataset->number_items; item++)
+	for (item = 0; item < 100; item++)
 		printf("%lu %f\n", item, sum_of_error[item] / dataset->number_users);
 	
 	/*
