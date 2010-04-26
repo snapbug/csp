@@ -31,7 +31,7 @@ CSP_generator_naive_bayes::CSP_generator_naive_bayes(CSP_dataset *dataset) : CSP
 	{
 		dataset->ratings_for_movie(i, &item_count);
 		most_probable[i].movie_id = i;
-		most_probable[i].probability = probabilities[i] = 1.0;// * item_count / number_ratings;
+		most_probable[i].probability = probabilities[i] = log(1.0 / (1.0 * item_count / number_ratings));
 	}
 	
 	for (i = 0; i < dataset->number_items * dataset->number_items / 2; i++)
@@ -90,11 +90,11 @@ int CSP_generator_naive_bayes::probability_cmp(const void *a, const void *b)
 */
 double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t non_ratable, uint64_t ratable)
 {
-	uint64_t movie_count, other_count, co_raters;
-	uint64_t *movie_ratings, *other_ratings;
-	uint64_t presented_movie, i, j;
+	//uint64_t *other_ratings, other_count;
+	uint64_t *movie_ratings, movie_count;
+	uint64_t presented_movie, i, j, co_raters;
 	double probability = 1;
-	double p_other, p_not_other, p_movie_and_other, p_movie_and_not_other, p_movie_given_other, p_movie_given_not_other;
+//	double p_other, p_not_other, p_movie_and_other, p_movie_and_not_other, p_movie_given_other, p_movie_given_not_other;
 	
 	presented_movie = 1;
 	non_ratable = non_ratable;
@@ -104,7 +104,7 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 	/*
 		Take care of the one they could rate, gives us something to multiply on for the ones they couldn't rate.
 	*/
-	other_ratings = dataset->ratings_for_movie(presentation_list[ratable], &other_count);
+	//other_ratings = dataset->ratings_for_movie(presentation_list[ratable], &other_count);
 	i = MIN(presentation_list[ratable], movie);
 	j = MAX(presentation_list[ratable], movie);
 	co_raters = coraters[CORR(i, j)];
@@ -112,29 +112,33 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 //	p_other = 1.0 * other_count;
 //	p_movie_and_other = 1.0 * co_raters;
 //	p_movie_given_other = p_movie_and_other / p_other;
-	if (co_raters == 0)
-		probability *= log(0.01 / number_ratings); // super small but non-0
-	else if (co_raters == movie_count)
-		probability *= 1;
-	else
-		probability *= log(1.0 * co_raters / movie_count);
+
+//	if (co_raters == 0)
+//		probability *= (0.01 / number_ratings); // super small but non-0
+//	else if (co_raters == movie_count)
+//		probability *= 1;
+//	else
+	if (co_raters)
+		probability *= (1.0 * co_raters / movie_count);
+
 //	probability *= p_movie_given_other;
 	
 	/*
 		Consider each movie that they couldn't rate.
 	*/
-	//for (presented_movie = non_ratable; presented_movie < ratable; presented_movie++)
-	//{
-	//	other_ratings = dataset->ratings_for_movie(presentation_list[presented_movie], &other_count);
-	//	i = MIN(presentation_list[presented_movie], movie);
-	//	j = MAX(presentation_list[presented_movie], movie);
-	//	co_raters = coraters[CORR(i, j)];
-	//	
-	//	p_movie_and_not_other = 1.0 * (movie_count - co_raters);
-	//	p_not_other = 1.0 * (number_ratings - other_count);
-	//	p_movie_given_not_other = p_movie_and_not_other / p_not_other;
-	//	probability *= p_movie_given_not_other;
-	//}
+	for (presented_movie = non_ratable; presented_movie < ratable; presented_movie++)
+	{
+		//other_ratings = dataset->ratings_for_movie(presentation_list[presented_movie], &other_count);
+		i = MIN(presentation_list[presented_movie], movie);
+		j = MAX(presentation_list[presented_movie], movie);
+		co_raters = coraters[CORR(i, j)];
+		
+		//p_movie_and_not_other = 1.0 * (movie_count - co_raters);
+		//p_not_other = 1.0 * (number_ratings - other_count);
+		//p_movie_given_not_other = p_movie_and_not_other / p_not_other;
+		//probability *= p_movie_given_not_other;
+		probability *= (1.0 * (movie_count - co_raters) / movie_count);
+	}
 	
 	return probability;
 }
@@ -152,7 +156,7 @@ uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_pre
 		for (i = 0; i < dataset->number_items; i++)
 		{
 			dataset->ratings_for_movie(i, &item_count);
-			probabilities[i] = log(1.0 * item_count / number_ratings);
+			probabilities[i] = (1.0 * item_count / number_ratings);
 		}
 		presentation_list =  CSP_generator_entropy::generate(user, number_presented);
 	}

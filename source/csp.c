@@ -33,10 +33,10 @@ int main(int argc, char **argv)
 	//CSP_metric_factory *metric = new CSP_metric_factory;
 	//CSP_metric_rmse *metric = new CSP_metric_rmse;
 	CSP_metric_mae *metric;
-	uint64_t *presentation_list, *key, *ratings, *test_ratings;
+	uint64_t *presentation_list, *key, *ratings;
 	uint64_t position_up_to, last_presented_and_seen, number_seen;
-	uint64_t count, test_count, user, item, presented, rating;
-	double prediction, auc, last_prediction_error;
+	uint64_t count, user, item, presented, rating;
+	double auc, last_prediction_error;
 	double *sum_of_error;
 	FILE *average_error;
 	
@@ -74,15 +74,12 @@ int main(int argc, char **argv)
 	}
 	
 	metric = new CSP_metric_mae(dataset, predictor);
-	//metric->set_metrics(params->metrics_to_use);
-	//metric->set_limits(dataset->maximum, dataset->minimum);
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	//for (user = 0; user < dataset->number_users; user++)
+	for (user = 0; user < dataset->number_users; user++)
 	//if (false)
-	user = 168;
 	{
 		if (user % 1000 == 0) { fprintf(stderr, "\r%lu", user); fflush(stderr); }
 		
@@ -97,16 +94,17 @@ int main(int argc, char **argv)
 			Get the ratings for this user, and then remove them all from the dataset.
 		*/
 		ratings = dataset->ratings_for_user(user, &count);
-		//for (rating = 0; rating < count; rating++)
-		//{
-		//	dataset->remove_rating(&ratings[rating]);
-		//	predictor->removed_rating(&ratings[rating]);
-		//}
+		for (rating = 0; rating < count; rating++)
+		{
+			dataset->remove_rating(&ratings[rating]);
+			predictor->removed_rating(&ratings[rating]);
+		}
 		
 		/*
 			Before we add any ratings, we should see how well we can do.
 		*/
-		//last_prediction_error = metric->score(user);
+		last_prediction_error = metric->score(user);
+		sum_of_error[number_seen] += last_prediction_error;
 		
 		/*
 			While the user can still add more ratings.
@@ -147,10 +145,11 @@ int main(int argc, char **argv)
 					/*
 						Now check our predictions on the test set for this user.
 					*/
-					//last_prediction_error = metric->score(user);
+					last_prediction_error = metric->score(user);
+					sum_of_error[number_seen] += last_prediction_error;
 					
 					/*
-						Stop looking for the next rating so we can check our accuracy.
+						Stop looking for the next rating so we can re-generate presentation list.
 					*/
 					break;
 				}
@@ -160,16 +159,19 @@ int main(int argc, char **argv)
 		/*
 			Need to keep going with the users with all the potential they can add, so as not to screw up averages.
 		*/
-		//for(presented = position_up_to; presented < dataset->number_items; presented++)
-		//	sum_of_error[presented] += last_prediction_error;
+		for(number_seen = count + 1; number_seen < dataset->number_items; number_seen++)
+			sum_of_error[number_seen] += last_prediction_error;
 		
 		/*
 			Update the AUC for the presentation list, and print it out.
 		*/
 		auc += (1 - (1.0 * last_presented_and_seen / dataset->number_items));
-		printf("AUC\t%lu\t%f\n", user, auc);
+		//printf("AUC\t%lu\t%f\n", user, auc);
 	}
-
+	
+	for (item = 0; item < dataset->number_items; item++)
+		printf("%lu %f\n", item, sum_of_error[item] / dataset->number_users);
+	
 	/*
 		Print our average errors to file.
 	*/
@@ -179,17 +181,7 @@ int main(int argc, char **argv)
 //	fclose(average_error);
 	
 //	for (user = 0; user < dataset->number_users; user++)
-//	{
-//		metric->reset();
-//		test_ratings = dataset->test_ratings_for_user(user, &test_count);
-//		for (rating = 0; rating < test_count; rating++)
-//		{
-//			prediction = predictor->predict(user, dataset->movie(test_ratings[rating]), dataset->day(test_ratings[rating]));
-//			prediction = clip(prediction, dataset->minimum, dataset->maximum);
-//			metric->update(prediction, (double)dataset->rating(test_ratings[rating]));
-//		}
-//		sum_of_error[0] += metric->score();
-//	}
+//		sum_of_error[0] += metric->score(user);
 //	printf("%f\n", sum_of_error[0] / dataset->number_users);
 	
 	/*

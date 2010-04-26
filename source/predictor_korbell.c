@@ -356,8 +356,8 @@ double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t da
 	day = day;
 	
 	return global_average // 0.940119
-		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987
-		+ (user_effect[user] / (user_counts[user] + user_alpha)) // 0.755379
+		+ (movie_counts[movie] ? (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) : 0) // 0.833987
+		+ (user_counts[user] ? (user_effect[user] / (user_counts[user] + user_alpha)) : 0) // 0.755379
 //		+ (movie_time(movie) * (sqrt((double)day - movie_first_ratings[movie]) - movie_time_average[movie])) // 0.76114 (not included)
 		+ user_movie_average(user, movie) // 0.749824
 		+ user_movie_support(user, movie) // 0.744655

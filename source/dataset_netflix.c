@@ -53,8 +53,7 @@ CSP_dataset_netflix::CSP_dataset_netflix(CSP_param_block *params) : CSP_dataset(
 */
 void CSP_dataset_netflix::add_rating(uint64_t *rating)
 {
-	uint64_t bit = 1, shift = 49;
-	*rating = *rating | (bit << shift);
+	*rating = *rating | (1ULL << 49ULL);
 }
 
 /*
@@ -63,8 +62,7 @@ void CSP_dataset_netflix::add_rating(uint64_t *rating)
 */
 void CSP_dataset_netflix::remove_rating(uint64_t *rating)
 {
-	uint64_t bit = 1, shift = 49;
-	*rating = *rating & ~(bit << shift);
+	*rating = *rating & ~(1ULL << 49ULL);
 }
 
 /*
