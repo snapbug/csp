@@ -31,7 +31,7 @@ CSP_generator_naive_bayes::CSP_generator_naive_bayes(CSP_dataset *dataset) : CSP
 	{
 		dataset->ratings_for_movie(i, &item_count);
 		most_probable[i].movie_id = i;
-		most_probable[i].probability = probabilities[i] = log(1.0 / (1.0 * item_count / number_ratings));
+		most_probable[i].probability = probabilities[i] = (1.0 * item_count / number_ratings);
 	}
 	
 	for (i = 0; i < dataset->number_items * dataset->number_items / 2; i++)
@@ -119,26 +119,26 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 //		probability *= 1;
 //	else
 	if (co_raters)
-		probability *= (1.0 * co_raters / movie_count);
+		probability += log(1.0 * co_raters / movie_count);
 
 //	probability *= p_movie_given_other;
 	
 	/*
 		Consider each movie that they couldn't rate.
 	*/
-	for (presented_movie = non_ratable; presented_movie < ratable; presented_movie++)
-	{
-		//other_ratings = dataset->ratings_for_movie(presentation_list[presented_movie], &other_count);
-		i = MIN(presentation_list[presented_movie], movie);
-		j = MAX(presentation_list[presented_movie], movie);
-		co_raters = coraters[CORR(i, j)];
-		
-		//p_movie_and_not_other = 1.0 * (movie_count - co_raters);
-		//p_not_other = 1.0 * (number_ratings - other_count);
-		//p_movie_given_not_other = p_movie_and_not_other / p_not_other;
-		//probability *= p_movie_given_not_other;
-		probability *= (1.0 * (movie_count - co_raters) / movie_count);
-	}
+	//for (presented_movie = non_ratable; presented_movie < ratable; presented_movie++)
+	//{
+	//	//other_ratings = dataset->ratings_for_movie(presentation_list[presented_movie], &other_count);
+	//	i = MIN(presentation_list[presented_movie], movie);
+	//	j = MAX(presentation_list[presented_movie], movie);
+	//	co_raters = coraters[CORR(i, j)];
+	//	
+	//	//p_movie_and_not_other = 1.0 * (movie_count - co_raters);
+	//	//p_not_other = 1.0 * (number_ratings - other_count);
+	//	//p_movie_given_not_other = p_movie_and_not_other / p_not_other;
+	//	//probability *= p_movie_given_not_other;
+	//	probability *= (1.0 * (movie_count - co_raters) / movie_count);
+	//}
 	
 	return probability;
 }
@@ -167,7 +167,7 @@ uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_pre
 		*/
 		for (i = number_presented; i < dataset->number_items; i++)
 		{
-			probabilities[presentation_list[i]] *= calculate_probability(presentation_list[i], last_presented_and_seen, number_presented - 1);
+			probabilities[presentation_list[i]] += calculate_probability(presentation_list[i], last_presented_and_seen, number_presented - 1);
 			most_probable[i].movie_id = presentation_list[i];
 			most_probable[i].probability = probabilities[presentation_list[i]];
 		}
@@ -181,7 +181,10 @@ uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_pre
 			Put the ids back into the presentation list.
 		*/
 		for (i = number_presented; i < dataset->number_items; i++)
+		{
 			presentation_list[i] = most_probable[i].movie_id;
+//			printf("%.20f\n", most_probable[i].probability);
+		}
 	}
 	
 	last_presented_and_seen = number_presented;

@@ -39,6 +39,7 @@ int main(int argc, char **argv)
 	double auc, last_prediction_error;
 	double *sum_of_error;
 	FILE *average_error;
+	uint64_t lol;
 	
 	params->parse();
 	dataset = new CSP_dataset_netflix(params);
@@ -78,8 +79,9 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	for (user = 0; user < dataset->number_users; user+=10)
+	//for (user = 0; user < dataset->number_users; user+=1)
 	//if (false)
+	user = 168;
 	{
 		if (user % 1000 == 0) { fprintf(stderr, "\r%lu", user); fflush(stderr); }
 		
@@ -103,8 +105,10 @@ int main(int argc, char **argv)
 		/*
 			Before we add any ratings, we should see how well we can do.
 		*/
-		last_prediction_error = metric->score(user);
-		sum_of_error[number_seen] += last_prediction_error;
+		//last_prediction_error = metric->score(user);
+		//sum_of_error[number_seen] += last_prediction_error;
+		//printf("%lu %f\n", number_seen, last_prediction_error);
+		//printf("%lu %lu %f\n", lol, number_seen, last_prediction_error);
 		
 		/*
 			While the user can still add more ratings.
@@ -145,8 +149,9 @@ int main(int argc, char **argv)
 					/*
 						Now check our predictions on the test set for this user.
 					*/
-					last_prediction_error = metric->score(user);
-					sum_of_error[number_seen] += last_prediction_error;
+					//last_prediction_error = metric->score(user);
+					//sum_of_error[number_seen] += last_prediction_error;
+					//printf("%lu %lu %f\n", lol, number_seen, last_prediction_error);
 					
 					/*
 						Stop looking for the next rating so we can re-generate presentation list.
@@ -159,18 +164,19 @@ int main(int argc, char **argv)
 		/*
 			Need to keep going with the users with all the potential they can add, so as not to screw up averages.
 		*/
-		for(number_seen = count + 1; number_seen < dataset->number_items; number_seen++)
-			sum_of_error[number_seen] += last_prediction_error;
+		//number_seen++;
+		//while (number_seen < dataset->number_items)
+		//	printf("%lu %f\n", number_seen++, last_prediction_error);
 		
 		/*
 			Update the AUC for the presentation list, and print it out.
 		*/
 		auc += (1 - (1.0 * last_presented_and_seen / dataset->number_items));
-		//printf("AUC\t%lu\t%f\n", user, auc);
+		printf("AUC\t%lu\t%f\n", user, auc);
 	}
 	
-	for (item = 0; item < 100; item++)
-		printf("%lu %f\n", item, sum_of_error[item] / dataset->number_users);
+	//for (item = 0; item < dataset->number_items; item++)
+	//	printf("%lu %f\n", item, sum_of_error[item] / dataset->number_users);
 	
 	/*
 		Print our average errors to file.
@@ -180,6 +186,9 @@ int main(int argc, char **argv)
 //		fprintf(stdout, "%lu %f\n", item, sum_of_error[item] / dataset->number_users);
 //	fclose(average_error);
 	
+	/*
+		Calculate the error if we had all ratings added.
+	*/
 //	for (user = 0; user < dataset->number_users; user++)
 //		sum_of_error[0] += metric->score(user);
 //	printf("%f\n", sum_of_error[0] / dataset->number_users);
@@ -187,6 +196,7 @@ int main(int argc, char **argv)
 	/*
 		Clean up.
 	*/
+	fprintf(stderr, "\n");
 	delete params;
 	delete generator;
 	delete dataset;
