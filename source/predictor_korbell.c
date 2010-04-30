@@ -348,10 +348,10 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 }
 
 /*
-	CSP_PREDICTOR_KORBELL::PREDICT()
-	--------------------------------
+	CSP_PREDICTOR_KORBELL::PREDICT_STATISTICS()
+	-------------------------------------------
 */
-double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t day)
+double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, uint64_t day)
 {
 	day = day;
 	
@@ -364,4 +364,13 @@ double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t da
 		+ movie_user_average(movie, user) // 0.742681
 		+ movie_user_support(movie, user) // 0.742112
 	;
+}
+
+/*
+	CSP_PREDICTOR_KORBELL::PREDICT()
+	--------------------------------
+*/
+double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t day)
+{
+	return predict_statistics(user, movie, day);
 }

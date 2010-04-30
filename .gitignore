@@ -2,3 +2,4 @@ cscope.*
 bin
 data
 vc90.pdb
+*.swp
