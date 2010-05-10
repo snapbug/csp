@@ -16,7 +16,6 @@ PARTS = \
 	$(OBJDIR)\generator_naive_bayes.obj \
 	$(OBJDIR)\generator_popularity.obj \
 	$(OBJDIR)\generator_random.obj \
-	$(OBJDIR)\metric_factory.obj \
 	$(OBJDIR)\metric_mae.obj \
 	$(OBJDIR)\metric_nmae.obj \
 	$(OBJDIR)\metric_nrmse.obj \
