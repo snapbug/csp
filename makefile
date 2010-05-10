@@ -5,7 +5,7 @@ OBJDIR = bin
 LDFLAGS = -lm
 
 # Normal
-CFLAGS = -Wall -Wextra -O3 -pedantic -ansi
+CFLAGS = -Wall -Wextra -O3 -pedantic -ansi -Wno-long-long
 ## Debugging
 #CFLAGS = -Wall -Wextra -Werror -O2 -pedantic -ansi -g
 
