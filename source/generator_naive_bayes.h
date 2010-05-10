@@ -10,7 +10,7 @@
 class CSP_generator_naive_bayes : public CSP_generator_entropy
 {
 public:
-	CSP_generator_naive_bayes(CSP_dataset *dataset);
+	CSP_generator_naive_bayes(CSP_dataset *dataset, uint32_t *coraters);
 	virtual ~CSP_generator_naive_bayes() {}
 
 	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);

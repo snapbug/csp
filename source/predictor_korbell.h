@@ -11,10 +11,9 @@
 class CSP_predictor_korbell : public CSP_predictor
 {
 public:
-	CSP_predictor_korbell(CSP_dataset *dataset);
-	CSP_predictor_korbell(CSP_dataset *dataset, double alpha);
+	CSP_predictor_korbell(CSP_dataset *dataset, double alpha, uint32_t *coraters);
 	virtual ~CSP_predictor_korbell() {}
-
+	
 	virtual double predict(uint64_t user, uint64_t movie, uint64_t day);
 	virtual void added_rating(uint64_t *key);
 	virtual void removed_rating(uint64_t *key);
@@ -35,7 +34,12 @@ private:
 	double movie_alpha, user_alpha, movie_time_alpha, user_movie_average_alpha, user_movie_support_alpha, movie_user_average_alpha, movie_user_support_alpha;
 	double alpha;
 
+	uint32_t *coraters;
+	
 	double predict_statistics(uint64_t user, uint64_t movie, uint64_t day);
+	double predict_neighbour(uint64_t user, uint64_t movie, uint64_t day);
+	
+	float **correlation_intermediates;
 };
 
 #endif /* PREDICTOR_KORBELL_H_ */

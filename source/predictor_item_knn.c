@@ -78,12 +78,12 @@ CSP_predictor_item_knn::CSP_predictor_item_knn(CSP_dataset *dataset, uint64_t k)
 				/*
 					Update the intermediate values.
 				*/
-				intermediate[CORR(xid, yid)].x += x_rating;
-				intermediate[CORR(xid, yid)].y += y_rating;
-				intermediate[CORR(xid, yid)].xy += x_rating * y_rating;
-				intermediate[CORR(xid, yid)].xx += x_rating * x_rating;
-				intermediate[CORR(xid, yid)].yy += y_rating * y_rating;
-				intermediate[CORR(xid, yid)].count++;
+				intermediate[tri_offset(xid, yid)].x += x_rating;
+				intermediate[tri_offset(xid, yid)].y += y_rating;
+				intermediate[tri_offset(xid, yid)].xy += x_rating * y_rating;
+				intermediate[tri_offset(xid, yid)].xx += x_rating * x_rating;
+				intermediate[tri_offset(xid, yid)].yy += y_rating * y_rating;
+				intermediate[tri_offset(xid, yid)].count++;
 			}
 		}
 	}
@@ -154,8 +154,8 @@ double CSP_predictor_item_knn::predict(uint64_t user, uint64_t movie, uint64_t d
 			most_similar[i].movie_id = i;
 			most_similar[i].rating = dataset->rating(key);
 			
-			most_similar[i].correlation = (intermediate[CORR(xid, yid)].xy / intermediate[CORR(xid, yid)].count) - ((intermediate[CORR(xid, yid)].x / intermediate[CORR(xid, yid)].count) * (intermediate[CORR(xid, yid)].y / intermediate[CORR(xid, yid)].count));
-			most_similar[i].correlation /= (sqrt((intermediate[CORR(xid, yid)].xx / intermediate[CORR(xid, yid)].count) - pow(intermediate[CORR(xid, yid)].x / intermediate[CORR(xid, yid)].count, 2)) * sqrt((intermediate[CORR(xid, yid)].yy / intermediate[CORR(xid, yid)].count) - pow(intermediate[CORR(xid, yid)].y / intermediate[CORR(xid, yid)].count, 2)));
+			most_similar[i].correlation = (intermediate[tri_offset(xid, yid)].xy / intermediate[tri_offset(xid, yid)].count) - ((intermediate[tri_offset(xid, yid)].x / intermediate[tri_offset(xid, yid)].count) * (intermediate[tri_offset(xid, yid)].y / intermediate[tri_offset(xid, yid)].count));
+			most_similar[i].correlation /= (sqrt((intermediate[tri_offset(xid, yid)].xx / intermediate[tri_offset(xid, yid)].count) - pow(intermediate[tri_offset(xid, yid)].x / intermediate[tri_offset(xid, yid)].count, 2)) * sqrt((intermediate[tri_offset(xid, yid)].yy / intermediate[tri_offset(xid, yid)].count) - pow(intermediate[tri_offset(xid, yid)].y / intermediate[tri_offset(xid, yid)].count, 2)));
 			
 			/*
 				Remove NaN from correlation.
@@ -195,19 +195,19 @@ void CSP_predictor_item_knn::added_rating(uint64_t *key)
 	uint64_t *item_ratings, *user_ratings;
 	uint64_t item_count, user_count;
 	uint64_t i, j;
-
+	
 	/*
 		For every person that has rated this item.
 	*/
 	item_ratings = dataset->ratings_for_movie(dataset->movie(key), &item_count);
-
+	
 	for (i = 0; i < item_count; i++)
 	{
 		/*
 			For every item that person rated.
 		*/
 		user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
-
+		
 		for (j = 0; j < user_count; j++)
 		{
 			/*
@@ -227,19 +227,19 @@ void CSP_predictor_item_knn::removed_rating(uint64_t *key)
 	uint64_t *item_ratings, *user_ratings;
 	uint64_t item_count, user_count;
 	uint64_t i, j;
-
+	
 	/*
 		For every person that has rated this item.
 	*/
 	item_ratings = dataset->ratings_for_movie(dataset->movie(key), &item_count);
-
+	
 	for (i = 0; i < item_count; i++)
 	{
 		/*
 			For every item that person rated.
 		*/
 		user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
-
+		
 		for (j = 0; j < user_count; j++)
 		{
 			/*

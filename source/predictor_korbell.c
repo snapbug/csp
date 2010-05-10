@@ -20,10 +20,11 @@
 	CSP_PREDICTOR_KORBELL::CSP_PREDICTOR_KORBELL()
 	----------------------------------------------
 */
-CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha) : CSP_predictor(dataset), alpha(alpha)
+CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha, uint32_t *coraters) : CSP_predictor(dataset), alpha(alpha), coraters(coraters)
 {
-	uint64_t i, movie, user, rating;
+	uint64_t i, j, min, max, movie, user, rating;
 	uint64_t *item_ratings, *user_ratings;
+	uint64_t item_count, user_count;
 	double prediction;
 	
 	global_average = 3.601435;
@@ -38,9 +39,6 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha)
 	user_movie_support_alpha = 90.0;
 	movie_user_average_alpha = 50.0;
 	movie_user_support_alpha = 50.0;
-	
-	if (!dataset->loaded_extra)
-		exit(puts("Need to load extra data '-e' to use Korbell predictor."));
 	
 	{
 	movie_effect = new double[dataset->number_items];
@@ -65,6 +63,15 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha)
 	movie_user_support_effect = new double[dataset->number_items];
 	movie_user_support_bottom = new double[dataset->number_items];
 	movie_user_support_average = new double[dataset->number_items];
+	}
+	
+	correlation_intermediates = new float*[tri_offset(dataset->number_items - 2, dataset->number_items - 1)];
+	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1); i++)
+	{
+		correlation_intermediates[i] = new float[3];
+		correlation_intermediates[i][0] = 0;
+		correlation_intermediates[i][1] = 0;
+		correlation_intermediates[i][2] = 0;
 	}
 	
 	/*
@@ -120,7 +127,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha)
 	}
 	
 	/*
-		Calculate the Movie X Time(Movie) effect.
+		DON'T Calculate the Movie X Time(Movie) effect.
 	*/
 	/*
 	fprintf(stderr, "Calculating Movie X Time(Movie) Effect.\n");
@@ -235,6 +242,36 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha)
 		}
 	}
 	fprintf(stderr, "Done.\n");
+	
+	/*
+		Now pre-calculate the portions needed for pearson correlation.
+	*/
+	for (movie = 0; movie < dataset->number_items; movie++)
+	{
+		item_ratings = dataset->ratings_for_movie(movie, &item_count);
+		for (i = 0; i < item_count; i++)
+		{
+			/*
+				For everyone that watched that movie.
+			*/
+			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
+			for (j = 0; j < user_count; j++)
+			{
+				if (dataset->movie(user_ratings[j]) != movie)
+				{
+					min = MIN(movie, dataset->movie(user_ratings[j]));
+					max = MAX(movie, dataset->movie(user_ratings[j]));
+					
+					/*
+						Update the intermediate values.
+					*/
+					correlation_intermediates[tri_offset(min, max)][0] += ();
+					correlation_intermediates[tri_offset(min, max)][1] += ();
+					correlation_intermediates[tri_offset(min, max)][2] += ();
+				}
+			}
+		}
+	}
 }
 
 /*
@@ -245,6 +282,7 @@ void CSP_predictor_korbell::added_rating(uint64_t *key)
 {
 	uint64_t movie = dataset->movie(key);
 	uint64_t user = dataset->user(key);
+	uint64_t day = dataset->day(key);
 	uint64_t rating = dataset->rating(key);
 	double pred = global_average;
 	
@@ -291,6 +329,7 @@ void CSP_predictor_korbell::added_rating(uint64_t *key)
 		---------------------
 		Don't have to do anything, counts already taken care of.
 	*/
+	pred = predict_statistics(user, movie, day);
 }
 
 /*
@@ -367,10 +406,22 @@ double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, 
 }
 
 /*
+	CSP_PREDICTOR_KORBELL::PREDICT_NEIGHBOUR()
+	------------------------------------------
+*/
+double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, uint64_t day)
+{
+	day = day;
+	user = user;
+	movie = movie;
+	return 0.0;
+}
+
+/*
 	CSP_PREDICTOR_KORBELL::PREDICT()
 	--------------------------------
 */
 double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t day)
 {
-	return predict_statistics(user, movie, day);
+	return predict_statistics(user, movie, day) + predict_neighbour(user, movie, day);
 }

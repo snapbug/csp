@@ -16,6 +16,7 @@
 #include "metric_rmse.h"
 #include "stats.h"
 
+
 int movie_search(const void *a, const void *b)
 {
 	uint64_t key = *(uint64_t *)a;
@@ -31,21 +32,53 @@ int main(int argc, char **argv)
 	CSP_predictor *predictor;
 	CSP_stats *stats;
 	//CSP_metric_factory *metric = new CSP_metric_factory;
-	//CSP_metric_rmse *metric = new CSP_metric_rmse;
 	CSP_metric_mae *metric;
 	uint64_t *presentation_list, *key, *ratings;
 	uint64_t position_up_to, last_presented_and_seen, number_seen;
 	uint64_t count, user, item, presented, rating;
+	uint32_t *coraters = NULL;
 	double auc, last_prediction_error;
 	double *sum_of_error;
-	FILE *average_error;
-	uint64_t lol;
+	//FILE *average_error = NULL;
+	
+	uint64_t i, j, k, min, max;
+	uint64_t *this_one, *that_one;
+	uint64_t this_count, that_count;
 	
 	params->parse();
 	dataset = new CSP_dataset_netflix(params);
 	stats = new CSP_stats(params->stats);
 	
-	average_error = NULL;
+	exit(printf("%lu\n", sizeof(uint32_t) * tri_offset(dataset->number_items - 2, dataset->number_items - 1)));
+	
+	if (params->generation_method == CSP_generator_factory::BAYESIAN)// || params->prediction_method == CSP_predictor_factory::KORBELL)
+	{
+		if (!dataset->loaded_extra)
+			exit(puts("Must load data sorted by movie (-e) to use Bayes/Korbell!"));
+		
+		coraters = new uint32_t[tri_offset(dataset->number_items - 2, dataset->number_items - 1)];
+		
+		fprintf(stderr, "Precalculating co-ratings...\n");
+		for (i = 0; i < dataset->number_items; i++)
+		{
+			if (i % 100 == 0) { fprintf(stderr, "\r%5lu", i); fflush(stderr); }
+			this_one = dataset->ratings_for_movie(i, &this_count);
+			for (j = 0; j < this_count; j++)
+			{
+				that_one = dataset->ratings_for_user(dataset->user(this_one[j]), &that_count);
+				for (k = 0; k < that_count; k++)
+				{
+					if (dataset->movie(that_one[k]) != i)
+					{
+						min = MIN(i, dataset->movie(that_one[k]));
+						max = MAX(i, dataset->movie(that_one[k]));
+						coraters[tri_offset(min, max)]++;
+					}
+				}
+			}
+		}
+		fprintf(stderr, "\rDone.\n");
+	}
 	
 	sum_of_error = new double[dataset->number_items];
 	for (item = 0; item < dataset->number_items; item++)
@@ -53,7 +86,7 @@ int main(int argc, char **argv)
 	
 	switch (params->generation_method)
 	{
-		case CSP_generator_factory::BAYESIAN: generator = new CSP_generator_naive_bayes(dataset); break;
+		case CSP_generator_factory::BAYESIAN: generator = new CSP_generator_naive_bayes(dataset, coraters); break;
 		case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
 		case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
@@ -67,7 +100,7 @@ int main(int argc, char **argv)
 		case CSP_predictor_factory::GLOBAL_AVERAGE: predictor = new CSP_predictor_global_avg(dataset); break;
 		case CSP_predictor_factory::ITEM_AVERAGE: predictor = new CSP_predictor_item_avg(dataset); break;
 		case CSP_predictor_factory::ITEM_ITEM_KNN: predictor = new CSP_predictor_item_knn(dataset, 20); break;
-		case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 25.0); break;
+		case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 25.0, coraters); break;
 		case CSP_predictor_factory::RANDOM: predictor = new CSP_predictor_random(dataset); break;
 		case CSP_predictor_factory::USER_AVERAGE: predictor = new CSP_predictor_user_avg(dataset); break;
 		case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
@@ -79,9 +112,8 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	//for (user = 0; user < dataset->number_users; user+=1)
-	//if (false)
-	user = 168;
+	for (user = 0; user < dataset->number_users; user++)
+	if (false)
 	{
 		if (user % 1000 == 0) { fprintf(stderr, "\r%lu", user); fflush(stderr); }
 		
@@ -107,8 +139,7 @@ int main(int argc, char **argv)
 		*/
 		//last_prediction_error = metric->score(user);
 		//sum_of_error[number_seen] += last_prediction_error;
-		//printf("%lu %f\n", number_seen, last_prediction_error);
-		//printf("%lu %lu %f\n", lol, number_seen, last_prediction_error);
+		//printf("%f %lu %f\n", average_num_test_ratings, number_seen, last_prediction_error);
 		
 		/*
 			While the user can still add more ratings.
@@ -149,9 +180,10 @@ int main(int argc, char **argv)
 					/*
 						Now check our predictions on the test set for this user.
 					*/
-					//last_prediction_error = metric->score(user);
 					//sum_of_error[number_seen] += last_prediction_error;
-					//printf("%lu %lu %f\n", lol, number_seen, last_prediction_error);
+					//last_prediction_error = metric->score(user);
+					//if (number_seen == 20 || number_seen == 100)
+					//	printf("%f %lu %f\n", average_num_test_ratings, number_seen, last_prediction_error);
 					
 					/*
 						Stop looking for the next rating so we can re-generate presentation list.
@@ -160,13 +192,6 @@ int main(int argc, char **argv)
 				}
 			}
 		}
-		
-		/*
-			Need to keep going with the users with all the potential they can add, so as not to screw up averages.
-		*/
-		//number_seen++;
-		//while (number_seen < dataset->number_items)
-		//	printf("%lu %f\n", number_seen++, last_prediction_error);
 		
 		/*
 			Update the AUC for the presentation list, and print it out.

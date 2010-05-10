@@ -6,18 +6,16 @@
 #include <stdlib.h>
 #include <math.h>
 #include "generator_naive_bayes.h"
-#define CORR(i, j) (((i * (35539 - i)) / 2) + j - i - 1)
 
 /*
 	CSP_GENERATOR_NAIVE_BAYES::CSP_GENERATOR_NAIVE_BAYES()
 	------------------------------------------------------
 */
-CSP_generator_naive_bayes::CSP_generator_naive_bayes(CSP_dataset *dataset) : CSP_generator_entropy(dataset)
+CSP_generator_naive_bayes::CSP_generator_naive_bayes(CSP_dataset *dataset, uint32_t *coraters) : CSP_generator_entropy(dataset), coraters(coraters)
 {
-	uint64_t i, j, k, min, max;
-	uint64_t *this_one, *that_one;
-	uint64_t this_count, that_count, item_count;
-	
+	uint64_t i;
+	uint64_t item_count;
+
 	if (!dataset->loaded_extra)
 		exit(puts("Must use -e to use Naive Bayes generation method."));
 	
@@ -25,41 +23,13 @@ CSP_generator_naive_bayes::CSP_generator_naive_bayes(CSP_dataset *dataset) : CSP
 	dataset->get_ratings(&number_ratings);
 	most_probable = new movie[dataset->number_items];
 	probabilities = new double[dataset->number_items];
-	coraters = new uint32_t[dataset->number_items * dataset->number_items / 2];
-	
+
 	for (i = 0; i < dataset->number_items; i++)
 	{
 		dataset->ratings_for_movie(i, &item_count);
 		most_probable[i].movie_id = i;
 		most_probable[i].probability = probabilities[i] = (1.0 * item_count / number_ratings);
 	}
-	
-	for (i = 0; i < dataset->number_items * dataset->number_items / 2; i++)
-		coraters[i] = 0;
-	
-	/*
-		Precalculate the co-raters for all movie pairs.
-	*/
-	fprintf(stderr, "Precalculating co-ratings...\n");
-	for (i = 0; i < dataset->number_items; i++)
-	{
-		if (i % 100 == 0) { fprintf(stderr, "\r%5lu", i); fflush(stderr); }
-		this_one = dataset->ratings_for_movie(i, &this_count);
-		for (j = 0; j < this_count; j++)
-		{
-			that_one = dataset->ratings_for_user(dataset->user(this_one[j]), &that_count);
-			for (k = 0; k < that_count; k++)
-			{
-				if (dataset->movie(that_one[k]) != i)
-				{
-					min = MIN(i, dataset->movie(that_one[k]));
-					max = MAX(i, dataset->movie(that_one[k]));
-					coraters[CORR(min, max)]++;
-				}
-			}
-		}
-	}
-	fprintf(stderr, "\rDone.\n");
 }
 
 /*
@@ -107,7 +77,7 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 	//other_ratings = dataset->ratings_for_movie(presentation_list[ratable], &other_count);
 	i = MIN(presentation_list[ratable], movie);
 	j = MAX(presentation_list[ratable], movie);
-	co_raters = coraters[CORR(i, j)];
+	co_raters = coraters[tri_offset(i, j)];
 	
 //	p_other = 1.0 * other_count;
 //	p_movie_and_other = 1.0 * co_raters;
@@ -131,7 +101,7 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 	//	//other_ratings = dataset->ratings_for_movie(presentation_list[presented_movie], &other_count);
 	//	i = MIN(presentation_list[presented_movie], movie);
 	//	j = MAX(presentation_list[presented_movie], movie);
-	//	co_raters = coraters[CORR(i, j)];
+	//	co_raters = coraters[tri_offset(i, j)];
 	//	
 	//	//p_movie_and_not_other = 1.0 * (movie_count - co_raters);
 	//	//p_not_other = 1.0 * (number_ratings - other_count);

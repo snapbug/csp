@@ -8,8 +8,6 @@
 #ifndef PREDICTOR_ITEM_KNN_H_
 #define PREDICTOR_ITEM_KNN_H_
 
-#define CORR(i, j) (((i * (35539 - i)) / 2) + j - i - 1)
-
 class CSP_predictor_item_knn : public CSP_predictor
 {
 public:
