@@ -28,6 +28,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	double prediction;
 	
 	global_average = 3.601435;
+	min = max = 1;
 	
 	/*
 		Alpha Values from: http://www.netflixprize.com/community/viewtopic.php?pid=5563#p5563
@@ -299,8 +300,11 @@ void CSP_predictor_korbell::added_rating(uint64_t *key)
 {
 	uint64_t movie = dataset->movie(key);
 	uint64_t user = dataset->user(key);
-	uint64_t day = dataset->day(key);
+	//uint64_t day = dataset->day(key);
 	uint64_t rating = dataset->rating(key);
+	uint64_t *user_ratings, user_count;
+	uint64_t *item_ratings, item_count;
+	uint64_t i, j;
 	double pred = global_average;
 	
 	movie_counts[movie]++;
@@ -346,7 +350,29 @@ void CSP_predictor_korbell::added_rating(uint64_t *key)
 		---------------------
 		Don't have to do anything, counts already taken care of.
 	*/
-	pred = predict_statistics(user, movie, day);
+	//pred = predict_statistics(user, movie, day);
+	
+	/*
+		Have to update the correlation sections for this movie.
+		That is, for everyone that rated this movie.
+	*/
+	item_ratings = dataset->ratings_for_movie(movie, &item_count);
+	for (i = 0; i < item_count; i++)
+	{
+		/*
+			For each other rating they gave.
+		*/
+		user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
+		for (j = 0; j < user_count; j++)
+		{
+			if (dataset->movie(user_ratings[j]) != movie)
+			{
+				/*
+					Update the information for movie and dataset->movie(user_ratings[j])
+				*/
+			}
+		}
+	}
 }
 
 /*
@@ -358,7 +384,32 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 	uint64_t movie = dataset->movie(key);
 	uint64_t user = dataset->user(key);
 	uint64_t rating = dataset->rating(key);
+	uint64_t *user_ratings, user_count;
+	uint64_t *item_ratings, item_count;
+	uint64_t i, j;
 	double pred = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_movie_average(user, movie);
+	
+	/*
+		Have to update the correlation sections for this movie.
+		That is, for everyone that rated this movie.
+	*/
+	item_ratings = dataset->ratings_for_movie(movie, &item_count);
+	for (i = 0; i < item_count; i++)
+	{
+		/*
+			For each other rating they gave.
+		*/
+		user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
+		for (j = 0; j < user_count; j++)
+		{
+			if (dataset->movie(user_ratings[j]) != movie)
+			{
+				/*
+					Update the information for movie and dataset->movie(user_ratings[j])
+				*/
+			}
+		}
+	}
 	
 	/*
 		Movie X User(Support)
