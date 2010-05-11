@@ -65,8 +65,10 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	movie_user_support_average = new double[dataset->number_items];
 	}
 	
-	correlation_intermediates = new float*[tri_offset(dataset->number_items - 2, dataset->number_items - 1)];
-	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1); i++)
+	//correlation_intermediates = new float*[tri_offset(dataset->number_items - 2, dataset->number_items - 1)];
+	//for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1); i++)
+	correlation_intermediates = new float*[dataset->number_items];
+	for (i = 0; i < dataset->number_items; i++)
 	{
 		correlation_intermediates[i] = new float[3];
 		correlation_intermediates[i][0] = 0;
@@ -92,7 +94,6 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 		movie_user_average_effect[movie] = movie_user_average_bottom[movie] = movie_user_average_average[movie] = 0;
 		movie_user_support_effect[movie] = movie_user_average_bottom[movie] = movie_user_support_average[movie] = 0;
 	}
-	if (false){
 	
 	/*
 		Calculate the movie effect, and movie averages.
@@ -242,12 +243,13 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 			movie_user_support_bottom[movie] += pow(sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie]), 2);
 		}
 	}
-}	
+	
 	/*
 		Now pre-calculate the portions needed for pearson correlation.
 	*/
 	fprintf(stderr, "Pre-calculating Pearson correlation sections.\n");
-	for (movie = 0; movie < dataset->number_items; movie++)
+	//for (movie = 0; movie < dataset->number_items; movie++)
+	movie = 2451; // LOTR: FOTR
 	{
 		if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
 		item_ratings = dataset->ratings_for_movie(movie, &item_count);
@@ -259,17 +261,20 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
 			for (j = 0; j < user_count; j++)
 			{
-				if (dataset->movie(user_ratings[j]) != movie)
+				//if (dataset->movie(user_ratings[j]) != movie)
 				{
-					min = MIN(movie, dataset->movie(user_ratings[j]));
-					max = MAX(movie, dataset->movie(user_ratings[j]));
+					//min = MIN(movie, dataset->movie(user_ratings[j]));
+					//max = MAX(movie, dataset->movie(user_ratings[j]));
 					
 					/*
 						Update the intermediate values.
 					*/
-					correlation_intermediates[tri_offset(min, max)][0] += (dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie])) * (dataset->rating(user_ratings[j]) - (movie_average[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]));
-					correlation_intermediates[tri_offset(min, max)][1] += pow(dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie]), 2);
-					correlation_intermediates[tri_offset(min, max)][2] += pow(dataset->rating(user_ratings[j]) - (movie_average[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]), 2);
+					correlation_intermediates[dataset->movie(user_ratings[j])][0] += (dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie])) * (dataset->rating(user_ratings[j]) - (movie_average[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]));
+					correlation_intermediates[dataset->movie(user_ratings[j])][1] += pow(dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie]), 2);
+					correlation_intermediates[dataset->movie(user_ratings[j])][2] += pow(dataset->rating(user_ratings[j]) - (movie_average[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]), 2);
+					//correlation_intermediates[tri_offset(min, max)][0] += (dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie])) * (dataset->rating(user_ratings[j]) - (movie_average[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]));
+					//correlation_intermediates[tri_offset(min, max)][1] += pow(dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie]), 2);
+					//correlation_intermediates[tri_offset(min, max)][2] += pow(dataset->rating(user_ratings[j]) - (movie_average[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]), 2);
 				}
 			}
 		}
@@ -277,9 +282,13 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	fprintf(stderr, "\r");
 	fprintf(stderr, "Done.\n");
 	
-	printf("LOTR: FOTR || LOTR: TTT || %f\n", correlation_intermediates[tri_offset(2451,11520)][0] / (sqrt(correlation_intermediates[tri_offset(2541,11520)][1]) * sqrt(correlation_intermediates[tri_offset(2451,11520)][2])));
-	printf("LOTR: FOTR || LOTR: ROTK || %f\n", correlation_intermediates[tri_offset(2451,14239)][0] / (sqrt(correlation_intermediates[tri_offset(2541,14239)][1]) * sqrt(correlation_intermediates[tri_offset(2451,14239)][2])));
-	printf("LOTR: TTT || LOTR: ROTK || %f\n", correlation_intermediates[tri_offset(2451,14239)][0] / (sqrt(correlation_intermediates[tri_offset(11520,14239)][1]) * sqrt(correlation_intermediates[tri_offset(2451,14239)][2])));
+	printf("FOTR: %f\n", correlation_intermediates[2451][0] / (sqrt(correlation_intermediates[2451][1]) * sqrt(correlation_intermediates[2451][2])));
+	printf("TTT: %f\n", correlation_intermediates[11520][0] / (sqrt(correlation_intermediates[11520][1]) * sqrt(correlation_intermediates[11520][2])));
+	printf("ROTK: %f\n", correlation_intermediates[14239][0] / (sqrt(correlation_intermediates[14239][1]) * sqrt(correlation_intermediates[14239][2])));
+	
+	//printf("FOTR <> TT: %f\n", correlation_intermediates[tri_offset(2451,11520)][0] / (sqrt(correlation_intermediates[tri_offset(2451,11520)][1]) * sqrt(correlation_intermediates[tri_offset(2451,11520)][2])));
+	//printf("FOTR <> ROTK: %f\n", correlation_intermediates[tri_offset(2451,14239)][0] / (sqrt(correlation_intermediates[tri_offset(2451,14239)][1]) * sqrt(correlation_intermediates[tri_offset(2451,14239)][2])));
+	//printf("TT <> ROTK: %f\n", correlation_intermediates[tri_offset(11520,14239)][0] / (sqrt(correlation_intermediates[tri_offset(11520,14239)][1]) * sqrt(correlation_intermediates[tri_offset(11520,14239)][2])));
 }
 
 /*
