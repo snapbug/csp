@@ -49,8 +49,6 @@ int main(int argc, char **argv)
 	dataset = new CSP_dataset_netflix(params);
 	stats = new CSP_stats(params->stats);
 	
-	exit(printf("%lu\n", sizeof(uint32_t) * tri_offset(dataset->number_items - 2, dataset->number_items - 1)));
-	
 	if (params->generation_method == CSP_generator_factory::BAYESIAN)// || params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
 		if (!dataset->loaded_extra)

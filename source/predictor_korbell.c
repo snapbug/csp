@@ -92,6 +92,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 		movie_user_average_effect[movie] = movie_user_average_bottom[movie] = movie_user_average_average[movie] = 0;
 		movie_user_support_effect[movie] = movie_user_average_bottom[movie] = movie_user_support_average[movie] = 0;
 	}
+	if (false){
 	
 	/*
 		Calculate the movie effect, and movie averages.
@@ -241,13 +242,14 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 			movie_user_support_bottom[movie] += pow(sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie]), 2);
 		}
 	}
-	fprintf(stderr, "Done.\n");
-	
+}	
 	/*
 		Now pre-calculate the portions needed for pearson correlation.
 	*/
+	fprintf(stderr, "Pre-calculating Pearson correlation sections.\n");
 	for (movie = 0; movie < dataset->number_items; movie++)
 	{
+		if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
 		item_ratings = dataset->ratings_for_movie(movie, &item_count);
 		for (i = 0; i < item_count; i++)
 		{
@@ -265,13 +267,19 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 					/*
 						Update the intermediate values.
 					*/
-					correlation_intermediates[tri_offset(min, max)][0] += ();
-					correlation_intermediates[tri_offset(min, max)][1] += ();
-					correlation_intermediates[tri_offset(min, max)][2] += ();
+					correlation_intermediates[tri_offset(min, max)][0] += (dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie])) * (dataset->rating(user_ratings[j]) - (movie_average[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]));
+					correlation_intermediates[tri_offset(min, max)][1] += pow(dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie]), 2);
+					correlation_intermediates[tri_offset(min, max)][2] += pow(dataset->rating(user_ratings[j]) - (movie_average[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]), 2);
 				}
 			}
 		}
 	}
+	fprintf(stderr, "\r");
+	fprintf(stderr, "Done.\n");
+	
+	printf("LOTR: FOTR || LOTR: TTT || %f\n", correlation_intermediates[tri_offset(2451,11520)][0] / (sqrt(correlation_intermediates[tri_offset(2541,11520)][1]) * sqrt(correlation_intermediates[tri_offset(2451,11520)][2])));
+	printf("LOTR: FOTR || LOTR: ROTK || %f\n", correlation_intermediates[tri_offset(2451,14239)][0] / (sqrt(correlation_intermediates[tri_offset(2541,14239)][1]) * sqrt(correlation_intermediates[tri_offset(2451,14239)][2])));
+	printf("LOTR: TTT || LOTR: ROTK || %f\n", correlation_intermediates[tri_offset(2451,14239)][0] / (sqrt(correlation_intermediates[tri_offset(11520,14239)][1]) * sqrt(correlation_intermediates[tri_offset(2451,14239)][2])));
 }
 
 /*
