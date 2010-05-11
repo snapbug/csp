@@ -40,6 +40,7 @@ private:
 	double predict_neighbour(uint64_t user, uint64_t movie, uint64_t day);
 	
 	float **correlation_intermediates;
+	double *residuals;
 };
 
 #endif /* PREDICTOR_KORBELL_H_ */
