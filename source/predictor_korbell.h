@@ -39,7 +39,7 @@ private:
 	double predict_statistics(uint64_t user, uint64_t movie, uint64_t day);
 	double predict_neighbour(uint64_t user, uint64_t movie, uint64_t day);
 	
-	float **correlation_intermediates;
+	float *correlation_intermediates;
 	double *residuals;
 };
 
