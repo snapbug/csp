@@ -66,13 +66,13 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	movie_user_support_average = new double[dataset->number_items];
 	}
 	
-	//correlation_intermediates = new float*[tri_offset(dataset->number_items - 2, dataset->number_items - 1)];
-	//for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1); i++)
+	residual_averages = new double[dataset->number_items];
+	//correlation_intermediates = new float[((tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1) * 3];
+	//for (i = 0; i < (tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1); i++)
 	correlation_intermediates = new float[dataset->number_items * 3];
-	residuals = new double[dataset->number_items];
 	for (i = 0; i < dataset->number_items; i++)
 	{
-		correlation_intermediates[(3 * i) + 0] = 0;
+		correlation_intermediates[3 * i] = 0;
 		correlation_intermediates[(3 * i) + 1] = 0;
 		correlation_intermediates[(3 * i) + 2] = 0;
 	}
@@ -248,15 +248,16 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	/*
 		Now pre-calculate the portions needed for pearson correlation.
 	*/
+	fprintf(stderr, "Calculating average residuals for movies.\n");
 	for (movie = 0; movie < dataset->number_items; movie++)
 	{
 		item_ratings = dataset->ratings_for_movie(movie, &item_count);
-		residuals[movie] = 0;
+		residual_averages[movie] = 0;
 		for (i = 0; i < item_count; i++)
-			residuals[movie] += dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), movie, dataset->day(item_ratings[i]));
+			residual_averages[movie] += dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), movie, dataset->day(item_ratings[i]));
 	}
 	
-	fprintf(stderr, "Pre-calculating Pearson correlation sections.\n");
+	fprintf(stderr, "Pre-calculating Pearson correlation sections:\n");
 	//for (movie = 0; movie < dataset->number_items; movie++)
 	movie = 2451; // LOTR: FOTR
 	{
@@ -281,9 +282,9 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 					*/
 					double residual_j = dataset->rating(user_ratings[j]) - predict_statistics(dataset->user(user_ratings[j]), dataset->movie(user_ratings[j]), dataset->day(user_ratings[j]));
 					
-					correlation_intermediates[(3 * dataset->movie(user_ratings[j])) + 0] += (residual_i - (residuals[movie] / movie_counts[movie])) * (residual_j - (residuals[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]));
-					correlation_intermediates[(3 * dataset->movie(user_ratings[j])) + 1] += pow(residual_i - (residuals[movie] / movie_counts[movie]), 2);
-					correlation_intermediates[(3 * dataset->movie(user_ratings[j])) + 2] += pow(residual_j - (residuals[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]), 2);
+					correlation_intermediates[3 * dataset->movie(user_ratings[j])] += (residual_i - (residual_averages[movie] / movie_counts[movie])) * (residual_j - (residual_averages[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]));
+					correlation_intermediates[(3 * dataset->movie(user_ratings[j])) + 1] += pow(residual_i - (residual_averages[movie] / movie_counts[movie]), 2);
+					correlation_intermediates[(3 * dataset->movie(user_ratings[j])) + 2] += pow(residual_j - (residual_averages[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]), 2);
 					
 					//correlation_intermediates[dataset->movie(user_ratings[j])][0] += (dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie])) * (dataset->rating(user_ratings[j]) - (movie_average[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])]));
 					//correlation_intermediates[dataset->movie(user_ratings[j])][1] += pow(dataset->rating(item_ratings[i]) - (movie_average[movie] / movie_counts[movie]), 2);
@@ -302,9 +303,9 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	//for (i = 0; i < dataset->number_items; i++)
 	//	printf("%f %lu\n", correlation_intermediates[i][0] / (sqrt(correlation_intermediates[i][1]) * sqrt(correlation_intermediates[i][2])), i);
 
-	printf("FOTR: %f\n", correlation_intermediates[(3 * 2451) + 0]  / (sqrt(correlation_intermediates[(3 * 2451) + 1])  * sqrt(correlation_intermediates[(3 * 2451) + 2])));
-	printf("TTT: %f\n",  correlation_intermediates[(3 * 11520) + 0] / (sqrt(correlation_intermediates[(3 * 11520) + 1]) * sqrt(correlation_intermediates[(3 * 11520) + 2])));
-	printf("ROTK: %f\n", correlation_intermediates[(3 * 14239) + 0] / (sqrt(correlation_intermediates[(3 * 14239) + 1]) * sqrt(correlation_intermediates[(3 * 14239) + 2])));
+	printf("FOTR: %f\n", correlation_intermediates[3 * 2451]  / (sqrt(correlation_intermediates[(3 * 2451) + 1])  * sqrt(correlation_intermediates[(3 * 2451) + 2])));
+	printf("TTT: %f\n",  correlation_intermediates[3 * 11520] / (sqrt(correlation_intermediates[(3 * 11520) + 1]) * sqrt(correlation_intermediates[(3 * 11520) + 2])));
+	printf("ROTK: %f\n", correlation_intermediates[3 * 14239] / (sqrt(correlation_intermediates[(3 * 14239) + 1]) * sqrt(correlation_intermediates[(3 * 14239) + 2])));
 	
 	//printf("FOTR - TT: %f\n", correlation_intermediates[tri_offset(2451,11520)][0] / (sqrt(correlation_intermediates[tri_offset(2451,11520)][1]) * sqrt(correlation_intermediates[tri_offset(2451,11520)][2])));
 	//printf("FOTR - RTK: %f\n", correlation_intermediates[tri_offset(2451,14239)][0] / (sqrt(correlation_intermediates[tri_offset(2451,14239)][1]) * sqrt(correlation_intermediates[tri_offset(2451,14239)][2])));
