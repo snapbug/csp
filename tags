@@ -3,13 +3,11 @@
 !_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
-!_TAG_PROGRAM_VERSION	5.8	//
+!_TAG_PROGRAM_VERSION	5.6	//
 A_PRES	./source/param_block.h	/^	enum { A_TIME, A_PRES };$/;"	e	enum:CSP_param_block::__anon11
 A_TIME	./source/param_block.h	/^	enum { A_TIME, A_PRES };$/;"	e	enum:CSP_param_block::__anon11
 BAYESIAN	./source/generator_factory.h	/^		BAYESIAN,$/;"	e	enum:CSP_generator_factory::__anon4
 CONSTANT	./source/predictor_factory.h	/^		CONSTANT,$/;"	e	enum:CSP_predictor_factory::__anon8
-CORR	./source/generator_naive_bayes.c	9;"	d	file:
-CORR	./source/predictor_item_knn.h	11;"	d
 CROC	./source/metric_factory.h	/^		CROC    = 32,$/;"	e	enum:CSP_metric_factory::__anon9
 CSP_dataset	./source/dataset.h	/^	CSP_dataset(CSP_param_block *params) : params(params) { loaded_extra = FALSE; }$/;"	f	class:CSP_dataset
 CSP_dataset	./source/dataset.h	/^class CSP_dataset$/;"	c
@@ -22,23 +20,23 @@ CSP_generator_entropy	./source/generator_entropy.h	/^class CSP_generator_entropy
 CSP_generator_factory	./source/generator_factory.h	/^class CSP_generator_factory$/;"	c
 CSP_generator_item_avg	./source/generator_item_avg.c	/^CSP_generator_item_avg::CSP_generator_item_avg(CSP_dataset *dataset) : CSP_generator(dataset)$/;"	f	class:CSP_generator_item_avg
 CSP_generator_item_avg	./source/generator_item_avg.h	/^class CSP_generator_item_avg : public CSP_generator$/;"	c
-CSP_generator_naive_bayes	./source/generator_naive_bayes.c	/^CSP_generator_naive_bayes::CSP_generator_naive_bayes(CSP_dataset *dataset) : CSP_generator_entropy(dataset)$/;"	f	class:CSP_generator_naive_bayes
+CSP_generator_naive_bayes	./source/generator_naive_bayes.c	/^CSP_generator_naive_bayes::CSP_generator_naive_bayes(CSP_dataset *dataset, uint32_t *coraters) : CSP_generator_entropy(dataset), coraters(coraters)$/;"	f	class:CSP_generator_naive_bayes
 CSP_generator_naive_bayes	./source/generator_naive_bayes.h	/^class CSP_generator_naive_bayes : public CSP_generator_entropy$/;"	c
 CSP_generator_popularity	./source/generator_popularity.c	/^CSP_generator_popularity::CSP_generator_popularity(CSP_dataset *dataset) : CSP_generator(dataset)$/;"	f	class:CSP_generator_popularity
 CSP_generator_popularity	./source/generator_popularity.h	/^class CSP_generator_popularity : public CSP_generator$/;"	c
 CSP_generator_random	./source/generator_random.c	/^CSP_generator_random::CSP_generator_random(CSP_dataset *dataset) : CSP_generator(dataset)$/;"	f	class:CSP_generator_random
 CSP_generator_random	./source/generator_random.h	/^class CSP_generator_random : public CSP_generator$/;"	c
-CSP_metric	./source/metric.h	/^	CSP_metric() {}$/;"	f	class:CSP_metric
+CSP_metric	./source/metric.h	/^	CSP_metric(CSP_dataset * dataset, CSP_predictor *predictor) : dataset(dataset), predictor(predictor) {}$/;"	f	class:CSP_metric
 CSP_metric	./source/metric.h	/^class CSP_metric$/;"	c
-CSP_metric_factory	./source/metric_factory.c	/^CSP_metric_factory::CSP_metric_factory() : CSP_metric()$/;"	f	class:CSP_metric_factory
+CSP_metric_factory	./source/metric_factory.c	/^CSP_metric_factory::CSP_metric_factory(CSP_dataset *dataset, CSP_predictor *predictor) : CSP_metric(dataset, predictor)$/;"	f	class:CSP_metric_factory
 CSP_metric_factory	./source/metric_factory.h	/^class CSP_metric_factory : public CSP_metric$/;"	c
-CSP_metric_mae	./source/metric_mae.c	/^CSP_metric_mae::CSP_metric_mae() : CSP_metric()$/;"	f	class:CSP_metric_mae
+CSP_metric_mae	./source/metric_mae.c	/^CSP_metric_mae::CSP_metric_mae(CSP_dataset *dataset, CSP_predictor *predictor) : CSP_metric(dataset, predictor)$/;"	f	class:CSP_metric_mae
 CSP_metric_mae	./source/metric_mae.h	/^class CSP_metric_mae : public CSP_metric$/;"	c
-CSP_metric_nmae	./source/metric_nmae.c	/^CSP_metric_nmae::CSP_metric_nmae() : CSP_metric()$/;"	f	class:CSP_metric_nmae
-CSP_metric_nmae	./source/metric_nmae.h	/^class CSP_metric_nmae : public CSP_metric$/;"	c
-CSP_metric_nrmse	./source/metric_nrmse.c	/^CSP_metric_nrmse::CSP_metric_nrmse() : CSP_metric()$/;"	f	class:CSP_metric_nrmse
-CSP_metric_nrmse	./source/metric_nrmse.h	/^class CSP_metric_nrmse : public CSP_metric$/;"	c
-CSP_metric_rmse	./source/metric_rmse.c	/^CSP_metric_rmse::CSP_metric_rmse() : CSP_metric()$/;"	f	class:CSP_metric_rmse
+CSP_metric_nmae	./source/metric_nmae.c	/^CSP_metric_nmae::CSP_metric_nmae(CSP_dataset *dataset, CSP_predictor *predictor) : CSP_metric_mae(dataset, predictor)$/;"	f	class:CSP_metric_nmae
+CSP_metric_nmae	./source/metric_nmae.h	/^class CSP_metric_nmae : public CSP_metric_mae$/;"	c
+CSP_metric_nrmse	./source/metric_nrmse.c	/^CSP_metric_nrmse::CSP_metric_nrmse(CSP_dataset *dataset, CSP_predictor *predictor) : CSP_metric_rmse(dataset, predictor)$/;"	f	class:CSP_metric_nrmse
+CSP_metric_nrmse	./source/metric_nrmse.h	/^class CSP_metric_nrmse : public CSP_metric_rmse$/;"	c
+CSP_metric_rmse	./source/metric_rmse.c	/^CSP_metric_rmse::CSP_metric_rmse(CSP_dataset *dataset, CSP_predictor *predictor) : CSP_metric(dataset, predictor)$/;"	f	class:CSP_metric_rmse
 CSP_metric_rmse	./source/metric_rmse.h	/^class CSP_metric_rmse : public CSP_metric$/;"	c
 CSP_param_block	./source/param_block.c	/^CSP_param_block::CSP_param_block(int argc, char **argv)$/;"	f	class:CSP_param_block
 CSP_param_block	./source/param_block.h	/^class CSP_param_block$/;"	c
@@ -54,7 +52,7 @@ CSP_predictor_item_avg	./source/predictor_item_avg.c	/^CSP_predictor_item_avg::C
 CSP_predictor_item_avg	./source/predictor_item_avg.h	/^class CSP_predictor_item_avg : public CSP_predictor$/;"	c
 CSP_predictor_item_knn	./source/predictor_item_knn.c	/^CSP_predictor_item_knn::CSP_predictor_item_knn(CSP_dataset *dataset, uint64_t k) : CSP_predictor(dataset), k(k)$/;"	f	class:CSP_predictor_item_knn
 CSP_predictor_item_knn	./source/predictor_item_knn.h	/^class CSP_predictor_item_knn : public CSP_predictor$/;"	c
-CSP_predictor_korbell	./source/predictor_korbell.c	/^CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha) : CSP_predictor(dataset), alpha(alpha)$/;"	f	class:CSP_predictor_korbell
+CSP_predictor_korbell	./source/predictor_korbell.c	/^CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha, uint32_t *coraters) : CSP_predictor(dataset), alpha(alpha), coraters(coraters)$/;"	f	class:CSP_predictor_korbell
 CSP_predictor_korbell	./source/predictor_korbell.h	/^class CSP_predictor_korbell : public CSP_predictor$/;"	c
 CSP_predictor_random	./source/predictor_random.h	/^	CSP_predictor_random(CSP_dataset *dataset) : CSP_predictor(dataset) {}$/;"	f	class:CSP_predictor_random
 CSP_predictor_random	./source/predictor_random.h	/^class CSP_predictor_random : public CSP_predictor$/;"	c
@@ -86,7 +84,7 @@ KORBELL	./source/predictor_factory.h	/^		KORBELL$/;"	e	enum:CSP_predictor_factor
 MAE	./source/metric_factory.h	/^		MAE     = 1,$/;"	e	enum:CSP_metric_factory::__anon9
 MAX	./source/csp_types.h	32;"	d
 METRIC_FACTORY_H_	./source/metric_factory.h	9;"	d
-METRIC_H_	./source/metric.h	9;"	d
+METRIC_H_	./source/metric.h	11;"	d
 METRIC_MAE_H_	./source/metric_mae.h	8;"	d
 METRIC_NMAE_H_	./source/metric_nmae.h	8;"	d
 METRIC_NRMSE_H_	./source/metric_nrmse.h	8;"	d
@@ -137,18 +135,20 @@ argv	./source/param_block.h	/^	char **argv;$/;"	m	class:CSP_param_block
 average	./source/generator_item_avg.h	/^		double average;$/;"	m	struct:CSP_generator_item_avg::__anon7
 average_cmp	./source/generator_item_avg.c	/^int CSP_generator_item_avg::average_cmp(const void *a, const void *b)$/;"	f	class:CSP_generator_item_avg
 averages	./source/predictor_item_avg.h	/^	double *averages;$/;"	m	class:CSP_predictor_item_avg
-base_probability	./source/generator_naive_bayes.h	/^	double base_probability;$/;"	m	class:CSP_generator_naive_bayes
 bot	./source/predictor_user_avg.h	/^	uint64_t *bot;$/;"	m	class:CSP_predictor_user_avg
 calculate_probability	./source/generator_naive_bayes.c	/^double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t non_ratable, uint64_t ratable)$/;"	f	class:CSP_generator_naive_bayes
 clip	./source/csp_types.h	35;"	d
 considered	./source/predictor_item_knn.h	/^		uint64_t considered; \/\/ whether we need to consider this is calculation (used as primary sort index)$/;"	m	struct:CSP_predictor_item_knn::__anon6
 constant	./source/predictor_constant.h	/^	double constant;$/;"	m	class:CSP_predictor_constant
 coraters	./source/generator_naive_bayes.h	/^	uint32_t *coraters;$/;"	m	class:CSP_generator_naive_bayes
+coraters	./source/predictor_korbell.h	/^	uint32_t *coraters;$/;"	m	class:CSP_predictor_korbell
 correlation	./source/predictor_item_knn.h	/^		double correlation;$/;"	m	struct:CSP_predictor_item_knn::__anon6
+correlation_intermediates	./source/predictor_korbell.h	/^	float *correlation_intermediates;$/;"	m	class:CSP_predictor_korbell
 count	./source/generator_item_avg.h	/^		uint64_t count;$/;"	m	struct:CSP_generator_item_avg::__anon7
 count	./source/predictor_item_knn.h	/^		uint64_t count; \/\/ number of co-raters$/;"	m	struct:CSP_predictor_item_knn::__anon5
 data	./source/dataset_netflix.h	/^	uint64_t data[100480507]; \/\/ this is the most possible ratings we could have, won't use all this space$/;"	m	class:CSP_dataset_netflix
 dataset	./source/generator.h	/^	CSP_dataset *dataset;$/;"	m	class:CSP_generator
+dataset	./source/metric.h	/^	CSP_dataset *dataset;$/;"	m	class:CSP_metric
 dataset	./source/param_block.h	/^	uint64_t dataset; \/\/ which dataset to use$/;"	m	class:CSP_param_block
 dataset	./source/predictor.h	/^	CSP_dataset *dataset;$/;"	m	class:CSP_predictor
 day	./source/dataset.h	/^	inline virtual uint64_t day(uint64_t *example) { return day(*example); }$/;"	f	class:CSP_dataset
@@ -169,8 +169,6 @@ get_ratings	./source/dataset_netflix.c	/^uint64_t *CSP_dataset_netflix::get_rati
 get_test_ratings	./source/dataset_netflix.c	/^uint64_t *CSP_dataset_netflix::get_test_ratings(uint64_t *count)$/;"	f	class:CSP_dataset_netflix
 global_average	./source/predictor_korbell.h	/^	double global_average;$/;"	m	class:CSP_predictor_korbell
 help	./source/param_block.c	/^void CSP_param_block::help(void)$/;"	f	class:CSP_param_block
-high	./source/metric_nmae.h	/^	uint64_t high, low;$/;"	m	class:CSP_metric_nmae
-high	./source/metric_nrmse.h	/^	uint64_t high, low;$/;"	m	class:CSP_metric_nrmse
 id	./source/metric_factory.c	/^	uint64_t id;$/;"	m	struct:__anon14	file:
 included	./source/dataset.h	/^	inline virtual uint64_t included(uint64_t *example) { return included(*example); }$/;"	f	class:CSP_dataset
 included	./source/dataset.h	/^	inline virtual uint64_t included(uint64_t example) { example = example; return 0; }$/;"	f	class:CSP_dataset
@@ -188,8 +186,6 @@ k	./source/predictor_user_knn.h	/^	uint64_t k;$/;"	m	class:CSP_predictor_user_kn
 last_presented_and_seen	./source/generator_naive_bayes.h	/^	uint64_t last_presented_and_seen;$/;"	m	class:CSP_generator_naive_bayes
 load_extra	./source/param_block.h	/^	uint64_t load_extra; \/\/ whether to load extra data$/;"	m	class:CSP_param_block
 loaded_extra	./source/dataset.h	/^	uint64_t loaded_extra; \/\/ whether we loaded the extra data -- useful for predictors to know, can make some faster if we have$/;"	m	class:CSP_dataset
-low	./source/metric_nmae.h	/^	uint64_t high, low;$/;"	m	class:CSP_metric_nmae
-low	./source/metric_nrmse.h	/^	uint64_t high, low;$/;"	m	class:CSP_metric_nrmse
 main	./source/csp.c	/^int main(int argc, char **argv)$/;"	f
 maximum	./source/dataset.h	/^	uint64_t minimum, maximum; \/\/ min\/max allowed rating values$/;"	m	class:CSP_dataset
 metric	./source/metric_factory.c	/^	CSP_metric *metric;$/;"	m	struct:__anon14	file:
@@ -240,6 +236,7 @@ name	./source/metric_factory.c	/^	char *name;$/;"	m	struct:__anon14	file:
 number_items	./source/dataset.h	/^	uint64_t number_items;$/;"	m	class:CSP_dataset
 number_of_metrics	./source/metric_factory.c	/^static uint64_t number_of_metrics = sizeof(metrics) \/ sizeof(*metrics);$/;"	v	file:
 number_ratings	./source/dataset.h	/^	uint64_t number_ratings;$/;"	m	class:CSP_dataset
+number_ratings	./source/generator_naive_bayes.h	/^	uint64_t number_ratings;$/;"	m	class:CSP_generator_naive_bayes
 number_ratings	./source/generator_popularity.h	/^		uint64_t number_ratings;$/;"	m	struct:CSP_generator_popularity::__anon3
 number_ratings	./source/predictor_global_avg.h	/^	uint64_t number_ratings;$/;"	m	class:CSP_predictor_global_avg
 number_ratings_cmp	./source/generator_popularity.c	/^int CSP_generator_popularity::number_ratings_cmp(const void *a, const void *b)$/;"	f	class:CSP_generator_popularity
@@ -256,12 +253,11 @@ predict	./source/predictor_korbell.c	/^double CSP_predictor_korbell::predict(uin
 predict	./source/predictor_random.c	/^double CSP_predictor_random::predict(uint64_t user, uint64_t movie, uint64_t day)$/;"	f	class:CSP_predictor_random
 predict	./source/predictor_user_avg.c	/^double CSP_predictor_user_avg::predict(uint64_t user, uint64_t movie, uint64_t day)$/;"	f	class:CSP_predictor_user_avg
 predict	./source/predictor_user_knn.c	/^double CSP_predictor_user_knn::predict(uint64_t user, uint64_t movie, uint64_t day)$/;"	f	class:CSP_predictor_user_knn
+predict_neighbour	./source/predictor_korbell.c	/^double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, uint64_t day)$/;"	f	class:CSP_predictor_korbell
+predict_statistics	./source/predictor_korbell.c	/^double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, uint64_t day)$/;"	f	class:CSP_predictor_korbell
 prediction	./source/param_block.c	/^void CSP_param_block::prediction(char *which)$/;"	f	class:CSP_param_block
 prediction_method	./source/param_block.h	/^	uint64_t prediction_method; \/\/ which prediction method to use$/;"	m	class:CSP_param_block
-predictions_made	./source/metric_mae.h	/^	uint64_t predictions_made;$/;"	m	class:CSP_metric_mae
-predictions_made	./source/metric_nmae.h	/^	uint64_t predictions_made;$/;"	m	class:CSP_metric_nmae
-predictions_made	./source/metric_nrmse.h	/^	uint64_t predictions_made;$/;"	m	class:CSP_metric_nrmse
-predictions_made	./source/metric_rmse.h	/^	uint64_t predictions_made;$/;"	m	class:CSP_metric_rmse
+predictor	./source/metric.h	/^	CSP_predictor *predictor;$/;"	m	class:CSP_metric
 presentation_list	./source/generator.h	/^	uint64_t *presentation_list;$/;"	m	class:CSP_generator
 print	./source/metric_factory.c	/^void CSP_metric_factory::print(uint64_t user, uint64_t added)$/;"	f	class:CSP_metric_factory
 probabilities	./source/generator_naive_bayes.h	/^	double *probabilities;$/;"	m	class:CSP_generator_naive_bayes
@@ -283,46 +279,31 @@ removed_rating	./source/predictor_item_knn.c	/^void CSP_predictor_item_knn::remo
 removed_rating	./source/predictor_korbell.c	/^void CSP_predictor_korbell::removed_rating(uint64_t *key)$/;"	f	class:CSP_predictor_korbell
 removed_rating	./source/predictor_user_avg.c	/^void CSP_predictor_user_avg::removed_rating(uint64_t *key)$/;"	f	class:CSP_predictor_user_avg
 removed_rating	./source/predictor_user_knn.c	/^void CSP_predictor_user_knn::removed_rating(uint64_t *key)$/;"	f	class:CSP_predictor_user_knn
-reset	./source/metric_factory.c	/^void CSP_metric_factory::reset(void)$/;"	f	class:CSP_metric_factory
-reset	./source/metric_mae.c	/^void CSP_metric_mae::reset(void)$/;"	f	class:CSP_metric_mae
-reset	./source/metric_nmae.c	/^void CSP_metric_nmae::reset(void)$/;"	f	class:CSP_metric_nmae
-reset	./source/metric_nrmse.c	/^void CSP_metric_nrmse::reset(void)$/;"	f	class:CSP_metric_nrmse
-reset	./source/metric_rmse.c	/^void CSP_metric_rmse::reset(void)$/;"	f	class:CSP_metric_rmse
-score	./source/metric_factory.c	/^double CSP_metric_factory::score(void)$/;"	f	class:CSP_metric_factory
-score	./source/metric_mae.c	/^double CSP_metric_mae::score(void)$/;"	f	class:CSP_metric_mae
-score	./source/metric_nmae.c	/^double CSP_metric_nmae::score(void)$/;"	f	class:CSP_metric_nmae
-score	./source/metric_nrmse.c	/^double CSP_metric_nrmse::score(void)$/;"	f	class:CSP_metric_nrmse
-score	./source/metric_rmse.c	/^double CSP_metric_rmse::score(void)$/;"	f	class:CSP_metric_rmse
+residuals	./source/predictor_korbell.h	/^	double *residuals;$/;"	m	class:CSP_predictor_korbell
+score	./source/metric_factory.c	/^double CSP_metric_factory::score(uint64_t user)$/;"	f	class:CSP_metric_factory
+score	./source/metric_mae.c	/^double CSP_metric_mae::score(uint64_t user)$/;"	f	class:CSP_metric_mae
+score	./source/metric_nmae.c	/^double CSP_metric_nmae::score(uint64_t user)$/;"	f	class:CSP_metric_nmae
+score	./source/metric_nrmse.c	/^double CSP_metric_nrmse::score(uint64_t user)$/;"	f	class:CSP_metric_nrmse
+score	./source/metric_rmse.c	/^double CSP_metric_rmse::score(uint64_t user)$/;"	f	class:CSP_metric_rmse
 set_limits	./source/metric.h	/^	virtual void set_limits(uint64_t high, uint64_t low) { high = high; low = low; }$/;"	f	class:CSP_metric
 set_limits	./source/metric_factory.c	/^void CSP_metric_factory::set_limits(uint64_t high, uint64_t low)$/;"	f	class:CSP_metric_factory
-set_limits	./source/metric_nmae.c	/^void CSP_metric_nmae::set_limits(uint64_t high, uint64_t low)$/;"	f	class:CSP_metric_nmae
-set_limits	./source/metric_nrmse.c	/^void CSP_metric_nrmse::set_limits(uint64_t high, uint64_t low)$/;"	f	class:CSP_metric_nrmse
 set_metrics	./source/metric_factory.h	/^	void set_metrics(uint64_t which) { metrics_to_use = which; }$/;"	f	class:CSP_metric_factory
 shuffle	./source/generator_random.c	/^void CSP_generator_random::shuffle(uint64_t *start, uint64_t number)$/;"	f	class:CSP_generator_random
 similarity_cmp	./source/predictor_item_knn.c	/^int CSP_predictor_item_knn::similarity_cmp(const void *a, const void *b)$/;"	f	class:CSP_predictor_item_knn
 statistics	./source/param_block.c	/^void CSP_param_block::statistics(char *which)$/;"	f	class:CSP_param_block
 stats	./source/param_block.h	/^	uint64_t stats; \/\/ which stats we are interested in$/;"	m	class:CSP_param_block
 stats	./source/stats.h	/^	uint64_t stats;$/;"	m	class:CSP_stats
-sum_absolute_error	./source/metric_mae.h	/^	double sum_absolute_error;$/;"	m	class:CSP_metric_mae
-sum_absolute_error	./source/metric_nmae.h	/^	double sum_absolute_error;$/;"	m	class:CSP_metric_nmae
 sum_of_ratings	./source/predictor_global_avg.h	/^	double sum_of_ratings;$/;"	m	class:CSP_predictor_global_avg
-sum_sqaured_error	./source/metric_nrmse.h	/^	double sum_sqaured_error;$/;"	m	class:CSP_metric_nrmse
-sum_sqaured_error	./source/metric_rmse.h	/^	double sum_sqaured_error;$/;"	m	class:CSP_metric_rmse
 test_ratings_for_user	./source/dataset_netflix.c	/^uint64_t *CSP_dataset_netflix::test_ratings_for_user(uint64_t user, uint64_t *count)$/;"	f	class:CSP_dataset_netflix
 testing_data	./source/dataset_netflix.h	/^	uint64_t testing_data[10183402]; \/\/ the largest test set is the proportional one$/;"	m	class:CSP_dataset_netflix
 testing_index	./source/dataset_netflix.h	/^	uint64_t testing_index[480189];$/;"	m	class:CSP_dataset_netflix
 testing_method	./source/param_block.h	/^	uint64_t testing_method; \/\/ which testing method to use (proportional\/fixed)$/;"	m	class:CSP_param_block
 top	./source/predictor_user_avg.h	/^	double *top;$/;"	m	class:CSP_predictor_user_avg
-total_ratings	./source/generator_naive_bayes.h	/^	uint64_t total_ratings;$/;"	m	class:CSP_generator_naive_bayes
+tri_offset	./source/csp_types.h	36;"	d
 uint16_t	./source/csp_types.h	/^	typedef unsigned short uint16_t;$/;"	t
 uint32_t	./source/csp_types.h	/^	typedef unsigned int uint32_t;$/;"	t
 uint64_t	./source/csp_types.h	/^	typedef unsigned long long uint64_t;$/;"	t
 uint8_t	./source/csp_types.h	/^	typedef unsigned char uint8_t; $/;"	t
-update	./source/metric_factory.c	/^void CSP_metric_factory::update(double predicted, double actual)$/;"	f	class:CSP_metric_factory
-update	./source/metric_mae.c	/^void CSP_metric_mae::update(double predicted, double actual)$/;"	f	class:CSP_metric_mae
-update	./source/metric_nmae.c	/^void CSP_metric_nmae::update(double predicted, double actual)$/;"	f	class:CSP_metric_nmae
-update	./source/metric_nrmse.c	/^void CSP_metric_nrmse::update(double predicted, double actual)$/;"	f	class:CSP_metric_nrmse
-update	./source/metric_rmse.c	/^void CSP_metric_rmse::update(double predicted, double actual)$/;"	f	class:CSP_metric_rmse
 usage	./source/param_block.c	/^void CSP_param_block::usage(void)$/;"	f	class:CSP_param_block
 user	./source/dataset.h	/^	inline virtual uint64_t user(uint64_t *example) { return user(*example); }$/;"	f	class:CSP_dataset
 user	./source/dataset.h	/^	inline virtual uint64_t user(uint64_t example) { example = example; return 0; }$/;"	f	class:CSP_dataset
