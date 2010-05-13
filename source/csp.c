@@ -41,20 +41,21 @@ int main(int argc, char **argv)
 	double *sum_of_error;
 	//FILE *average_error = NULL;
 	
-	uint64_t i, j, k, min, max;
+	uint64_t i, j, k;
 	uint64_t *this_one, *that_one;
 	uint64_t this_count, that_count;
 	
 	params->parse();
 	dataset = new CSP_dataset_netflix(params);
 	stats = new CSP_stats(params->stats);
-	
-	if (params->generation_method == CSP_generator_factory::BAYESIAN)// || params->prediction_method == CSP_predictor_factory::KORBELL)
+
+	//if (params->generation_method == CSP_generator_factory::BAYESIAN)// || params->prediction_method == CSP_predictor_factory::KORBELL)
+	if (false)
 	{
 		if (!dataset->loaded_extra)
 			exit(puts("Must load data sorted by movie (-e) to use Bayes/Korbell!"));
 		
-		coraters = new uint32_t[tri_offset(dataset->number_items - 2, dataset->number_items - 1)];
+		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
 		
 		fprintf(stderr, "Precalculating co-ratings...\n");
 		for (i = 0; i < dataset->number_items; i++)
@@ -65,14 +66,8 @@ int main(int argc, char **argv)
 			{
 				that_one = dataset->ratings_for_user(dataset->user(this_one[j]), &that_count);
 				for (k = 0; k < that_count; k++)
-				{
-					if (dataset->movie(that_one[k]) != i)
-					{
-						min = MIN(i, dataset->movie(that_one[k]));
-						max = MAX(i, dataset->movie(that_one[k]));
-						coraters[tri_offset(min, max)]++;
-					}
-				}
+					if (i < dataset->movie(that_one[k]))
+						coraters[tri_offset(i, dataset->movie(that_one[k]))]++;
 			}
 		}
 		fprintf(stderr, "\rDone.\n");
