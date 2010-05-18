@@ -22,6 +22,7 @@
 */
 CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha, uint32_t *coraters) : CSP_predictor(dataset), alpha(alpha), coraters(coraters)
 {
+	puts("loldongs");
 	uint64_t i, j, min, max, movie, user, rating;
 	uint64_t *item_ratings, *user_ratings;
 	uint64_t item_count, user_count;
@@ -278,13 +279,15 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 		for (i = 0; i < item_count; i++)
 		{
 			residual_i = dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), dataset->movie(item_ratings[i]), dataset->day(item_ratings[i]));
+			
 			/*
 				For everyone that watched that movie.
 			*/
 			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
 			for (j = 0; j < user_count; j++)
 			{
-#ifndef SINGLE
+#ifdef SINGLE
+#else
 				if (movie < dataset->movie(user_ratings[j]))
 #endif
 				{
@@ -294,8 +297,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 					residual_j = dataset->rating(user_ratings[j]) - predict_statistics(dataset->user(user_ratings[j]), dataset->movie(user_ratings[j]), dataset->day(user_ratings[j]));
 					if (dataset->movie(user_ratings[j]) == 26)
 					{
-						printf("\n%f %f", residual_i, residual_j);
 						to_remove = &item_ratings[i];
+						printf("%f %f\n", residual_i, residual_j);
 					}
 #ifdef SINGLE
 					correlation_intermediates[(3 * dataset->movie(user_ratings[j])) + 0] += (float)((residual_i - (residual_averages[movie] / movie_counts[movie])) * (residual_j - (residual_averages[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])])));
@@ -316,11 +319,12 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 #ifdef SINGLE
 	printf("\n\n");
 	item_ratings = dataset->ratings_for_movie(0, &item_count);
-	printf("%f\n", correlation_intermediates[78]  / (sqrt(correlation_intermediates[79])  * sqrt(correlation_intermediates[80])));
+	printf("%f / sq(%f)*sq(%f) = %f\n", correlation_intermediates[78], correlation_intermediates[79], correlation_intermediates[80], correlation_intermediates[78]  / (sqrt(correlation_intermediates[79])  * sqrt(correlation_intermediates[80])));
 	removed_rating(to_remove);
-	printf("%f\n", correlation_intermediates[78]  / (sqrt(correlation_intermediates[79])  * sqrt(correlation_intermediates[80])));
+	printf("%f / sq(%f)*sq(%f) = %f\n", correlation_intermediates[78], correlation_intermediates[79], correlation_intermediates[80], correlation_intermediates[78]  / (sqrt(correlation_intermediates[79])  * sqrt(correlation_intermediates[80])));
 	added_rating(to_remove);
-	printf("%f\n", correlation_intermediates[78]  / (sqrt(correlation_intermediates[79])  * sqrt(correlation_intermediates[80])));
+	printf("%f / sq(%f)*sq(%f) = %f\n", correlation_intermediates[78], correlation_intermediates[79], correlation_intermediates[80], correlation_intermediates[78]  / (sqrt(correlation_intermediates[79])  * sqrt(correlation_intermediates[80])));
+
 	//printf("FOTR: %f\n", correlation_intermediates[3 * 2451]  / (sqrt(correlation_intermediates[(3 * 2451) + 1])  * sqrt(correlation_intermediates[(3 * 2451) + 2])));
 	//printf("TTT: %f\n",  correlation_intermediates[3 * 11520] / (sqrt(correlation_intermediates[(3 * 11520) + 1]) * sqrt(correlation_intermediates[(3 * 11520) + 2])));
 	//printf("ROTK: %f\n", correlation_intermediates[3 * 14239] / (sqrt(correlation_intermediates[(3 * 14239) + 1]) * sqrt(correlation_intermediates[(3 * 14239) + 2])));
@@ -343,17 +347,12 @@ void CSP_predictor_korbell::added_rating(uint64_t *key)
 	uint64_t i, j;
 	uint64_t min, max;
 	uint64_t other_movie, other_rating, other_day, other_user = user;
-	double bsum;
+	double bsum, csum;
 	double this_residual, other_residual;
 	double this_residual_average, this_new_residual_average, change_in_average_residual;
 	double pred = global_average;
 	
-	this_residual = rating - predict_statistics(user, movie, day);
-	this_residual_average = residual_averages[movie] / movie_counts[movie];
-	this_new_residual_average = (residual_averages[movie] + this_residual) / movie_counts[movie]++;
-	change_in_average_residual = this_new_residual_average - this_residual_average;
-	
-//	movie_counts[movie]++;
+	movie_counts[movie]++;
 	user_counts[user]++;
 	
 	{
@@ -405,12 +404,22 @@ void CSP_predictor_korbell::added_rating(uint64_t *key)
 	user_ratings = dataset->ratings_for_user(user, &user_count);
 	item_ratings = dataset->ratings_for_movie(movie, &item_count);
 	
+	this_residual = rating - predict_statistics(user, movie, day);
+	this_residual_average = residual_averages[movie] / (movie_counts[movie] - 1);
+	this_new_residual_average = (residual_averages[movie] + this_residual) / movie_counts[movie];
+	change_in_average_residual = this_new_residual_average - this_residual_average;
+	
+	csum = 0;
+	for (i = 0; i < item_count; i++)
+		csum += change_in_average_residual * ((dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), movie, dataset->day(item_ratings[i]))) - this_residual_average);
+	
 	/*
 		For each other rating that the person we're removing gave.
 	*/
 	for (i = 0; i < user_count; i++)
 	{
-#ifndef SINGLE
+#ifdef SINGLE
+#else
 		if (dataset->movie(user_ratings[i]) != movie)
 #endif
 		{
@@ -426,12 +435,12 @@ void CSP_predictor_korbell::added_rating(uint64_t *key)
 			max = MAX(other_movie, movie);
 			
 			bsum = 0;
-			for (j = 0; j < item_count; j++)
+			for (j = 0; j < coraters[other_movie]; j++)
 				bsum += change_in_average_residual * ((dataset->rating(item_ratings[j]) - predict_statistics(dataset->user(item_ratings[j]), movie, dataset->day(item_ratings[j]))) - (residual_averages[other_movie] / movie_counts[other_movie]));
 			
 #ifdef SINGLE
-			correlation_intermediates[(3 * other_movie) + 0] += (float)((this_residual - this_residual_average) * (other_residual - (residual_averages[other_movie] / movie_counts[other_movie])) - bsum);
-			correlation_intermediates[(3 * other_movie) + 1] += (float)(pow(this_residual, 2) - (movie_counts[movie] * pow(change_in_average_residual, 2)));
+			correlation_intermediates[(3 * other_movie) + 0] += (float)((this_residual - this_new_residual_average) * (other_residual - (residual_averages[other_movie] / movie_counts[other_movie])) - bsum);
+			correlation_intermediates[(3 * other_movie) + 1] += (float)(pow(this_residual - this_new_residual_average, 2) + (coraters[other_movie] * pow(change_in_average_residual, 2))) - (2 * csum);
 			correlation_intermediates[(3 * other_movie) + 2] += (float)pow(other_residual - (residual_averages[other_movie] / movie_counts[other_movie]), 2);
 #else
 			correlation_intermediates[(3 * tri_offset(min, max)) + 0] += (float)((this_residual - this_residual_average) * (other_residual - (residual_averages[other_movie] / movie_counts[other_movie])) + bsum);
@@ -460,7 +469,7 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 	double pred = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_movie_average(user, movie);
 	double other_residual, this_residual;
 	double this_new_residual_average, this_residual_average, change_in_average_residual;
-	double bsum;
+	double bsum, csum;
 	
 	/*
 		Have to update the correlation sections for this movie.
@@ -473,12 +482,17 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 	this_new_residual_average = (residual_averages[movie] - this_residual) / (movie_counts[movie] - 1);
 	change_in_average_residual = this_new_residual_average - this_residual_average;
 	
+	csum = 0;
+	for (i = 0; i < item_count; i++)
+		csum += change_in_average_residual * ((dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), movie, dataset->day(item_ratings[i]))) - this_residual_average);
+	
 	/*
 		For each other rating that the person we're removing gave.
 	*/
 	for (i = 0; i < user_count; i++)
 	{
-#ifndef SINGLE
+#ifdef SINGLE
+#else
 		if (dataset->movie(user_ratings[i]) != movie)
 #endif
 		{
@@ -494,13 +508,13 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 			max = MAX(other_movie, movie);
 			
 			bsum = 0;
-			for (j = 0; j < item_count; j++)
+			for (j = 0; j < coraters[other_movie]; j++)
 				bsum += change_in_average_residual * ((dataset->rating(item_ratings[j]) - predict_statistics(dataset->user(item_ratings[j]), movie, dataset->day(item_ratings[j]))) - (residual_averages[other_movie] / movie_counts[other_movie]));
 			
 #ifdef SINGLE
-			correlation_intermediates[(3 * other_movie) + 0] -= (float)((this_residual - this_residual_average) * (other_residual - (residual_averages[other_movie] / movie_counts[other_movie])) + bsum);
-			correlation_intermediates[(3 * other_movie) + 1] -= (float)(pow(this_residual, 2) + (movie_counts[movie] * pow(change_in_average_residual, 2)));
-			correlation_intermediates[(3 * other_movie) + 2] -= (float)(pow(other_residual - (residual_averages[other_movie] / movie_counts[other_movie]), 2));
+			correlation_intermediates[(3 * other_movie) + 0] -= (float)((this_residual - this_new_residual_average) * (other_residual - (residual_averages[other_movie] / movie_counts[other_movie])) + bsum);
+			correlation_intermediates[(3 * other_movie) + 1] -= (float)(pow(this_residual - this_new_residual_average, 2) - (coraters[other_movie] * pow(change_in_average_residual, 2)) + (2 * csum));
+			correlation_intermediates[(3 * other_movie) + 2] -= (float)pow(other_residual - (residual_averages[other_movie] / movie_counts[other_movie]), 2);
 #else
 			correlation_intermediates[(3 * tri_offset(min, max)) + 0] -= (this_residual - (residual_averages[movie] / movie_counts[movie])) * (other_residual - (residual_averages[other_movie] / movie_counts[other_movie])) + bsum;
 			correlation_intermediates[(3 * tri_offset(min, max)) + 1] -= pow(this_residual, 2) + (movie_counts[movie] * pow(((residual_averages[movie] - this_residual) / (movie_counts[movie] - 1)) - (residual_averages[movie] / movie_counts[movie]), 2));

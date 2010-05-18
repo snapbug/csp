@@ -50,15 +50,23 @@ int main(int argc, char **argv)
 	stats = new CSP_stats(params->stats);
 
 	//if (params->generation_method == CSP_generator_factory::BAYESIAN)// || params->prediction_method == CSP_predictor_factory::KORBELL)
-	if (false)
+	//if (false)
 	{
 		if (!dataset->loaded_extra)
 			exit(puts("Must load data sorted by movie (-e) to use Bayes/Korbell!"));
 		
+#ifdef SINGLE
+		coraters = new uint32_t[dataset->number_items];
+#else
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
+#endif
 		
 		fprintf(stderr, "Precalculating co-ratings...\n");
+#ifdef SINGLE
+		i = 0;
+#else
 		for (i = 0; i < dataset->number_items; i++)
+#endif
 		{
 			if (i % 100 == 0) { fprintf(stderr, "\r%5lu", i); fflush(stderr); }
 			this_one = dataset->ratings_for_movie(i, &this_count);
@@ -66,8 +74,12 @@ int main(int argc, char **argv)
 			{
 				that_one = dataset->ratings_for_user(dataset->user(this_one[j]), &that_count);
 				for (k = 0; k < that_count; k++)
+#ifdef SINGLE
+					coraters[dataset->movie(that_one[k])]++;
+#else
 					if (i < dataset->movie(that_one[k]))
 						coraters[tri_offset(i, dataset->movie(that_one[k]))]++;
+#endif
 			}
 		}
 		fprintf(stderr, "\rDone.\n");
