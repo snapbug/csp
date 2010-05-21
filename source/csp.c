@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 		
 		fprintf(stderr, "Precalculating co-ratings...\n");
 #ifdef SINGLE
-		i = 0;
+		i = 2451;
 #else
 		for (i = 0; i < dataset->number_items; i++)
 #endif
@@ -83,6 +83,16 @@ int main(int argc, char **argv)
 			}
 		}
 		fprintf(stderr, "\rDone.\n");
+#ifdef SINGLE
+		dataset->ratings_for_movie(2451, &this_count);
+		printf("FOTR: %lu\n", this_count);
+		printf("TTT: %u\n", coraters[11520]);
+		printf("ROTK: %u\n", coraters[14239]);
+#else
+		printf("FOTR - TTT: %lu\n", coraters[tri_offset(2451, 11520)]);
+		printf("FOTR - ROTK: %u\n", coraters[tri_offset(2451, 14239)]);
+		printf("TTT - ROTK: %u\n", coraters[tri_offset(11520, 14239)]);
+#endif
 	}
 	
 	sum_of_error = new double[dataset->number_items];
