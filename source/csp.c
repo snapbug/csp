@@ -16,7 +16,6 @@
 #include "metric_rmse.h"
 #include "stats.h"
 
-
 int movie_search(const void *a, const void *b)
 {
 	uint64_t key = *(uint64_t *)a;
@@ -60,10 +59,9 @@ int main(int argc, char **argv)
 #else
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
 #endif
-		
 		fprintf(stderr, "Precalculating co-ratings...\n");
 #ifdef SINGLE
-		i = 2451;
+		i = 2451; // Fellowship of the Ring
 #else
 		for (i = 0; i < dataset->number_items; i++)
 #endif
@@ -229,9 +227,9 @@ int main(int argc, char **argv)
 	/*
 		Calculate the error if we had all ratings added.
 	*/
-//	for (user = 0; user < dataset->number_users; user++)
-//		sum_of_error[0] += metric->score(user);
-//	printf("%f\n", sum_of_error[0] / dataset->number_users);
+	for (user = 0; user < dataset->number_users; user++)
+		sum_of_error[0] += metric->score(user);
+	printf("\nMAE: %f\n", sum_of_error[0] / dataset->number_users);
 	
 	/*
 		Clean up.

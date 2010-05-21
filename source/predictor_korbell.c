@@ -79,10 +79,6 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	}
 	
 	/*
-		Statistical modeling section
-	*/
-	{
-	/*
 		Initialise everything.
 	*/
 	for (user = 0; user < dataset->number_users; user++)
@@ -249,8 +245,6 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 			movie_user_support_bottom[movie] += pow(sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie]), 2);
 		}
 	}
-	}
-	
 	/*
 		Now pre-calculate the portions needed for pearson correlation.
 	*/
@@ -271,7 +265,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	for (movie = 0; movie < dataset->number_items; movie++)
 #endif
 	{
-		//if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
+		if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
 		item_ratings = dataset->ratings_for_movie(movie, &item_count);
 		for (i = 0; i < item_count; i++)
 		{
@@ -305,8 +299,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 			}
 		}
 	}
-	fprintf(stderr, "\n");
-	fprintf(stderr, "Done.\n");
+	fprintf(stderr, "\rDone.\n");
 	
 #ifdef SINGLE
 	printf("FOTR: %f\n", correlation_intermediates[3 * 2451]  / (sqrt(correlation_intermediates[(3 * 2451) + 1])  * sqrt(correlation_intermediates[(3 * 2451) + 2])));
