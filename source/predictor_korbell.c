@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <omp.h>
 #include "csp_types.h"
 #include "predictor_korbell.h"
 
@@ -20,7 +21,7 @@
 	CSP_PREDICTOR_KORBELL::CSP_PREDICTOR_KORBELL()
 	----------------------------------------------
 */
-CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha, uint32_t *coraters) : CSP_predictor(dataset), alpha(alpha), coraters(coraters)
+CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters) : CSP_predictor(dataset), coraters(coraters), k(k)
 {
 	uint64_t i, j, min, max, movie, user, rating;
 	uint64_t *item_ratings, *user_ratings;
@@ -29,7 +30,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	
 	global_average = 3.601435;
 	min = max = 1;
-	
+
 	/*
 		Alpha Values from: http://www.netflixprize.com/community/viewtopic.php?pid=5563#p5563
 	*/
@@ -41,7 +42,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	movie_user_average_alpha = 50.0;
 	movie_user_support_alpha = 50.0;
 	
-	{
+	neighbours = new neighbour[dataset->number_items];	
 	movie_effect = new double[dataset->number_items];
 	movie_counts = new uint64_t[dataset->number_items];
 	user_effect = new double[dataset->number_users];
@@ -64,9 +65,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	movie_user_support_effect = new double[dataset->number_items];
 	movie_user_support_bottom = new double[dataset->number_items];
 	movie_user_support_average = new double[dataset->number_items];
-	}
-	
 	residual_averages = new double[dataset->number_items];
+	
 #ifdef SINGLE
 	correlation_intermediates = new float[3 * dataset->number_items];
 	for (i = 0; i < dataset->number_items; i++)
@@ -166,6 +166,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 		Calculate the User X Movie(Average) effect.
 	*/
 	fprintf(stderr, "Calculating User X Movie(Average) Effect.\n");
+	#pragma omp parallel for private(i, user_ratings, rating, movie, prediction)
 	for (user = 0; user < dataset->number_users; user++)
 	{
 		user_ratings = dataset->ratings_for_user(user, &user_counts[user]);
@@ -187,6 +188,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 		Calculate the User X Movie(Support) effect.
 	*/
 	fprintf(stderr, "Calculating User X Movie(Support) Effect.\n");
+	#pragma omp parallel for private(i, user_ratings, rating, movie, prediction)
 	for (user = 0; user < dataset->number_users; user++)
 	{
 		user_ratings = dataset->ratings_for_user(user, &user_counts[user]);
@@ -208,6 +210,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 		Calculate the Movie X User(Average) effect.
 	*/
 	fprintf(stderr, "Calculating Movie X User(Average) Effect.\n");
+	#pragma omp parallel for private(i, item_ratings, rating, user, prediction)
 	for (movie = 0; movie < dataset->number_items; movie++)
 	{
 		item_ratings = dataset->ratings_for_movie(movie, &movie_counts[movie]);
@@ -229,6 +232,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 		Calculate the Movie X User(Support) effect.
 	*/
 	fprintf(stderr, "Calculating Movie X User(Support) Effect.\n");
+	#pragma omp parallel for private(i, item_ratings, rating, user, prediction)
 	for (movie = 0; movie < dataset->number_items; movie++)
 	{
 		item_ratings = dataset->ratings_for_movie(movie, &movie_counts[movie]);
@@ -245,10 +249,12 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 			movie_user_support_bottom[movie] += pow(sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie]), 2);
 		}
 	}
+	
 	/*
 		Now pre-calculate the portions needed for pearson correlation.
 	*/
 	fprintf(stderr, "Calculating average residuals for movies.\n");
+	#pragma omp parallel for private(i, item_ratings, item_count)
 	for (movie = 0; movie < dataset->number_items; movie++)
 	{
 		item_ratings = dataset->ratings_for_movie(movie, &item_count);
@@ -262,19 +268,23 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 #ifdef SINGLE
 	movie = 2451; // Lord of the Rings: Fellowship of the Ring
 #else
+	#pragma omp parallel for private(i, j, user_ratings, item_ratings, user_count, item_count, residual_i, residual_j) schedule(dynamic, 500)
 	for (movie = 0; movie < dataset->number_items; movie++)
 #endif
 	{
 		if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
 		item_ratings = dataset->ratings_for_movie(movie, &item_count);
+		/*
+			For everyone that watched that movie.
+		*/
 		for (i = 0; i < item_count; i++)
 		{
 			residual_i = dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), dataset->movie(item_ratings[i]), dataset->day(item_ratings[i]));
 			
-			/*
-				For everyone that watched that movie.
-			*/
 			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
+			/*
+				For every movie they saw.
+			*/
 			for (j = 0; j < user_count; j++)
 			{
 #ifdef SINGLE
@@ -286,6 +296,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 						Update the intermediate values.
 					*/
 					residual_j = dataset->rating(user_ratings[j]) - predict_statistics(dataset->user(user_ratings[j]), dataset->movie(user_ratings[j]), dataset->day(user_ratings[j]));
+					
 #ifdef SINGLE
 					correlation_intermediates[(3 * dataset->movie(user_ratings[j])) + 0] += (float)((residual_i - (residual_averages[movie] / movie_counts[movie])) * (residual_j - (residual_averages[dataset->movie(user_ratings[j])] / movie_counts[dataset->movie(user_ratings[j])])));
 					correlation_intermediates[(3 * dataset->movie(user_ratings[j])) + 1] += (float)(pow(residual_i - (residual_averages[movie] / movie_counts[movie]), 2));
@@ -302,13 +313,13 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha,
 	fprintf(stderr, "\rDone.\n");
 	
 #ifdef SINGLE
-	printf("FOTR: %f\n", correlation_intermediates[3 * 2451]  / (sqrt(correlation_intermediates[(3 * 2451) + 1])  * sqrt(correlation_intermediates[(3 * 2451) + 2])));
-	printf("TTT: %f\n",  correlation_intermediates[3 * 11520] / (sqrt(correlation_intermediates[(3 * 11520) + 1]) * sqrt(correlation_intermediates[(3 * 11520) + 2])));
-	printf("ROTK: %f\n", correlation_intermediates[3 * 14239] / (sqrt(correlation_intermediates[(3 * 14239) + 1]) * sqrt(correlation_intermediates[(3 * 14239) + 2])));
+	printf("FOTR - FOTR: %f\n", correlation_intermediates[3 * 2451]  / (sqrt(correlation_intermediates[(3 * 2451) + 1])  * sqrt(correlation_intermediates[(3 * 2451) + 2])));  // 1.000000
+	printf("FOTR - TTT: %f\n",  correlation_intermediates[3 * 11520] / (sqrt(correlation_intermediates[(3 * 11520) + 1]) * sqrt(correlation_intermediates[(3 * 11520) + 2]))); // 0.779404
+	printf("FOTR - ROTK: %f\n", correlation_intermediates[3 * 14239] / (sqrt(correlation_intermediates[(3 * 14239) + 1]) * sqrt(correlation_intermediates[(3 * 14239) + 2]))); // 0.714616
 #else
-	printf("FOTR - TTT: %f\n",  correlation_intermediates[(3 * tri_offset(2451, 11520)) + 0]  / (sqrt(correlation_intermediates[(3 * tri_offset(2451, 11520)) + 1])  * sqrt(correlation_intermediates[(3 * tri_offset(2451, 11520)) + 2])));
-	printf("FOTR - ROTK: %f\n", correlation_intermediates[(3 * tri_offset(2451, 14239)) + 0]  / (sqrt(correlation_intermediates[(3 * tri_offset(2451, 14239)) + 1])  * sqrt(correlation_intermediates[(3 * tri_offset(2451, 14239)) + 2])));
-	printf("TTT - RT0K: %f\n",   correlation_intermediates[(3 * tri_offset(11520, 14239)) + 0] / (sqrt(correlation_intermediates[(3 * tri_offset(11520, 14239)) + 1]) * sqrt(correlation_intermediates[(3 * tri_offset(11520, 14239)) + 2])));
+	printf("FOTR - TTT: %f\n",  correlation_intermediates[(3 * tri_offset(2451, 11520)) + 0]  / (sqrt(correlation_intermediates[(3 * tri_offset(2451, 11520)) + 1])  * sqrt(correlation_intermediates[(3 * tri_offset(2451, 11520)) + 2])));   // 0.779404
+	printf("FOTR - ROTK: %f\n", correlation_intermediates[(3 * tri_offset(2451, 14239)) + 0]  / (sqrt(correlation_intermediates[(3 * tri_offset(2451, 14239)) + 1])  * sqrt(correlation_intermediates[(3 * tri_offset(2451, 14239)) + 2])));   // 0.714616
+	printf("TTT - RT0K: %f\n",   correlation_intermediates[(3 * tri_offset(11520, 14239)) + 0] / (sqrt(correlation_intermediates[(3 * tri_offset(11520, 14239)) + 1]) * sqrt(correlation_intermediates[(3 * tri_offset(11520, 14239)) + 2]))); // 0.742932
 #endif
 }
 
@@ -437,13 +448,55 @@ double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, 
 }
 
 /*
+	CSP_PREDICTOR_KORBELL::NEIGHBOUR_COMPARE()
+	------------------------------------------
+*/
+int CSP_predictor_korbell::neighbour_compare(const void *a, const void *b)
+{
+	neighbour *x = (neighbour *)a;
+	neighbour *y = (neighbour *)b;
+	
+	if (x->considered && !y->considered) return -1;
+	if (!x->considered && y->considered) return 1;
+	if (x->correlation < y->correlation) return 1;
+	if (x->correlation > y->correlation) return -1;
+	return 0;
+}
+
+/*
 	CSP_PREDICTOR_KORBELL::PREDICT_NEIGHBOUR()
 	------------------------------------------
 */
 double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, uint64_t day)
 {
+	uint64_t *user_ratings, user_count;
+	uint64_t i;
+	
+	for (i = 0; i < dataset->number_items; i++)
+	{
+		neighbours[i].movie_id = i;
+		neighbours[i].considered = FALSE;
+	}
+	
+	user_ratings = dataset->ratings_for_user(user, &user_count);
+	
+	for (i = 0; i < user_count; i++)
+		if (dataset->included(user_ratings[i]))
+		{
+			neighbours[i].considered = TRUE;
+			neighbours[i].correlation = correlation_intermediates[(3 * tri_offset(MIN(movie, i), MAX(movie, i))) + 0] / (sqrt(correlation_intermediates[(3 * tri_offset(MIN(movie, i), MAX(movie, i))) + 1]) * sqrt(correlation_intermediates[(3 * tri_offset(MIN(movie, i), MAX(movie, i)) + 1)]));
+		}
+	
+	qsort(neighbours, dataset->number_items, sizeof(*neighbours), CSP_predictor_korbell::neighbour_compare);
+	
+	for (i = 0; i < dataset->number_items; i++)
+		if (neighbours[i].considered)
+		{
+			printf("%lu - %f\n", neighbours[i].movie_id, neighbours[i].correlation);
+			fflush(stdout);
+		}
+	
 	day = day;
-	user = user;
 	movie = movie;
 	return 0.0;
 }

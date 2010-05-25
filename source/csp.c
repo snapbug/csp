@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <omp.h>
 #include "csp_types.h"
 #include "dataset_netflix.h"
 #include "generator_factory.h"
@@ -49,7 +50,7 @@ int main(int argc, char **argv)
 	stats = new CSP_stats(params->stats);
 
 	//if (params->generation_method == CSP_generator_factory::BAYESIAN)// || params->prediction_method == CSP_predictor_factory::KORBELL)
-	//if (false)
+	if (false)
 	{
 		if (!dataset->loaded_extra)
 			exit(puts("Must load data sorted by movie (-e) to use Bayes/Korbell!"));
@@ -83,13 +84,13 @@ int main(int argc, char **argv)
 		fprintf(stderr, "\rDone.\n");
 #ifdef SINGLE
 		dataset->ratings_for_movie(2451, &this_count);
-		printf("FOTR: %lu\n", this_count);
-		printf("TTT: %u\n", coraters[11520]);
-		printf("ROTK: %u\n", coraters[14239]);
+		printf("FOTR: %lu\n", this_count);     // 144081
+		printf("TTT: %u\n", coraters[11520]);  // 119040
+		printf("ROTK: %u\n", coraters[14239]); // 102847
 #else
-		printf("FOTR - TTT: %lu\n", coraters[tri_offset(2451, 11520)]);
-		printf("FOTR - ROTK: %u\n", coraters[tri_offset(2451, 14239)]);
-		printf("TTT - ROTK: %u\n", coraters[tri_offset(11520, 14239)]);
+		printf("FOTR - TTT: %u\n", coraters[tri_offset(2451, 11520)]);  // 119040
+		printf("FOTR - ROTK: %u\n", coraters[tri_offset(2451, 14239)]); // 102847
+		printf("TTT - ROTK: %u\n", coraters[tri_offset(11520, 14239)]); // 106020
 #endif
 	}
 	
@@ -113,7 +114,7 @@ int main(int argc, char **argv)
 		case CSP_predictor_factory::GLOBAL_AVERAGE: predictor = new CSP_predictor_global_avg(dataset); break;
 		case CSP_predictor_factory::ITEM_AVERAGE: predictor = new CSP_predictor_item_avg(dataset); break;
 		case CSP_predictor_factory::ITEM_ITEM_KNN: predictor = new CSP_predictor_item_knn(dataset, 20); break;
-		case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 25.0, coraters); break;
+		case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 50, coraters); break;
 		case CSP_predictor_factory::RANDOM: predictor = new CSP_predictor_random(dataset); break;
 		case CSP_predictor_factory::USER_AVERAGE: predictor = new CSP_predictor_user_avg(dataset); break;
 		case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
@@ -227,9 +228,10 @@ int main(int argc, char **argv)
 	/*
 		Calculate the error if we had all ratings added.
 	*/
-	for (user = 0; user < dataset->number_users; user++)
-		sum_of_error[0] += metric->score(user);
-	printf("\nMAE: %f\n", sum_of_error[0] / dataset->number_users);
+//	for (user = 0; user < dataset->number_users; user++)
+//		sum_of_error[0] += metric->score(user);
+//	printf("\nMAE: %f\n", sum_of_error[0] / dataset->number_users);
+	predictor->predict(0, 0, 0);
 	
 	/*
 		Clean up.

@@ -2,11 +2,11 @@ SRCDIR = source
 BINDIR = bin
 OBJDIR = bin
 
-LDFLAGS = -lm
-MINUS_D = -DSINGLE
+LDFLAGS = -lm -fopenmp
+#MINUS_D = -DSINGLE
 
 # Normal
-CFLAGS = -Wall -Wextra -O3 -pedantic -ansi -Wno-long-long $(MINUS_D)
+CFLAGS = -Wall -Wextra -O3 -pedantic -ansi -Wno-long-long $(MINUS_D) -fopenmp
 ## Debugging
 #CFLAGS = -Wall -Wextra -Werror -O2 -pedantic -ansi -g
 
