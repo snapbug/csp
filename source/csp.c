@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 	stats = new CSP_stats(params->stats);
 
 	//if (params->generation_method == CSP_generator_factory::BAYESIAN)// || params->prediction_method == CSP_predictor_factory::KORBELL)
-	if (false)
+	//if (false)
 	{
 		if (!dataset->loaded_extra)
 			exit(puts("Must load data sorted by movie (-e) to use Bayes/Korbell!"));
@@ -64,6 +64,7 @@ int main(int argc, char **argv)
 #ifdef SINGLE
 		i = 2451; // Fellowship of the Ring
 #else
+		#pragma omp parallel for private(i, j, k, this_one, this_count, that_one, that_count) num_threads(2)
 		for (i = 0; i < dataset->number_items; i++)
 #endif
 		{
