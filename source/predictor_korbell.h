@@ -40,7 +40,7 @@ private:
 	double predict_neighbour(uint64_t user, uint64_t movie, uint64_t day);
 	static int neighbour_compare(const void *a, const void *b);
 	
-	float *correlation_intermediates;
+	double *correlation_intermediates;
 	double *residual_averages;
 	
 	typedef struct {
