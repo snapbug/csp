@@ -4,11 +4,11 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.6	//
-A_PRES	./source/param_block.h	/^	enum { A_TIME, A_PRES };$/;"	e	enum:CSP_param_block::__anon11
-A_TIME	./source/param_block.h	/^	enum { A_TIME, A_PRES };$/;"	e	enum:CSP_param_block::__anon11
-BAYESIAN	./source/generator_factory.h	/^		BAYESIAN,$/;"	e	enum:CSP_generator_factory::__anon4
-CONSTANT	./source/predictor_factory.h	/^		CONSTANT,$/;"	e	enum:CSP_predictor_factory::__anon8
-CROC	./source/metric_factory.h	/^		CROC    = 32,$/;"	e	enum:CSP_metric_factory::__anon9
+A_PRES	./source/param_block.h	/^	enum { A_TIME, A_PRES };$/;"	e	enum:CSP_param_block::__anon9
+A_TIME	./source/param_block.h	/^	enum { A_TIME, A_PRES };$/;"	e	enum:CSP_param_block::__anon9
+BAYESIAN	./source/generator_factory.h	/^		BAYESIAN,$/;"	e	enum:CSP_generator_factory::__anon2
+CONSTANT	./source/predictor_factory.h	/^		CONSTANT,$/;"	e	enum:CSP_predictor_factory::__anon11
+CROC	./source/metric_factory.h	/^		CROC    = 32,$/;"	e	enum:CSP_metric_factory::__anon7
 CSP_dataset	./source/dataset.h	/^	CSP_dataset(CSP_param_block *params) : params(params) { loaded_extra = FALSE; }$/;"	f	class:CSP_dataset
 CSP_dataset	./source/dataset.h	/^class CSP_dataset$/;"	c
 CSP_dataset_netflix	./source/dataset_netflix.c	/^CSP_dataset_netflix::CSP_dataset_netflix(CSP_param_block *params) : CSP_dataset(params)$/;"	f	class:CSP_dataset_netflix
@@ -52,7 +52,7 @@ CSP_predictor_item_avg	./source/predictor_item_avg.c	/^CSP_predictor_item_avg::C
 CSP_predictor_item_avg	./source/predictor_item_avg.h	/^class CSP_predictor_item_avg : public CSP_predictor$/;"	c
 CSP_predictor_item_knn	./source/predictor_item_knn.c	/^CSP_predictor_item_knn::CSP_predictor_item_knn(CSP_dataset *dataset, uint64_t k) : CSP_predictor(dataset), k(k)$/;"	f	class:CSP_predictor_item_knn
 CSP_predictor_item_knn	./source/predictor_item_knn.h	/^class CSP_predictor_item_knn : public CSP_predictor$/;"	c
-CSP_predictor_korbell	./source/predictor_korbell.c	/^CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, double alpha, uint32_t *coraters) : CSP_predictor(dataset), alpha(alpha), coraters(coraters)$/;"	f	class:CSP_predictor_korbell
+CSP_predictor_korbell	./source/predictor_korbell.c	/^CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters) : CSP_predictor(dataset), coraters(coraters), k(k)$/;"	f	class:CSP_predictor_korbell
 CSP_predictor_korbell	./source/predictor_korbell.h	/^class CSP_predictor_korbell : public CSP_predictor$/;"	c
 CSP_predictor_random	./source/predictor_random.h	/^	CSP_predictor_random(CSP_dataset *dataset) : CSP_predictor(dataset) {}$/;"	f	class:CSP_predictor_random
 CSP_predictor_random	./source/predictor_random.h	/^class CSP_predictor_random : public CSP_predictor$/;"	c
@@ -64,11 +64,11 @@ CSP_stats	./source/stats.c	/^CSP_stats::CSP_stats(uint64_t stats)$/;"	f	class:CS
 CSP_stats	./source/stats.h	/^class CSP_stats$/;"	c
 DATASET_H_	./source/dataset.h	10;"	d
 DATASET_NETFLIX_H_	./source/dataset_netflix.h	9;"	d
-D_NETFLIX	./source/param_block.h	/^	enum { D_NETFLIX };$/;"	e	enum:CSP_param_block::__anon10
-ENTROPY	./source/generator_factory.h	/^		ENTROPY$/;"	e	enum:CSP_generator_factory::__anon4
+D_NETFLIX	./source/param_block.h	/^	enum { D_NETFLIX };$/;"	e	enum:CSP_param_block::__anon8
+ENTROPY	./source/generator_factory.h	/^		ENTROPY$/;"	e	enum:CSP_generator_factory::__anon2
 FALSE	./source/csp_types.h	22;"	d
-GENERATION_AUC	./source/stats.h	/^		GENERATION_AUC      = 2,$/;"	e	enum:CSP_stats::__anon1
-GENERATION_TIME	./source/stats.h	/^		GENERATION_TIME     = 1,$/;"	e	enum:CSP_stats::__anon1
+GENERATION_AUC	./source/stats.h	/^		GENERATION_AUC      = 2,$/;"	e	enum:CSP_stats::__anon15
+GENERATION_TIME	./source/stats.h	/^		GENERATION_TIME     = 1,$/;"	e	enum:CSP_stats::__anon15
 GENERATOR_ENTROPY_H_	./source/generator_entropy.h	8;"	d
 GENERATOR_FACTORY_H_	./source/generator_factory.h	14;"	d
 GENERATOR_H_	./source/generator.h	9;"	d
@@ -76,12 +76,12 @@ GENERATOR_ITEM_AVG_H_	./source/generator_item_avg.h	8;"	d
 GENERATOR_NAIVE_BAYES_H_	./source/generator_naive_bayes.h	8;"	d
 GENERATOR_POPULARITY_H_	./source/generator_popularity.h	8;"	d
 GENERATOR_RANDOM_H_	./source/generator_random.h	8;"	d
-GLOBAL_AVERAGE	./source/predictor_factory.h	/^		GLOBAL_AVERAGE,$/;"	e	enum:CSP_predictor_factory::__anon8
-ITEM_AVERAGE	./source/generator_factory.h	/^		ITEM_AVERAGE,$/;"	e	enum:CSP_generator_factory::__anon4
-ITEM_AVERAGE	./source/predictor_factory.h	/^		ITEM_AVERAGE,$/;"	e	enum:CSP_predictor_factory::__anon8
-ITEM_ITEM_KNN	./source/predictor_factory.h	/^		ITEM_ITEM_KNN,$/;"	e	enum:CSP_predictor_factory::__anon8
-KORBELL	./source/predictor_factory.h	/^		KORBELL$/;"	e	enum:CSP_predictor_factory::__anon8
-MAE	./source/metric_factory.h	/^		MAE     = 1,$/;"	e	enum:CSP_metric_factory::__anon9
+GLOBAL_AVERAGE	./source/predictor_factory.h	/^		GLOBAL_AVERAGE,$/;"	e	enum:CSP_predictor_factory::__anon11
+ITEM_AVERAGE	./source/generator_factory.h	/^		ITEM_AVERAGE,$/;"	e	enum:CSP_generator_factory::__anon2
+ITEM_AVERAGE	./source/predictor_factory.h	/^		ITEM_AVERAGE,$/;"	e	enum:CSP_predictor_factory::__anon11
+ITEM_ITEM_KNN	./source/predictor_factory.h	/^		ITEM_ITEM_KNN,$/;"	e	enum:CSP_predictor_factory::__anon11
+KORBELL	./source/predictor_factory.h	/^		KORBELL$/;"	e	enum:CSP_predictor_factory::__anon11
+MAE	./source/metric_factory.h	/^		MAE     = 1,$/;"	e	enum:CSP_metric_factory::__anon7
 MAX	./source/csp_types.h	32;"	d
 METRIC_FACTORY_H_	./source/metric_factory.h	9;"	d
 METRIC_H_	./source/metric.h	11;"	d
@@ -90,16 +90,16 @@ METRIC_NMAE_H_	./source/metric_nmae.h	8;"	d
 METRIC_NRMSE_H_	./source/metric_nrmse.h	8;"	d
 METRIC_RMSE_H_	./source/metric_rmse.h	8;"	d
 MIN	./source/csp_types.h	29;"	d
-NMAE	./source/metric_factory.h	/^		NMAE    = 2,$/;"	e	enum:CSP_metric_factory::__anon9
-NONE	./source/generator_factory.h	/^		NONE,$/;"	e	enum:CSP_generator_factory::__anon4
-NONE	./source/metric_factory.h	/^		NONE    = 0,$/;"	e	enum:CSP_metric_factory::__anon9
-NONE	./source/predictor_factory.h	/^		NONE,$/;"	e	enum:CSP_predictor_factory::__anon8
-NONE	./source/stats.h	/^		NONE                = 0,$/;"	e	enum:CSP_stats::__anon1
-NRMSE	./source/metric_factory.h	/^		NRMSE   = 8,$/;"	e	enum:CSP_metric_factory::__anon9
+NMAE	./source/metric_factory.h	/^		NMAE    = 2,$/;"	e	enum:CSP_metric_factory::__anon7
+NONE	./source/generator_factory.h	/^		NONE,$/;"	e	enum:CSP_generator_factory::__anon2
+NONE	./source/metric_factory.h	/^		NONE    = 0,$/;"	e	enum:CSP_metric_factory::__anon7
+NONE	./source/predictor_factory.h	/^		NONE,$/;"	e	enum:CSP_predictor_factory::__anon11
+NONE	./source/stats.h	/^		NONE                = 0,$/;"	e	enum:CSP_stats::__anon15
+NRMSE	./source/metric_factory.h	/^		NRMSE   = 8,$/;"	e	enum:CSP_metric_factory::__anon7
 PARAM_BLOCK_H_	./source/param_block.h	7;"	d
-POPULARITY	./source/generator_factory.h	/^		POPULARITY,$/;"	e	enum:CSP_generator_factory::__anon4
-PREDICTION_ACCURACY	./source/stats.h	/^		PREDICTION_ACCURACY = 8$/;"	e	enum:CSP_stats::__anon1
-PREDICTION_TIME	./source/stats.h	/^		PREDICTION_TIME     = 4,$/;"	e	enum:CSP_stats::__anon1
+POPULARITY	./source/generator_factory.h	/^		POPULARITY,$/;"	e	enum:CSP_generator_factory::__anon2
+PREDICTION_ACCURACY	./source/stats.h	/^		PREDICTION_ACCURACY = 8$/;"	e	enum:CSP_stats::__anon15
+PREDICTION_TIME	./source/stats.h	/^		PREDICTION_TIME     = 4,$/;"	e	enum:CSP_stats::__anon15
 PREDICTOR_CONSTANT_H_	./source/predictor_constant.h	9;"	d
 PREDICTOR_FACTORY_H_	./source/predictor_factory.h	17;"	d
 PREDICTOR_GLOBAL_AVG_H_	./source/predictor_global_avg.h	9;"	d
@@ -110,17 +110,22 @@ PREDICTOR_KORBELL_H_	./source/predictor_korbell.h	9;"	d
 PREDICTOR_RANDOM_H_	./source/predictor_random.h	9;"	d
 PREDICTOR_USER_AVG_H_	./source/predictor_user_avg.h	9;"	d
 PREDICTOR_USER_KNN_H_	./source/predictor_user_knn.h	9;"	d
-RANDOM	./source/generator_factory.h	/^		RANDOM,$/;"	e	enum:CSP_generator_factory::__anon4
-RANDOM	./source/predictor_factory.h	/^		RANDOM,$/;"	e	enum:CSP_predictor_factory::__anon8
-RMSE	./source/metric_factory.h	/^		RMSE    = 4,$/;"	e	enum:CSP_metric_factory::__anon9
-ROC	./source/metric_factory.h	/^		ROC     = 16,$/;"	e	enum:CSP_metric_factory::__anon9
+RANDOM	./source/generator_factory.h	/^		RANDOM,$/;"	e	enum:CSP_generator_factory::__anon2
+RANDOM	./source/predictor_factory.h	/^		RANDOM,$/;"	e	enum:CSP_predictor_factory::__anon11
+RMSE	./source/metric_factory.h	/^		RMSE    = 4,$/;"	e	enum:CSP_metric_factory::__anon7
+ROC	./source/metric_factory.h	/^		ROC     = 16,$/;"	e	enum:CSP_metric_factory::__anon7
 STATS_H_	./source/stats.h	7;"	d
-S_FIXED	./source/param_block.h	/^	enum { S_FIXED, S_PROP };$/;"	e	enum:CSP_param_block::__anon12
-S_PROP	./source/param_block.h	/^	enum { S_FIXED, S_PROP };$/;"	e	enum:CSP_param_block::__anon12
+S_FIXED	./source/param_block.h	/^	enum { S_FIXED, S_PROP };$/;"	e	enum:CSP_param_block::__anon10
+S_PROP	./source/param_block.h	/^	enum { S_FIXED, S_PROP };$/;"	e	enum:CSP_param_block::__anon10
 TRUE	./source/csp_types.h	25;"	d
-USER_AVERAGE	./source/predictor_factory.h	/^		USER_AVERAGE,$/;"	e	enum:CSP_predictor_factory::__anon8
-USER_USER_KNN	./source/predictor_factory.h	/^		USER_USER_KNN,$/;"	e	enum:CSP_predictor_factory::__anon8
-UTILITY	./source/metric_factory.h	/^		UTILITY = 64$/;"	e	enum:CSP_metric_factory::__anon9
+USER_AVERAGE	./source/predictor_factory.h	/^		USER_AVERAGE,$/;"	e	enum:CSP_predictor_factory::__anon11
+USER_USER_KNN	./source/predictor_factory.h	/^		USER_USER_KNN,$/;"	e	enum:CSP_predictor_factory::__anon11
+UTILITY	./source/metric_factory.h	/^		UTILITY = 64$/;"	e	enum:CSP_metric_factory::__anon7
+X	./source/predictor_korbell.c	21;"	d	file:
+XX	./source/predictor_korbell.c	20;"	d	file:
+XY	./source/predictor_korbell.c	22;"	d	file:
+Y	./source/predictor_korbell.c	23;"	d	file:
+YY	./source/predictor_korbell.c	24;"	d	file:
 add_rating	./source/dataset.h	/^	inline virtual void add_rating(uint64_t *rating) { rating = rating; }$/;"	f	class:CSP_dataset
 add_rating	./source/dataset_netflix.c	/^void CSP_dataset_netflix::add_rating(uint64_t *rating)$/;"	f	class:CSP_dataset_netflix
 added_rating	./source/predictor.h	/^	virtual void added_rating(uint64_t *key) { key = key; }$/;"	f	class:CSP_predictor
@@ -129,23 +134,26 @@ added_rating	./source/predictor_item_knn.c	/^void CSP_predictor_item_knn::added_
 added_rating	./source/predictor_korbell.c	/^void CSP_predictor_korbell::added_rating(uint64_t *key)$/;"	f	class:CSP_predictor_korbell
 added_rating	./source/predictor_user_avg.c	/^void CSP_predictor_user_avg::added_rating(uint64_t *key)$/;"	f	class:CSP_predictor_user_avg
 added_rating	./source/predictor_user_knn.c	/^void CSP_predictor_user_knn::added_rating(uint64_t *key)$/;"	f	class:CSP_predictor_user_knn
-alpha	./source/predictor_korbell.h	/^	double alpha;$/;"	m	class:CSP_predictor_korbell
 argc	./source/param_block.h	/^	int argc;$/;"	m	class:CSP_param_block
 argv	./source/param_block.h	/^	char **argv;$/;"	m	class:CSP_param_block
-average	./source/generator_item_avg.h	/^		double average;$/;"	m	struct:CSP_generator_item_avg::__anon7
+average	./source/generator_item_avg.h	/^		double average;$/;"	m	struct:CSP_generator_item_avg::__anon3
 average_cmp	./source/generator_item_avg.c	/^int CSP_generator_item_avg::average_cmp(const void *a, const void *b)$/;"	f	class:CSP_generator_item_avg
 averages	./source/predictor_item_avg.h	/^	double *averages;$/;"	m	class:CSP_predictor_item_avg
 bot	./source/predictor_user_avg.h	/^	uint64_t *bot;$/;"	m	class:CSP_predictor_user_avg
 calculate_probability	./source/generator_naive_bayes.c	/^double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t non_ratable, uint64_t ratable)$/;"	f	class:CSP_generator_naive_bayes
 clip	./source/csp_types.h	35;"	d
-considered	./source/predictor_item_knn.h	/^		uint64_t considered; \/\/ whether we need to consider this is calculation (used as primary sort index)$/;"	m	struct:CSP_predictor_item_knn::__anon6
+considered	./source/predictor_item_knn.h	/^		uint64_t considered; \/\/ whether we need to consider this is calculation (used as primary sort index)$/;"	m	struct:CSP_predictor_item_knn::__anon13
+considered	./source/predictor_korbell.h	/^		uint64_t considered;$/;"	m	struct:CSP_predictor_korbell::__anon14
 constant	./source/predictor_constant.h	/^	double constant;$/;"	m	class:CSP_predictor_constant
 coraters	./source/generator_naive_bayes.h	/^	uint32_t *coraters;$/;"	m	class:CSP_generator_naive_bayes
 coraters	./source/predictor_korbell.h	/^	uint32_t *coraters;$/;"	m	class:CSP_predictor_korbell
-correlation	./source/predictor_item_knn.h	/^		double correlation;$/;"	m	struct:CSP_predictor_item_knn::__anon6
+corr	./source/predictor_korbell.c	27;"	d	file:
+corr	./source/predictor_korbell.c	29;"	d	file:
+correlation	./source/predictor_item_knn.h	/^		double correlation;$/;"	m	struct:CSP_predictor_item_knn::__anon13
+correlation	./source/predictor_korbell.h	/^		double correlation;$/;"	m	struct:CSP_predictor_korbell::__anon14
 correlation_intermediates	./source/predictor_korbell.h	/^	float *correlation_intermediates;$/;"	m	class:CSP_predictor_korbell
-count	./source/generator_item_avg.h	/^		uint64_t count;$/;"	m	struct:CSP_generator_item_avg::__anon7
-count	./source/predictor_item_knn.h	/^		uint64_t count; \/\/ number of co-raters$/;"	m	struct:CSP_predictor_item_knn::__anon5
+count	./source/generator_item_avg.h	/^		uint64_t count;$/;"	m	struct:CSP_generator_item_avg::__anon3
+count	./source/predictor_item_knn.h	/^		uint64_t count; \/\/ number of co-raters$/;"	m	struct:CSP_predictor_item_knn::__anon12
 data	./source/dataset_netflix.h	/^	uint64_t data[100480507]; \/\/ this is the most possible ratings we could have, won't use all this space$/;"	m	class:CSP_dataset_netflix
 dataset	./source/generator.h	/^	CSP_dataset *dataset;$/;"	m	class:CSP_generator
 dataset	./source/metric.h	/^	CSP_dataset *dataset;$/;"	m	class:CSP_metric
@@ -154,7 +162,7 @@ dataset	./source/predictor.h	/^	CSP_dataset *dataset;$/;"	m	class:CSP_predictor
 day	./source/dataset.h	/^	inline virtual uint64_t day(uint64_t *example) { return day(*example); }$/;"	f	class:CSP_dataset
 day	./source/dataset.h	/^	inline virtual uint64_t day(uint64_t example) { example = example; return 0; }$/;"	f	class:CSP_dataset
 day	./source/dataset_netflix.h	/^	inline virtual uint64_t day(uint64_t example) { return example >> 3 & 4095; }$/;"	f	class:CSP_dataset_netflix
-entropy	./source/generator_entropy.h	/^		double entropy;$/;"	m	struct:CSP_generator_entropy::__anon2
+entropy	./source/generator_entropy.h	/^		double entropy;$/;"	m	struct:CSP_generator_entropy::__anon1
 entropy_cmp	./source/generator_entropy.c	/^int CSP_generator_entropy::entropy_cmp(const void *a, const void *b)$/;"	f	class:CSP_generator_entropy
 extra_data	./source/dataset_netflix.h	/^	uint64_t extra_data[100480507];$/;"	m	class:CSP_dataset_netflix
 extra_index	./source/dataset_netflix.h	/^	uint64_t extra_index[480189];$/;"	m	class:CSP_dataset_netflix
@@ -169,7 +177,7 @@ get_ratings	./source/dataset_netflix.c	/^uint64_t *CSP_dataset_netflix::get_rati
 get_test_ratings	./source/dataset_netflix.c	/^uint64_t *CSP_dataset_netflix::get_test_ratings(uint64_t *count)$/;"	f	class:CSP_dataset_netflix
 global_average	./source/predictor_korbell.h	/^	double global_average;$/;"	m	class:CSP_predictor_korbell
 help	./source/param_block.c	/^void CSP_param_block::help(void)$/;"	f	class:CSP_param_block
-id	./source/metric_factory.c	/^	uint64_t id;$/;"	m	struct:__anon14	file:
+id	./source/metric_factory.c	/^	uint64_t id;$/;"	m	struct:__anon6	file:
 included	./source/dataset.h	/^	inline virtual uint64_t included(uint64_t *example) { return included(*example); }$/;"	f	class:CSP_dataset
 included	./source/dataset.h	/^	inline virtual uint64_t included(uint64_t example) { example = example; return 0; }$/;"	f	class:CSP_dataset
 included	./source/dataset_netflix.h	/^	inline virtual uint64_t included(uint64_t example) { return example >> 49 & 1; }$/;"	f	class:CSP_dataset_netflix
@@ -182,14 +190,15 @@ intermediate	./source/predictor_item_knn.h	/^	pearson_intermediate *intermediate
 isinf	./source/csp_types.h	16;"	d
 isnan	./source/csp_types.h	15;"	d
 k	./source/predictor_item_knn.h	/^	uint64_t k;$/;"	m	class:CSP_predictor_item_knn
+k	./source/predictor_korbell.h	/^	uint64_t k;$/;"	m	class:CSP_predictor_korbell
 k	./source/predictor_user_knn.h	/^	uint64_t k;$/;"	m	class:CSP_predictor_user_knn
 last_presented_and_seen	./source/generator_naive_bayes.h	/^	uint64_t last_presented_and_seen;$/;"	m	class:CSP_generator_naive_bayes
 load_extra	./source/param_block.h	/^	uint64_t load_extra; \/\/ whether to load extra data$/;"	m	class:CSP_param_block
 loaded_extra	./source/dataset.h	/^	uint64_t loaded_extra; \/\/ whether we loaded the extra data -- useful for predictors to know, can make some faster if we have$/;"	m	class:CSP_dataset
 main	./source/csp.c	/^int main(int argc, char **argv)$/;"	f
 maximum	./source/dataset.h	/^	uint64_t minimum, maximum; \/\/ min\/max allowed rating values$/;"	m	class:CSP_dataset
-metric	./source/metric_factory.c	/^	CSP_metric *metric;$/;"	m	struct:__anon14	file:
-metrics	./source/metric_factory.c	/^} metrics[] = {$/;"	v	typeref:struct:__anon14	file:
+metric	./source/metric_factory.c	/^	CSP_metric *metric;$/;"	m	struct:__anon6	file:
+metrics	./source/metric_factory.c	/^} metrics[] = {$/;"	v	typeref:struct:__anon6	file:
 metrics	./source/param_block.c	/^void CSP_param_block::metrics(char *which)$/;"	f	class:CSP_param_block
 metrics_to_use	./source/metric_factory.h	/^	uint64_t metrics_to_use;$/;"	m	class:CSP_metric_factory
 metrics_to_use	./source/param_block.h	/^	uint64_t metrics_to_use; \/\/ which metrics we are using$/;"	m	class:CSP_param_block
@@ -202,49 +211,53 @@ most_similar	./source/predictor_item_knn.h	/^	movie *most_similar;$/;"	m	class:C
 movie	./source/dataset.h	/^	inline virtual uint64_t movie(uint64_t *example) { return movie(*example); }$/;"	f	class:CSP_dataset
 movie	./source/dataset.h	/^	inline virtual uint64_t movie(uint64_t example) { example = example; return 0; }$/;"	f	class:CSP_dataset
 movie	./source/dataset_netflix.h	/^	inline virtual uint64_t movie(uint64_t example) { return example >> 15 & 32767; }$/;"	f	class:CSP_dataset_netflix
-movie	./source/generator_entropy.h	/^	} movie;$/;"	t	class:CSP_generator_entropy	typeref:struct:CSP_generator_entropy::__anon2
-movie	./source/generator_item_avg.h	/^	} movie;$/;"	t	class:CSP_generator_item_avg	typeref:struct:CSP_generator_item_avg::__anon7
-movie	./source/generator_naive_bayes.h	/^	} movie;$/;"	t	class:CSP_generator_naive_bayes	typeref:struct:CSP_generator_naive_bayes::__anon13
-movie	./source/generator_popularity.h	/^	} movie;$/;"	t	class:CSP_generator_popularity	typeref:struct:CSP_generator_popularity::__anon3
-movie	./source/predictor_item_knn.h	/^	} movie;$/;"	t	class:CSP_predictor_item_knn	typeref:struct:CSP_predictor_item_knn::__anon6
+movie	./source/generator_entropy.h	/^	} movie;$/;"	t	class:CSP_generator_entropy	typeref:struct:CSP_generator_entropy::__anon1
+movie	./source/generator_item_avg.h	/^	} movie;$/;"	t	class:CSP_generator_item_avg	typeref:struct:CSP_generator_item_avg::__anon3
+movie	./source/generator_naive_bayes.h	/^	} movie;$/;"	t	class:CSP_generator_naive_bayes	typeref:struct:CSP_generator_naive_bayes::__anon4
+movie	./source/generator_popularity.h	/^	} movie;$/;"	t	class:CSP_generator_popularity	typeref:struct:CSP_generator_popularity::__anon5
+movie	./source/predictor_item_knn.h	/^	} movie;$/;"	t	class:CSP_predictor_item_knn	typeref:struct:CSP_predictor_item_knn::__anon13
 movie_alpha	./source/predictor_korbell.h	/^	double movie_alpha, user_alpha, movie_time_alpha, user_movie_average_alpha, user_movie_support_alpha, movie_user_average_alpha, movie_user_support_alpha;$/;"	m	class:CSP_predictor_korbell
 movie_average	./source/predictor_korbell.h	/^	double *movie_average;$/;"	m	class:CSP_predictor_korbell
 movie_counts	./source/predictor_korbell.h	/^	uint64_t *user_counts, *movie_counts;$/;"	m	class:CSP_predictor_korbell
 movie_effect	./source/predictor_korbell.h	/^	double *user_effect, *movie_effect;$/;"	m	class:CSP_predictor_korbell
 movie_first_ratings	./source/predictor_korbell.h	/^	uint64_t *movie_first_ratings;$/;"	m	class:CSP_predictor_korbell
-movie_id	./source/generator_entropy.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_generator_entropy::__anon2
-movie_id	./source/generator_item_avg.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_generator_item_avg::__anon7
-movie_id	./source/generator_naive_bayes.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_generator_naive_bayes::__anon13
-movie_id	./source/generator_popularity.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_generator_popularity::__anon3
-movie_id	./source/predictor_item_knn.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_predictor_item_knn::__anon6
+movie_id	./source/generator_entropy.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_generator_entropy::__anon1
+movie_id	./source/generator_item_avg.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_generator_item_avg::__anon3
+movie_id	./source/generator_naive_bayes.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_generator_naive_bayes::__anon4
+movie_id	./source/generator_popularity.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_generator_popularity::__anon5
+movie_id	./source/predictor_item_knn.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_predictor_item_knn::__anon13
+movie_id	./source/predictor_korbell.h	/^		uint64_t movie_id;$/;"	m	struct:CSP_predictor_korbell::__anon14
 movie_search	./source/csp.c	/^int movie_search(const void *a, const void *b)$/;"	f
 movie_time_alpha	./source/predictor_korbell.h	/^	double movie_alpha, user_alpha, movie_time_alpha, user_movie_average_alpha, user_movie_support_alpha, movie_user_average_alpha, movie_user_support_alpha;$/;"	m	class:CSP_predictor_korbell
 movie_time_average	./source/predictor_korbell.h	/^	double *movie_time_effect, *movie_time_bottom, *movie_time_average;$/;"	m	class:CSP_predictor_korbell
 movie_time_bottom	./source/predictor_korbell.h	/^	double *movie_time_effect, *movie_time_bottom, *movie_time_average;$/;"	m	class:CSP_predictor_korbell
 movie_time_effect	./source/predictor_korbell.h	/^	double *movie_time_effect, *movie_time_bottom, *movie_time_average;$/;"	m	class:CSP_predictor_korbell
-movie_user_average	./source/predictor_korbell.c	16;"	d	file:
+movie_user_average	./source/predictor_korbell.c	17;"	d	file:
 movie_user_average_alpha	./source/predictor_korbell.h	/^	double movie_alpha, user_alpha, movie_time_alpha, user_movie_average_alpha, user_movie_support_alpha, movie_user_average_alpha, movie_user_support_alpha;$/;"	m	class:CSP_predictor_korbell
 movie_user_average_average	./source/predictor_korbell.h	/^	double *movie_user_average_effect, *movie_user_average_bottom, *movie_user_average_average;$/;"	m	class:CSP_predictor_korbell
 movie_user_average_bottom	./source/predictor_korbell.h	/^	double *movie_user_average_effect, *movie_user_average_bottom, *movie_user_average_average;$/;"	m	class:CSP_predictor_korbell
 movie_user_average_effect	./source/predictor_korbell.h	/^	double *movie_user_average_effect, *movie_user_average_bottom, *movie_user_average_average;$/;"	m	class:CSP_predictor_korbell
-movie_user_support	./source/predictor_korbell.c	17;"	d	file:
+movie_user_support	./source/predictor_korbell.c	18;"	d	file:
 movie_user_support_alpha	./source/predictor_korbell.h	/^	double movie_alpha, user_alpha, movie_time_alpha, user_movie_average_alpha, user_movie_support_alpha, movie_user_average_alpha, movie_user_support_alpha;$/;"	m	class:CSP_predictor_korbell
 movie_user_support_average	./source/predictor_korbell.h	/^	double *movie_user_support_effect, *movie_user_support_bottom, *movie_user_support_average;$/;"	m	class:CSP_predictor_korbell
 movie_user_support_bottom	./source/predictor_korbell.h	/^	double *movie_user_support_effect, *movie_user_support_bottom, *movie_user_support_average;$/;"	m	class:CSP_predictor_korbell
 movie_user_support_effect	./source/predictor_korbell.h	/^	double *movie_user_support_effect, *movie_user_support_bottom, *movie_user_support_average;$/;"	m	class:CSP_predictor_korbell
-name	./source/metric_factory.c	/^	char *name;$/;"	m	struct:__anon14	file:
+name	./source/metric_factory.c	/^	char *name;$/;"	m	struct:__anon6	file:
+neighbour	./source/predictor_korbell.h	/^	} neighbour;$/;"	t	class:CSP_predictor_korbell	typeref:struct:CSP_predictor_korbell::__anon14
+neighbour_compare	./source/predictor_korbell.c	/^int CSP_predictor_korbell::neighbour_compare(const void *a, const void *b)$/;"	f	class:CSP_predictor_korbell
+neighbours	./source/predictor_korbell.h	/^	neighbour *neighbours;$/;"	m	class:CSP_predictor_korbell
 number_items	./source/dataset.h	/^	uint64_t number_items;$/;"	m	class:CSP_dataset
 number_of_metrics	./source/metric_factory.c	/^static uint64_t number_of_metrics = sizeof(metrics) \/ sizeof(*metrics);$/;"	v	file:
 number_ratings	./source/dataset.h	/^	uint64_t number_ratings;$/;"	m	class:CSP_dataset
 number_ratings	./source/generator_naive_bayes.h	/^	uint64_t number_ratings;$/;"	m	class:CSP_generator_naive_bayes
-number_ratings	./source/generator_popularity.h	/^		uint64_t number_ratings;$/;"	m	struct:CSP_generator_popularity::__anon3
+number_ratings	./source/generator_popularity.h	/^		uint64_t number_ratings;$/;"	m	struct:CSP_generator_popularity::__anon5
 number_ratings	./source/predictor_global_avg.h	/^	uint64_t number_ratings;$/;"	m	class:CSP_predictor_global_avg
 number_ratings_cmp	./source/generator_popularity.c	/^int CSP_generator_popularity::number_ratings_cmp(const void *a, const void *b)$/;"	f	class:CSP_generator_popularity
 number_test_ratings	./source/dataset.h	/^	uint64_t number_test_ratings;$/;"	m	class:CSP_dataset
 number_users	./source/dataset.h	/^	uint64_t number_users;$/;"	m	class:CSP_dataset
 params	./source/dataset.h	/^	CSP_param_block *params;$/;"	m	class:CSP_dataset
 parse	./source/param_block.c	/^void CSP_param_block::parse(void)$/;"	f	class:CSP_param_block
-pearson_intermediate	./source/predictor_item_knn.h	/^	} pearson_intermediate;$/;"	t	class:CSP_predictor_item_knn	typeref:struct:CSP_predictor_item_knn::__anon5
+pearson_intermediate	./source/predictor_item_knn.h	/^	} pearson_intermediate;$/;"	t	class:CSP_predictor_item_knn	typeref:struct:CSP_predictor_item_knn::__anon12
 predict	./source/predictor_constant.c	/^double CSP_predictor_constant::predict(uint64_t user, uint64_t movie, uint64_t day)$/;"	f	class:CSP_predictor_constant
 predict	./source/predictor_global_avg.c	/^double CSP_predictor_global_avg::predict(uint64_t user, uint64_t movie, uint64_t day)$/;"	f	class:CSP_predictor_global_avg
 predict	./source/predictor_item_avg.c	/^double CSP_predictor_item_avg::predict(uint64_t user, uint64_t movie, uint64_t day)$/;"	f	class:CSP_predictor_item_avg
@@ -261,14 +274,14 @@ predictor	./source/metric.h	/^	CSP_predictor *predictor;$/;"	m	class:CSP_metric
 presentation_list	./source/generator.h	/^	uint64_t *presentation_list;$/;"	m	class:CSP_generator
 print	./source/metric_factory.c	/^void CSP_metric_factory::print(uint64_t user, uint64_t added)$/;"	f	class:CSP_metric_factory
 probabilities	./source/generator_naive_bayes.h	/^	double *probabilities;$/;"	m	class:CSP_generator_naive_bayes
-probability	./source/generator_naive_bayes.h	/^		double probability;$/;"	m	struct:CSP_generator_naive_bayes::__anon13
+probability	./source/generator_naive_bayes.h	/^		double probability;$/;"	m	struct:CSP_generator_naive_bayes::__anon4
 probability_cmp	./source/generator_naive_bayes.c	/^int CSP_generator_naive_bayes::probability_cmp(const void *a, const void *b)$/;"	f	class:CSP_generator_naive_bayes
 puts	./source/param_block.c	14;"	d	file:
 rating	./source/dataset.h	/^	inline virtual uint64_t rating(uint64_t *example) { return rating(*example); }$/;"	f	class:CSP_dataset
 rating	./source/dataset.h	/^	inline virtual uint64_t rating(uint64_t example) { example = example; return 0; }$/;"	f	class:CSP_dataset
 rating	./source/dataset_netflix.h	/^	inline virtual uint64_t rating(uint64_t example) { return example >> 0 & 7; }$/;"	f	class:CSP_dataset_netflix
-rating	./source/predictor_item_knn.h	/^		uint64_t rating; \/\/ the rating the user gave this other movie$/;"	m	struct:CSP_predictor_item_knn::__anon6
-ratings	./source/generator_entropy.h	/^		uint64_t ratings;$/;"	m	struct:CSP_generator_entropy::__anon2
+rating	./source/predictor_item_knn.h	/^		uint64_t rating; \/\/ the rating the user gave this other movie$/;"	m	struct:CSP_predictor_item_knn::__anon13
+ratings	./source/generator_entropy.h	/^		uint64_t ratings;$/;"	m	struct:CSP_generator_entropy::__anon1
 ratings_for_movie	./source/dataset_netflix.c	/^uint64_t *CSP_dataset_netflix::ratings_for_movie(uint64_t movie, uint64_t *count)$/;"	f	class:CSP_dataset_netflix
 ratings_for_user	./source/dataset_netflix.c	/^uint64_t *CSP_dataset_netflix::ratings_for_user(uint64_t user, uint64_t *count)$/;"	f	class:CSP_dataset_netflix
 remove_rating	./source/dataset.h	/^	inline virtual void remove_rating(uint64_t *rating) { rating = rating; }$/;"	f	class:CSP_dataset
@@ -279,7 +292,7 @@ removed_rating	./source/predictor_item_knn.c	/^void CSP_predictor_item_knn::remo
 removed_rating	./source/predictor_korbell.c	/^void CSP_predictor_korbell::removed_rating(uint64_t *key)$/;"	f	class:CSP_predictor_korbell
 removed_rating	./source/predictor_user_avg.c	/^void CSP_predictor_user_avg::removed_rating(uint64_t *key)$/;"	f	class:CSP_predictor_user_avg
 removed_rating	./source/predictor_user_knn.c	/^void CSP_predictor_user_knn::removed_rating(uint64_t *key)$/;"	f	class:CSP_predictor_user_knn
-residuals	./source/predictor_korbell.h	/^	double *residuals;$/;"	m	class:CSP_predictor_korbell
+residual_averages	./source/predictor_korbell.h	/^	double *residual_averages;$/;"	m	class:CSP_predictor_korbell
 score	./source/metric_factory.c	/^double CSP_metric_factory::score(uint64_t user)$/;"	f	class:CSP_metric_factory
 score	./source/metric_mae.c	/^double CSP_metric_mae::score(uint64_t user)$/;"	f	class:CSP_metric_mae
 score	./source/metric_nmae.c	/^double CSP_metric_nmae::score(uint64_t user)$/;"	f	class:CSP_metric_nmae
@@ -312,22 +325,22 @@ user_alpha	./source/predictor_korbell.h	/^	double movie_alpha, user_alpha, movie
 user_average	./source/predictor_korbell.h	/^	double *user_average;$/;"	m	class:CSP_predictor_korbell
 user_counts	./source/predictor_korbell.h	/^	uint64_t *user_counts, *movie_counts;$/;"	m	class:CSP_predictor_korbell
 user_effect	./source/predictor_korbell.h	/^	double *user_effect, *movie_effect;$/;"	m	class:CSP_predictor_korbell
-user_movie_average	./source/predictor_korbell.c	14;"	d	file:
+user_movie_average	./source/predictor_korbell.c	15;"	d	file:
 user_movie_average_alpha	./source/predictor_korbell.h	/^	double movie_alpha, user_alpha, movie_time_alpha, user_movie_average_alpha, user_movie_support_alpha, movie_user_average_alpha, movie_user_support_alpha;$/;"	m	class:CSP_predictor_korbell
 user_movie_average_average	./source/predictor_korbell.h	/^	double *user_movie_average_effect, *user_movie_average_bottom, *user_movie_average_average;$/;"	m	class:CSP_predictor_korbell
 user_movie_average_bottom	./source/predictor_korbell.h	/^	double *user_movie_average_effect, *user_movie_average_bottom, *user_movie_average_average;$/;"	m	class:CSP_predictor_korbell
 user_movie_average_effect	./source/predictor_korbell.h	/^	double *user_movie_average_effect, *user_movie_average_bottom, *user_movie_average_average;$/;"	m	class:CSP_predictor_korbell
-user_movie_support	./source/predictor_korbell.c	15;"	d	file:
+user_movie_support	./source/predictor_korbell.c	16;"	d	file:
 user_movie_support_alpha	./source/predictor_korbell.h	/^	double movie_alpha, user_alpha, movie_time_alpha, user_movie_average_alpha, user_movie_support_alpha, movie_user_average_alpha, movie_user_support_alpha;$/;"	m	class:CSP_predictor_korbell
 user_movie_support_average	./source/predictor_korbell.h	/^	double *user_movie_support_effect, *user_movie_support_bottom, *user_movie_support_average;$/;"	m	class:CSP_predictor_korbell
 user_movie_support_bottom	./source/predictor_korbell.h	/^	double *user_movie_support_effect, *user_movie_support_bottom, *user_movie_support_average;$/;"	m	class:CSP_predictor_korbell
 user_movie_support_effect	./source/predictor_korbell.h	/^	double *user_movie_support_effect, *user_movie_support_bottom, *user_movie_support_average;$/;"	m	class:CSP_predictor_korbell
 user_rated	./source/predictor_item_knn.c	/^int user_rated(const void *a, const void *b)$/;"	f
-x	./source/predictor_item_knn.h	/^		double x;       \/\/ sum of ratings for movie X$/;"	m	struct:CSP_predictor_item_knn::__anon5
-xx	./source/predictor_item_knn.h	/^		double xx;      \/\/ squared sum of ratings for movie X$/;"	m	struct:CSP_predictor_item_knn::__anon5
-xy	./source/predictor_item_knn.h	/^		double xy;      \/\/ product of ratings for movie X and Y$/;"	m	struct:CSP_predictor_item_knn::__anon5
-y	./source/predictor_item_knn.h	/^		double y;       \/\/ sum of ratings for movie Y$/;"	m	struct:CSP_predictor_item_knn::__anon5
-yy	./source/predictor_item_knn.h	/^		double yy;      \/\/ squared sum of ratings for movie Y$/;"	m	struct:CSP_predictor_item_knn::__anon5
+x	./source/predictor_item_knn.h	/^		double x;       \/\/ sum of ratings for movie X$/;"	m	struct:CSP_predictor_item_knn::__anon12
+xx	./source/predictor_item_knn.h	/^		double xx;      \/\/ squared sum of ratings for movie X$/;"	m	struct:CSP_predictor_item_knn::__anon12
+xy	./source/predictor_item_knn.h	/^		double xy;      \/\/ product of ratings for movie X and Y$/;"	m	struct:CSP_predictor_item_knn::__anon12
+y	./source/predictor_item_knn.h	/^		double y;       \/\/ sum of ratings for movie Y$/;"	m	struct:CSP_predictor_item_knn::__anon12
+yy	./source/predictor_item_knn.h	/^		double yy;      \/\/ squared sum of ratings for movie Y$/;"	m	struct:CSP_predictor_item_knn::__anon12
 ~CSP_dataset	./source/dataset.h	/^	virtual ~CSP_dataset() {}$/;"	f	class:CSP_dataset
 ~CSP_dataset_netflix	./source/dataset_netflix.h	/^	virtual ~CSP_dataset_netflix() {}$/;"	f	class:CSP_dataset_netflix
 ~CSP_generator	./source/generator.h	/^	virtual ~CSP_generator() {}$/;"	f	class:CSP_generator
