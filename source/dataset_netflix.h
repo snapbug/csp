@@ -20,8 +20,8 @@ public:
 	virtual uint64_t *get_ratings(uint64_t *count);
 	virtual uint64_t *get_test_ratings(uint64_t *count);
 	
-	inline virtual void add_rating(uint64_t *rating);
-	inline virtual void remove_rating(uint64_t *rating);
+	inline virtual void add_rating(uint64_t *rating) { *rating = *rating | (1ULL << 49ULL); }
+	inline virtual void remove_rating(uint64_t *rating) { *rating = *rating & ~(1ULL << 49ULL); }
 
 	/*
 		Functions to extract the data from the actual items

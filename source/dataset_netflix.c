@@ -4,7 +4,7 @@
 */
 
 #include <stdio.h>
-#include <string.h> // for strcat
+#include <string.h>
 #include "dataset_netflix.h"
 
 /*
@@ -15,6 +15,7 @@ CSP_dataset_netflix::CSP_dataset_netflix(CSP_param_block *params) : CSP_dataset(
 {
 	char testing_filename[35];
 	char training_filename[35];
+	uint64_t size;
 	
 	minimum = 1;
 	maximum = 5;
@@ -33,36 +34,18 @@ CSP_dataset_netflix::CSP_dataset_netflix(CSP_param_block *params) : CSP_dataset(
 	/*
 		Now actually load the data.
 	*/
-	fread(&data, sizeof(*data), number_ratings, fopen(training_filename, "rb"));
-	fread(&index, sizeof(*index), number_users, fopen(strcat(training_filename, ".idx"), "rb"));
-	fread(&testing_data, sizeof(*testing_data), number_test_ratings, fopen(testing_filename, "rb"));
-	fread(&testing_index, sizeof(*testing_index), number_users, fopen(strcat(testing_filename, ".idx"), "rb"));
+	size = fread(&data, sizeof(*data), number_ratings, fopen(training_filename, "rb"));
+	size = fread(&index, sizeof(*index), number_users, fopen(strcat(training_filename, ".idx"), "rb"));
+	size = fread(&testing_data, sizeof(*testing_data), number_test_ratings, fopen(testing_filename, "rb"));
+	size = fread(&testing_index, sizeof(*testing_index), number_users, fopen(strcat(testing_filename, ".idx"), "rb"));
 
 	if (params->load_extra)
 	{
 		loaded_extra = TRUE;
 		sprintf(training_filename, "./data/netflix.movie.%s", params->testing_method == CSP_param_block::S_PROP ? "prop" : "fixed");
-		fread(&extra_data, sizeof(*extra_data), number_ratings, fopen(training_filename, "rb"));
-		fread(&extra_index, sizeof(*extra_index), number_items, fopen(strcat(training_filename, ".idx"), "rb"));
+		size = fread(&extra_data, sizeof(*extra_data), number_ratings, fopen(training_filename, "rb"));
+		size = fread(&extra_index, sizeof(*extra_index), number_items, fopen(strcat(training_filename, ".idx"), "rb"));
 	}
-}
-
-/*
-	CSP_DATASET_NETFLIX::ADD_RATING()
-	---------------------------------
-*/
-void CSP_dataset_netflix::add_rating(uint64_t *rating)
-{
-	*rating = *rating | (1ULL << 49ULL);
-}
-
-/*
-	CSP_DATASET_NETFLIX::REMOVE_RATING()
-	------------------------------------
-*/
-void CSP_dataset_netflix::remove_rating(uint64_t *rating)
-{
-	*rating = *rating & ~(1ULL << 49ULL);
 }
 
 /*
