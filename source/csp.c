@@ -44,6 +44,7 @@ int main(int argc, char **argv)
 	uint64_t i, j, k;
 	uint64_t *this_one, *that_one;
 	uint64_t this_count, that_count;
+	int64_t index;
 	
 	params->parse();
 	dataset = new CSP_dataset_netflix(params);
@@ -62,12 +63,13 @@ int main(int argc, char **argv)
 #endif
 		fprintf(stderr, "Precalculating co-ratings...\n");
 #ifdef SINGLE
-		i = 2451; // Fellowship of the Ring
+		index = 2451; // Fellowship of the Ring
 #else
 		#pragma omp parallel for private(i, j, k, this_one, this_count, that_one, that_count) num_threads(2)
-		for (i = 0; i < dataset->number_items; i++)
+		for (index = 0; index < (int64_t)dataset->number_items; index++)
 #endif
 		{
+			i = index;
 			if (i % 100 == 0) { fprintf(stderr, "\r%5lu", i); fflush(stderr); }
 			this_one = dataset->ratings_for_movie(i, &this_count);
 			for (j = 0; j < this_count; j++)

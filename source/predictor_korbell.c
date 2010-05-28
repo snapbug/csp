@@ -38,6 +38,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	uint64_t i, j, min, max, movie, user, rating;
 	uint64_t *item_ratings, *user_ratings;
 	uint64_t item_count, user_count;
+	int64_t index;
 	double prediction;
 	
 	global_average = 3.601435;
@@ -141,9 +142,10 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		Calculate the User X Movie(Average) effect.
 	*/
 	fprintf(stderr, "Calculating User X Movie(Average) Effect.\n");
-	#pragma omp parallel for private(i, user_ratings, rating, movie, prediction)
-	for (user = 0; user < dataset->number_users; user++)
+	#pragma omp parallel for private(i, user_ratings, rating, movie, user, prediction)
+	for (index = 0; index < (int64_t)dataset->number_users; index++)
 	{
+		user = index;
 		user_ratings = dataset->ratings_for_user(user, &user_counts[user]);
 		
 		for (i = 0; i < user_counts[user]; i++)
@@ -163,9 +165,10 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		Calculate the User X Movie(Support) effect.
 	*/
 	fprintf(stderr, "Calculating User X Movie(Support) Effect.\n");
-	#pragma omp parallel for private(i, user_ratings, rating, movie, prediction)
-	for (user = 0; user < dataset->number_users; user++)
+	#pragma omp parallel for private(i, user_ratings, rating, movie, user, prediction)
+	for (index = 0; index < (int64_t)dataset->number_users; index++)
 	{
+		user = index;
 		user_ratings = dataset->ratings_for_user(user, &user_counts[user]);
 		
 		for (i = 0; i < user_counts[user]; i++)
@@ -185,9 +188,10 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		Calculate the Movie X User(Average) effect.
 	*/
 	fprintf(stderr, "Calculating Movie X User(Average) Effect.\n");
-	#pragma omp parallel for private(i, item_ratings, rating, user, prediction)
-	for (movie = 0; movie < dataset->number_items; movie++)
+	#pragma omp parallel for private(i, item_ratings, rating, movie, user, prediction)
+	for (index = 0; index < (int64_t)dataset->number_items; index++)
 	{
+		movie = index;
 		item_ratings = dataset->ratings_for_movie(movie, &movie_counts[movie]);
 		
 		for (i = 0; i < movie_counts[movie]; i++)
@@ -207,9 +211,10 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		Calculate the Movie X User(Support) effect.
 	*/
 	fprintf(stderr, "Calculating Movie X User(Support) Effect.\n");
-	#pragma omp parallel for private(i, item_ratings, rating, user, prediction)
-	for (movie = 0; movie < dataset->number_items; movie++)
+	#pragma omp parallel for private(i, item_ratings, rating, movie, user, prediction)
+	for (index = 0; index < (int64_t)dataset->number_items; index++)
 	{
+		movie = index;
 		item_ratings = dataset->ratings_for_movie(movie, &movie_counts[movie]);
 		
 		for (i = 0; i < movie_counts[movie]; i++)
@@ -229,12 +234,13 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	double residual_i, residual_j;
 	uint64_t other;
 #ifdef SINGLE
-	movie = 2451; // Lord of the Rings: Fellowship of the Ring
+	index = 2451; // Lord of the Rings: Fellowship of the Ring
 #else
-	#pragma omp parallel for private(i, j, user_ratings, item_ratings, user_count, item_count, residual_i, residual_j, other) schedule(dynamic, 500)
-	for (movie = 0; movie < dataset->number_items; movie++)
+	#pragma omp parallel for private(i, j, movie, other, user_ratings, item_ratings, user_count, item_count, residual_i, residual_j) schedule(dynamic, 500)
+	for (index = 0; index < (int64_t)dataset->number_items; index++)
 #endif
 	{
+		movie = index;
 		if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
 		item_ratings = dataset->ratings_for_movie(movie, &item_count);
 		/*

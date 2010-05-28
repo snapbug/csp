@@ -3,7 +3,7 @@ BINDIR = bin
 OBJDIR = bin
 
 #MINUS_D = -DSINGLE
-CFLAGS = /W4 -D_CRT_SECURE_NO_WARNINGS /nologo /Zi $(MINUS_D) /Ox /fp:fast /GL /Gy
+CFLAGS = /W4 -D_CRT_SECURE_NO_WARNINGS /nologo /Zi $(MINUS_D) /Ox /fp:fast /GL /Gy /openmp
 
 FIXED = /link /fixed:no
 WINDOWS_LIBS = user32.lib advapi32.lib kernel32.lib shlwapi.lib
