@@ -22,8 +22,6 @@ private:
 	double global_average;
 	double *user_effect, *movie_effect;
 	uint64_t *user_counts, *movie_counts;
-	double *movie_time_effect, *movie_time_bottom, *movie_time_average;
-	uint64_t *movie_first_ratings;
 	double *user_movie_average_effect, *user_movie_average_bottom, *user_movie_average_average;
 	double *movie_average;
 	double *user_movie_support_effect, *user_movie_support_bottom, *user_movie_support_average;
