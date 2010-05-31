@@ -38,14 +38,17 @@ int main(int argc, char **argv)
 	uint64_t count, user, item, presented, rating;
 	uint32_t *coraters = NULL;
 	double auc, last_prediction_error;
-	double *sum_of_error;
+	double *error_presented, *error_rated;
 	//FILE *average_error = NULL;
 	
 	params->parse();
 	dataset = new CSP_dataset_netflix(params);
 	stats = new CSP_stats(params->stats);
+	error_presented = new double[dataset->number_items];
+	error_rated = new double[dataset->number_items];
 
-	if (params->prediction_method == CSP_predictor_factory::KORBELL)// || params->generation_method == CSP_generator_factory::BAYESIAN)
+	//if (params->generation_method == CSP_generator_factory::BAYESIAN)// || params->prediction_method == CSP_predictor_factory::KORBELL)
+	if (false)
 	{
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
 		fprintf(stderr, "Loading coraters from file... "); fflush(stdout);
@@ -53,9 +56,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Done.\n"); fflush(stdout);
 	}
 	
-	sum_of_error = new double[dataset->number_items];
 	for (item = 0; item < dataset->number_items; item++)
-		sum_of_error[item] = 0;
+		error_rated[item] = error_presented[item] = 0;
 	
 	switch (params->generation_method)
 	{
@@ -86,14 +88,14 @@ int main(int argc, char **argv)
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
 	for (user = 0; user < dataset->number_users; user++)
-	if (false)
+	//if (false)
 	{
 		if (user % 1000 == 0) { fprintf(stderr, "\r%lu", user); fflush(stderr); }
 		
 		/*
 			Reset things for this user.
 		*/
-		position_up_to = last_presented_and_seen = number_seen = 0;
+		position_up_to = last_presented_and_seen = number_seen = presented = 0;
 		presentation_list = key = NULL;
 		auc = last_prediction_error = 0;
 		
@@ -110,9 +112,9 @@ int main(int argc, char **argv)
 		/*
 			Before we add any ratings, we should see how well we can do.
 		*/
-		//last_prediction_error = metric->score(user);
-		//sum_of_error[number_seen] += last_prediction_error;
-		//printf("%f %lu %f\n", average_num_test_ratings, number_seen, last_prediction_error);
+		last_prediction_error = metric->score(user);
+		if (stats->stats & CSP_stats::ERROR_RATED)
+			error_rated[number_seen] += last_prediction_error;
 		
 		/*
 			While the user can still add more ratings.
@@ -129,14 +131,14 @@ int main(int argc, char **argv)
 			*/
 			for (presented = position_up_to; presented < dataset->number_items; presented++)
 			{
-				//sum_of_error[presented] += last_prediction_error;
+				if (stats->stats & CSP_stats::ERROR_PRESENTED)
+					error_presented[presented] += last_prediction_error;
 				
 				if ((key = (uint64_t *)bsearch(&presentation_list[presented], ratings, count, sizeof(*ratings), movie_search)) != NULL)
 				{
-					/*
-						Update the area under the curve up to this point.
-					*/
-					auc += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen++ / count);
+					if (stats->stats & CSP_stats::AUC)
+						auc += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen / count);
+					number_seen++;
 					
 					/*
 						Add the rating we came across.
@@ -153,10 +155,9 @@ int main(int argc, char **argv)
 					/*
 						Now check our predictions on the test set for this user.
 					*/
-					//sum_of_error[number_seen] += last_prediction_error;
-					//last_prediction_error = metric->score(user);
-					//if (number_seen == 20 || number_seen == 100)
-					//	printf("%f %lu %f\n", average_num_test_ratings, number_seen, last_prediction_error);
+					last_prediction_error = metric->score(user);
+					if (stats->stats & CSP_stats::ERROR_RATED)
+						error_rated[number_seen] += last_prediction_error;
 					
 					/*
 						Stop looking for the next rating so we can re-generate presentation list.
@@ -169,32 +170,34 @@ int main(int argc, char **argv)
 		/*
 			Update the AUC for the presentation list, and print it out.
 		*/
-		auc += (1 - (1.0 * last_presented_and_seen / dataset->number_items));
-		printf("AUC\t%lu\t%f\n", user, auc);
+		if (stats->stats & CSP_stats::AUC)
+			printf("AUC\t%lu\t%f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
+	
+		if (stats->stats & CSP_stats::ERROR_RATED)
+			for (item = number_seen + 1; item < dataset->number_items; item++)
+				error_rated[item] += last_prediction_error;
+		
+		if (stats->stats & CSP_stats::ERROR_PRESENTED)
+			for (item = presented; item < dataset->number_items; item++)
+				error_presented[item] += last_prediction_error;
 	}
-	
-	//for (item = 0; item < dataset->number_items; item++)
-	//	printf("%lu %f\n", item, sum_of_error[item] / dataset->number_users);
-	
-	/*
-		Print our average errors to file.
-	*/
-//	average_error = fopen("pk(gmuas).gi.txt", "w");
-//	for (item = 0; item < dataset->number_items; item++)
-//		fprintf(stdout, "%lu %f\n", item, sum_of_error[item] / dataset->number_users);
-//	fclose(average_error);
+	if (stats->stats & CSP_stats::ERROR_RATED)
+		for (item = 0; item < dataset->number_items; item++)
+			printf("ER: %lu %f\n", item, error_rated[item] / dataset->number_users);
+	if (stats->stats & CSP_stats::ERROR_PRESENTED)
+		for (item = 0; item < dataset->number_items; item++)
+			printf("EP: %lu %f\n", item, error_presented[item] / dataset->number_users);
 	
 	/*
 		Calculate the error if we had all ratings added.
 	*/
-	for (user = 0; user < dataset->number_users; user++)
-		sum_of_error[0] += metric->score(user);
-	printf("\nMAE: %f\n", sum_of_error[0] / dataset->number_users);
+//	for (user = 0; user < dataset->number_users; user++)
+//		sum_of_error[0] += metric->score(user);
+//	printf("\nMAE: %f\n", sum_of_error[0] / dataset->number_users);
 	
 	/*
 		Clean up.
 	*/
-	fprintf(stderr, "\n");
 	delete params;
 	delete generator;
 	delete dataset;

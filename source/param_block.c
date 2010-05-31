@@ -49,7 +49,8 @@ void CSP_param_block::usage(void)
 */
 void CSP_param_block::help(void)
 {
-	puts("CSP Version 0.2");
+	puts("CSP");
+	puts("===");
 	puts("Copyright Matt Crane 2010");
 	puts("");
 	
@@ -104,19 +105,18 @@ void CSP_param_block::help(void)
 	puts("   M             Normalized Mean Absolute Error");
 	puts("   r             Root Mean Squared Error");
 	puts("   R             Normalized Root Mean Squared Error");
-//	puts("   c      *      Receiver Operator Characteristic");
-//	puts("   C      *      Customer Receiver Operator Characteristic");
-//	puts("   u      *      Breese Utility");
 	puts("");
 	
 	puts("STATISTICS");
 	puts("----------");
-	puts("-s[ngGpP]        Measure and output the following statistics:");
+	puts("-s[naeEgpS]      Measure and output the following statistics:");
 	puts("   n             None [default]");
-	puts("   g             Generation Time");
-	puts("   G             Generation Accuracy (AUC)");
-	puts("   p             Prediction Time");
-	puts("   P             Predictin Accuracy (as measured by above)");
+	puts("   a             AUC for presentation lists (number rated vs number presented)");
+	puts("   e             Error as function of number presented");
+	puts("   E             Error as function of number rated");
+	puts("   g             Time to generate presentation lists");
+	puts("   p             Time to generate predictions");
+	puts("   S             All of the above");
 	
 	exit(EXIT_SUCCESS);
 }
@@ -199,10 +199,12 @@ void CSP_param_block::statistics(char *which)
 		switch (*which)
 		{
 			case 'n': stats = CSP_stats::NONE; break;
+			case 'a': stats |= CSP_stats::AUC; break;
+			case 'e': stats |= CSP_stats::ERROR_PRESENTED; break;
+			case 'E': stats |= CSP_stats::ERROR_RATED; break;
 			case 'g': stats |= CSP_stats::GENERATION_TIME; break;
-			case 'G': stats |= CSP_stats::GENERATION_AUC; break;
 			case 'p': stats |= CSP_stats::PREDICTION_TIME; break;
-			case 'P': stats |= CSP_stats::PREDICTION_ACCURACY; break;
+			case 'S': statistics("aeEgp"); break;
 			default: exit(printf("Unknown statistic: '%c'\n", *which));
 		}
 		which++;
