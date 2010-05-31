@@ -11,16 +11,17 @@ class CSP_stats
 public:
 	CSP_stats(uint64_t stats);// { this->stats = stats; }
 	virtual ~CSP_stats() {}
-
+	
 	enum {
 		NONE                = 0,
 		GENERATION_TIME     = 1,
-		GENERATION_AUC      = 2,
-		PREDICTION_TIME     = 4,
-		PREDICTION_ACCURACY = 8
+		PREDICTION_TIME     = 2,
+		ERROR_PRESENTED     = 4,
+		ERROR_RATED         = 8,
+		AUC                 = 16
 	};
 
-private:
+public:
 	uint64_t stats;
 };
 
