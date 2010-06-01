@@ -17,7 +17,6 @@ CSP_predictor_global_avg::CSP_predictor_global_avg(CSP_dataset *dataset) : CSP_p
 
 	for (i = 0; i < number_ratings; i++)
 		sum_of_ratings += (double)dataset->rating(data[i]);
-	printf("%f\n", sum_of_ratings / number_ratings);
 }
 
 /*

@@ -99,6 +99,9 @@ int main(int argc, char **argv)
 #endif
 	}
 	
+	/*
+		Set the error accumulation to 0.
+	*/
 	for (item = 0; item < dataset->number_items; item++)
 		error_rated[item] = error_presented[item] = 0;
 	
@@ -155,7 +158,8 @@ int main(int argc, char **argv)
 		/*
 			Before we add any ratings, we should see how well we can do.
 		*/
-		last_prediction_error = metric->score(user);
+		if (stats->stats & CSP_stats::ERROR_RATED || stats->stats & CSP_stats::ERROR_PRESENTED)
+			last_prediction_error = metric->score(user);
 		if (stats->stats & CSP_stats::ERROR_RATED)
 			error_rated[number_seen] += last_prediction_error;
 		
@@ -198,7 +202,8 @@ int main(int argc, char **argv)
 					/*
 						Now check our predictions on the test set for this user.
 					*/
-					last_prediction_error = metric->score(user);
+					if (stats->stats & CSP_stats::ERROR_RATED || stats->stats & CSP_stats::ERROR_PRESENTED)
+						last_prediction_error = metric->score(user);
 					if (stats->stats & CSP_stats::ERROR_RATED)
 						error_rated[number_seen] += last_prediction_error;
 					
@@ -214,8 +219,11 @@ int main(int argc, char **argv)
 			Update the AUC for the presentation list, and print it out.
 		*/
 		if (stats->stats & CSP_stats::AUC)
-			printf("AUC\t%lu\t%f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
+			printf("AUC %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
 	
+		/*
+			Fill in the 'missing' values to give smooth graphs.
+		*/
 		if (stats->stats & CSP_stats::ERROR_RATED)
 			for (item = number_seen + 1; item < dataset->number_items; item++)
 				error_rated[item] += last_prediction_error;
@@ -224,19 +232,11 @@ int main(int argc, char **argv)
 			for (item = presented; item < dataset->number_items; item++)
 				error_presented[item] += last_prediction_error;
 	}
-	if (stats->stats & CSP_stats::ERROR_RATED)
-		for (item = 0; item < dataset->number_items; item++)
-			printf("ER: %lu %f\n", item, error_rated[item] / dataset->number_users);
-	if (stats->stats & CSP_stats::ERROR_PRESENTED)
-		for (item = 0; item < dataset->number_items; item++)
-			printf("EP: %lu %f\n", item, error_presented[item] / dataset->number_users);
 	
-	/*
-		Calculate the error if we had all ratings added.
-	*/
-//	for (user = 0; user < dataset->number_users; user++)
-//		sum_of_error[0] += metric->score(user);
-//	printf("\nMAE: %f\n", sum_of_error[0] / dataset->number_users);
+	for (i = 0; stats->stats & CSP_stats::ERROR_RATED && i < dataset->number_items; i++)
+		printf("ER: %lu %f\n", i, error_rated[i] / dataset->number_users);
+	for (i = 0; stats->stats & CSP_stats::ERROR_PRESENTED && i < dataset->number_items; i++)
+		printf("EP: %lu %f\n", i, error_presented[i] / dataset->number_users);
 	
 	/*
 		Clean up.
@@ -246,6 +246,7 @@ int main(int argc, char **argv)
 	delete dataset;
 	delete predictor;
 	delete metric;
+	delete stats;
 	
 	return EXIT_SUCCESS;
 }
