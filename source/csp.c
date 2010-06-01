@@ -41,11 +41,6 @@ int main(int argc, char **argv)
 	double *error_presented, *error_rated;
 	//FILE *average_error = NULL;
 	
-	uint64_t i, j, k;
-	uint64_t *this_one, *that_one;
-	uint64_t this_count, that_count;
-	int64_t index;
-	
 	params->parse();
 	dataset = new CSP_dataset_netflix(params);
 	stats = new CSP_stats(params->stats);
@@ -55,48 +50,10 @@ int main(int argc, char **argv)
 	//if (params->generation_method == CSP_generator_factory::BAYESIAN)// || params->prediction_method == CSP_predictor_factory::KORBELL)
 	if (false)
 	{
-		if (!dataset->loaded_extra)
-			exit(puts("Must load data sorted by movie (-e) to use Bayes/Korbell!"));
-		
-#ifdef SINGLE
-		coraters = new uint32_t[dataset->number_items];
-#else
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
-#endif
-		fprintf(stderr, "Precalculating co-ratings...\n");
-#ifdef SINGLE
-		index = 2451; // Fellowship of the Ring
-#else
-		#pragma omp parallel for private(i, j, k, this_one, this_count, that_one, that_count) num_threads(2)
-		for (index = 0; index < (int64_t)dataset->number_items; index++)
-#endif
-		{
-			i = index;
-			if (i % 100 == 0) { fprintf(stderr, "\r%5lu", i); fflush(stderr); }
-			this_one = dataset->ratings_for_movie(i, &this_count);
-			for (j = 0; j < this_count; j++)
-			{
-				that_one = dataset->ratings_for_user(dataset->user(this_one[j]), &that_count);
-				for (k = 0; k < that_count; k++)
-#ifdef SINGLE
-					coraters[dataset->movie(that_one[k])]++;
-#else
-					if (i < dataset->movie(that_one[k]))
-						coraters[tri_offset(i, dataset->movie(that_one[k]))]++;
-#endif
-			}
-		}
-		fprintf(stderr, "\rDone.\n");
-#ifdef SINGLE
-		dataset->ratings_for_movie(2451, &this_count);
-		printf("FOTR: %lu\n", this_count);     // 144081
-		printf("TTT: %u\n", coraters[11520]);  // 119040
-		printf("ROTK: %u\n", coraters[14239]); // 102847
-#else
-		printf("FOTR - TTT: %u\n", coraters[tri_offset(2451, 11520)]);  // 119040
-		printf("FOTR - ROTK: %u\n", coraters[tri_offset(2451, 14239)]); // 102847
-		printf("TTT - ROTK: %u\n", coraters[tri_offset(11520, 14239)]); // 106020
-#endif
+		fprintf(stderr, "Loading coraters from file... "); fflush(stdout);
+		fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.coraters.item","rb"));
+		fprintf(stderr, "Done.\n"); fflush(stdout);
 	}
 	
 	/*
