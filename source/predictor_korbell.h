@@ -33,15 +33,20 @@ private:
 	
 	uint32_t *coraters;
 	uint64_t k;
+	float *weights;
 	
 	double predict_statistics(uint64_t user, uint64_t movie, uint64_t day);
 	double predict_neighbour(uint64_t user, uint64_t movie, uint64_t day);
 	static int neighbour_compare(const void *a, const void *b);
+	float *non_negative_quadratic_opt(float *a, float *b, uint64_t size); // need size in case neighbours < k
 	
 	float *correlation;
+	float *abar, *bbar;
+	float *ahat, *bhat;
 	
 	typedef struct {
-		double correlation;
+		float correlation;
+		uint32_t coraters;
 		uint64_t movie_id;
 		uint64_t considered;
 	} neighbour;

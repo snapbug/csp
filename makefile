@@ -3,7 +3,10 @@ BINDIR = bin
 OBJDIR = bin
 
 LDFLAGS = -lm -fopenmp
-#MINUS_D = -DSINGLE
+MINUS_D = 
+ifeq ($(CORR),abs)
+MINUS_D += -DABS_CORR
+endif
 
 # Normal
 CFLAGS = -Wall -Wextra -O3 -pedantic -ansi -Wno-long-long $(MINUS_D) -fopenmp

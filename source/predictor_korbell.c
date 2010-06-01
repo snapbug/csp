@@ -42,7 +42,6 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	movie_user_average_alpha = 50.0;
 	movie_user_support_alpha = 50.0;
 	
-	neighbours = new neighbour[dataset->number_items];	
 	movie_effect = new double[dataset->number_items];
 	movie_counts = new uint64_t[dataset->number_items];
 	user_effect = new double[dataset->number_users];
@@ -62,7 +61,13 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	movie_user_support_bottom = new double[dataset->number_items];
 	movie_user_support_average = new double[dataset->number_items];
 	
+	neighbours = new neighbour[dataset->number_items];	
 	correlation = new float[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
+//	abar = new float[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
+//	bbar = new float[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
+//	ahat = new float[k * k];
+//	bhat = new float[k];
+	weights = new float[k];
 	
 	/*
 		Initialise everything.
@@ -210,6 +215,15 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	fprintf(stderr, "Loading correlations from file... "); fflush(stderr);
 	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.correlations.item.residual", "rb"));
 	fprintf(stderr, "Done.\n"); fflush(stderr);
+	
+	/*
+		Apply the scaling for correlations based on coraters from paper.
+	*/
+	fprintf(stderr, "Scaling correlations, "); fflush(stderr);
+	#pragma omp parallel for
+	for (index = 0; index < (int64_t)tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; index++)
+		correlation[index] = correlation[index] * (coraters[index] / (coraters[index] + 10.0));
+	fprintf(stderr, "Done.\n"); fflush(stderr);
 }
 
 /*
@@ -347,9 +361,26 @@ int CSP_predictor_korbell::neighbour_compare(const void *a, const void *b)
 	
 	if (x->considered && !y->considered) return -1;
 	if (!x->considered && y->considered) return 1;
+#ifdef ABS_CORR
+	if (fabs(x->correlation) < fabs(y->correlation)) return 1;
+	if (fabs(x->correlation) > fabs(y->correlation)) return -1;
+#else
 	if (x->correlation < y->correlation) return 1;
 	if (x->correlation > y->correlation) return -1;
+#endif
 	return 0;
+}
+
+/*
+	CSP_PREDICTOR_KORBELL::NON_NEGATIVE_QUADRATIC_OPT()
+	---------------------------------------------------
+*/
+float *CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint64_t size)
+{
+	a = a;
+	b = b;
+	size = size;
+	return weights;
 }
 
 /*
@@ -358,33 +389,39 @@ int CSP_predictor_korbell::neighbour_compare(const void *a, const void *b)
 */
 double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, uint64_t day)
 {
-//	uint64_t *user_ratings, user_count;
-//	uint64_t i;
-//	
-//	for (i = 0; i < dataset->number_items; i++)
-//	{
-//		neighbours[i].movie_id = i;
-//		neighbours[i].considered = FALSE;
-//	}
-//	
-//	user_ratings = dataset->ratings_for_user(user, &user_count);
-//	
-//	for (i = 0; i < user_count; i++)
-//		if (dataset->included(user_ratings[i]) && movie != dataset->movie(user_ratings[i]))
-//		{
-//			neighbours[dataset->movie(user_ratings[i])].considered = TRUE;
-//			neighbours[dataset->movie(user_ratings[i])].correlation = corr(MIN(movie, dataset->movie(user_ratings[i])), MAX(movie, dataset->movie(user_ratings[i])));
-//		}
-//	
-//	qsort(neighbours, dataset->number_items, sizeof(*neighbours), CSP_predictor_korbell::neighbour_compare);
-//	
-//	for (i = 0; i < dataset->number_items; i++)
-//		if (neighbours[i].considered)
-//			printf("%lu - %f\n", neighbours[i].movie_id, neighbours[i].correlation);
+	uint64_t *user_ratings, user_count;
+	uint64_t i, min, max;
 	
-	user = user;
-	day = day;
+	for (i = 0; i < dataset->number_items; i++)
+	{
+		neighbours[i].movie_id = i;
+		neighbours[i].considered = FALSE;
+	}
+	
+	user_ratings = dataset->ratings_for_user(user, &user_count);
+	
+	for (i = 0; i < user_counts[user]; i++)
+		if (dataset->included(user_ratings[i]))
+		{
+			neighbours[dataset->movie(user_ratings[i])].considered = TRUE;
+			min = MIN(movie, dataset->movie(user_ratings[i]));
+			max = MAX(movie, dataset->movie(user_ratings[i]));
+			neighbours[dataset->movie(user_ratings[i])].correlation = correlation[tri_offset(min, max)];
+			neighbours[dataset->movie(user_ratings[i])].coraters = coraters[tri_offset(min, max)];
+		}
+	
+	qsort(neighbours, dataset->number_items, sizeof(*neighbours), CSP_predictor_korbell::neighbour_compare);
+	
+	fprintf(stderr, "Neighbours for %lu by %lu:\n", movie, user);
+	for (i = 0; i < MIN(k, user_counts[user]); i++)
+		printf("%-2lu%-6lu% f %-6u\n", neighbours[i].considered, neighbours[i].movie_id, neighbours[i].correlation, neighbours[i].coraters);
+	
+	/*
+		Create the A hat matrix and b hat vectors here, from precomputed A bar and b bar values?
+	*/
+	
 	movie = movie;
+	day = day;
 	return 0.0;
 }
 
