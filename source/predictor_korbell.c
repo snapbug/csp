@@ -356,19 +356,15 @@ double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, 
 */
 int CSP_predictor_korbell::neighbour_compare(const void *a, const void *b)
 {
-	neighbour *x = (neighbour *)a;
-	neighbour *y = (neighbour *)b;
-	
-//	if (x->considered && !y->considered) return -1;
-//	if (!x->considered && y->considered) return 1;
 #ifdef ABS_CORR
-	if (fabs(x->correlation) < fabs(y->correlation)) return 1;
-	if (fabs(x->correlation) > fabs(y->correlation)) return -1;
+	float x = fabs(((neighbour *)a)->correlation);
+	float y = fabs(((neighbour *)b)->correlation);
 #else
-	if (x->correlation < y->correlation) return 1;
-	if (x->correlation > y->correlation) return -1;
+	float x = ((neighbour *)a)->correlation;
+	float y = ((neighbour *)b)->correlation;
 #endif
-	return 0;
+	
+	return (x < y) - (x > y);
 }
 
 /*
@@ -396,12 +392,14 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	for (i = 0; i < user_count; i++)
 		if (dataset->included(user_ratings[i]))
 		{
-			neighbours[position].movie_id = dataset->movie(user_ratings[i]);
-			neighbours[position].considered = TRUE;
 			min = MIN(movie, dataset->movie(user_ratings[i]));
 			max = MAX(movie, dataset->movie(user_ratings[i]));
+			
+			neighbours[position].movie_id = dataset->movie(user_ratings[i]);
+			neighbours[position].considered = TRUE;
 			neighbours[position].correlation = correlation[tri_offset(min, max)];
 			neighbours[position].coraters = coraters[tri_offset(min, max)];
+			
 			position++;
 		}
 	
