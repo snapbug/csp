@@ -359,8 +359,8 @@ int CSP_predictor_korbell::neighbour_compare(const void *a, const void *b)
 	neighbour *x = (neighbour *)a;
 	neighbour *y = (neighbour *)b;
 	
-	if (x->considered && !y->considered) return -1;
-	if (!x->considered && y->considered) return 1;
+//	if (x->considered && !y->considered) return -1;
+//	if (!x->considered && y->considered) return 1;
 #ifdef ABS_CORR
 	if (fabs(x->correlation) < fabs(y->correlation)) return 1;
 	if (fabs(x->correlation) > fabs(y->correlation)) return -1;
@@ -390,30 +390,25 @@ float *CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uin
 double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, uint64_t day)
 {
 	uint64_t *user_ratings, user_count;
-	uint64_t i, min, max;
-	
-	for (i = 0; i < dataset->number_items; i++)
-	{
-		neighbours[i].movie_id = i;
-		neighbours[i].considered = FALSE;
-	}
+	uint64_t i, min, max, position = 0;
 	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
-	
-	for (i = 0; i < user_counts[user]; i++)
+	for (i = 0; i < user_count; i++)
 		if (dataset->included(user_ratings[i]))
 		{
-			neighbours[dataset->movie(user_ratings[i])].considered = TRUE;
+			neighbours[position].movie_id = dataset->movie(user_ratings[i]);
+			neighbours[position].considered = TRUE;
 			min = MIN(movie, dataset->movie(user_ratings[i]));
 			max = MAX(movie, dataset->movie(user_ratings[i]));
-			neighbours[dataset->movie(user_ratings[i])].correlation = correlation[tri_offset(min, max)];
-			neighbours[dataset->movie(user_ratings[i])].coraters = coraters[tri_offset(min, max)];
+			neighbours[position].correlation = correlation[tri_offset(min, max)];
+			neighbours[position].coraters = coraters[tri_offset(min, max)];
+			position++;
 		}
 	
-	qsort(neighbours, dataset->number_items, sizeof(*neighbours), CSP_predictor_korbell::neighbour_compare);
+	qsort(neighbours, position, sizeof(*neighbours), CSP_predictor_korbell::neighbour_compare);
 	
 	fprintf(stderr, "Neighbours for %lu by %lu:\n", movie, user);
-	for (i = 0; i < MIN(k, user_counts[user]); i++)
+	for (i = 0; i < position; i++)
 		printf("%-2lu%-6lu% f %-6u\n", neighbours[i].considered, neighbours[i].movie_id, neighbours[i].correlation, neighbours[i].coraters);
 	
 	/*

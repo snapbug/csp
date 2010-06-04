@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 	CSP_metric_mae *metric;
 	uint64_t *presentation_list, *key, *ratings;
 	uint64_t position_up_to, last_presented_and_seen, number_seen;
-	uint64_t count, user, item, presented, rating, i;
+	uint64_t count, user, item, presented, rating, i, size;
 	uint32_t *coraters = NULL;
 	double auc, last_prediction_error;
 	double *error_presented, *error_rated;
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	{
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
 		fprintf(stderr, "Loading coraters from file... "); fflush(stdout);
-		fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.coraters.item","rb"));
+		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.coraters.item","rb"));
 		fprintf(stderr, "Done.\n"); fflush(stdout);
 	}
 	
