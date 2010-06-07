@@ -34,3 +34,4 @@
 
 #define clip(x, low, high) (low > x ? low : x < high ? x : high)
 #define tri_offset(i, j) ((((i) * (35539 - (i))) / 2) + (j) - (i) - 1)
+#define UNUSED(x) (x = x)
