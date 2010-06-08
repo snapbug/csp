@@ -34,7 +34,7 @@ private:
 	uint32_t *coraters;
 	uint64_t k;
 	double beta;
-	float *weights;
+	double *weights;
 	
 public:
 	double predict_statistics(uint64_t user, uint64_t movie, uint64_t day);
@@ -47,7 +47,8 @@ private:
 	double *abar_tri, *abar_dia;
 	double *bbar;
 	float *ahat, *bhat;
-	double bar_avg_tri, bar_avg_dia;
+	double bar_avg_tri_top, bar_avg_tri_bot;
+	double bar_avg_dia_top, bar_avg_dia_bot;
 	
 	typedef struct {
 		float correlation;

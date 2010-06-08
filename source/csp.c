@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	//	case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
 	//	default: exit(puts("Unknown prediction method"));
 	//}
-	predictor = new CSP_predictor_korbell(dataset, 20, coraters);
+	predictor = new CSP_predictor_korbell(dataset, 5, coraters);
 	
 	metric = new CSP_metric_mae(dataset, predictor);
 	
