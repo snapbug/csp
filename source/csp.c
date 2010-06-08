@@ -190,10 +190,22 @@ int main(int argc, char **argv)
 			error_presented[item] += last_prediction_error;
 	}
 	
-	user = 168;
-	ratings = dataset->test_ratings_for_user(user, &count);
-	printf("Pred: %f\tAct: %lu\n", predictor->predict(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
-	printf("S-Pred: %f\tAct: %lu\n", predictor->predict_statistics(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
+//	user = 168;
+//	ratings = dataset->test_ratings_for_user(user, &count);
+//	printf("Pred: %f\tAct: %lu\n", predictor->predict(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
+//	printf("S-Pred: %f\tAct: %lu\n", predictor->predict_statistics(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
+	double error = 0;
+	double last_error;
+	FILE *each = fopen("user.error.pk.txt", "w");
+	for (user = 0; user < dataset->number_users; user++)
+	{
+		last_error = metric->score(user);
+		error += last_error;
+		fprintf(each, "%lu %f\n", user, last_error);
+	}
+	fclose(each);
+	error /= dataset->number_users;
+	printf("Avg MAE: %f\n", error);
 	
 	for (i = 0; stats->stats & CSP_stats::ERROR_RATED && i < dataset->number_items; i++)
 		printf("ER: %lu %f\n", i, error_rated[i] / dataset->number_users);

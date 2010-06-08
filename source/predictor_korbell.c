@@ -16,7 +16,7 @@
 #define user_movie_support(user, movie) ((user_movie_support_bottom[user] && user_counts[user]) ? ((user_counts[user] * (user_movie_support_effect[user] / user_movie_support_bottom[user])) / (user_counts[user] + user_movie_support_alpha)) * (sqrt((double)movie_counts[movie]) - (user_movie_support_average[user] / user_counts[user])) : 0)
 #define movie_user_average(movie, user) ((movie_user_average_bottom[movie] && movie_counts[movie] && user_counts[user]) ? ((movie_counts[movie] * (movie_user_average_effect[movie] / movie_user_average_bottom[movie])) / (movie_counts[movie] + movie_user_average_alpha)) * ((user_average[user] / user_counts[user]) - (movie_user_average_average[movie] / movie_counts[movie])) : 0)
 #define movie_user_support(movie, user) ((movie_user_support_bottom[movie] && movie_counts[movie]) ? ((movie_counts[movie] * (movie_user_support_effect[movie] / movie_user_support_bottom[movie])) / (movie_counts[movie] + movie_user_support_alpha)) * (sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie])) : 0)
-#define THRESHOLD (2.0 * 2.0)
+#define THRESHOLD (0.00005)
 
 /*
 	CSP_PREDICTOR_KORBELL::CSP_PREDICTOR_KORBELL()
@@ -235,7 +235,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	uint64_t other, item_count, user_count, j;
 	bar_avg_tri_top = 0;
 	fprintf(stderr, "Calculating A bar...\n"); fflush(stderr);
-	#pragma omp parallel for private(movie, item_ratings, item_count, user_ratings, user_count, residual_i, residual_j, i, j, other) schedule(dynamic, 500) num_threads(7)
+	#pragma omp parallel for private(movie, item_ratings, item_count, user_ratings, user_count, residual_i, residual_j, i, j, other) schedule(dynamic, 500) num_threads(8)
 	for (index = 0; index < (int64_t)dataset->number_items; index++)
 	{
 		movie = index;
@@ -440,41 +440,41 @@ int CSP_predictor_korbell::neighbour_compare(const void *a, const void *b)
 void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint64_t size)
 {
 	uint64_t i, j;
-	float *r = new float[size];
-	float *Ar = new float[size];
+	double *r = new double[size];
+	double *Ar = new double[size];
 	double alpha, interm, magnitude;
-	uint64_t iter = 0;
+	//uint64_t iter = 0;
+	//
+	//printf("A:\n");
+	//for (i = 0; i < size; i++)
+	//{
+	//	for (j = 0; j < size; j++) printf("% 1.10f ", a[(i * size) + j]);
+	//	printf("\n");
+	//}
+	//printf("B:\n");
+	//for (i = 0; i < size; i++) printf("% 1.10f ", b[i]);
+	//printf("\n");
 	
-	printf("A:\n");
-	for (i = 0; i < size; i++)
-	{
-		for (j = 0; j < size; j++) printf("% 1.5f ", a[(i * size) + j]);
-		printf("\n");
-	}
-	printf("B:\n");
-	for (i = 0; i < size; i++) printf("% 1.5f ", b[i]);
-	printf("\n");
-	
-	for (i = 0; i < size; i++) weights[i] = 1;
+	for (i = 0; i < size; i++) weights[i] = (double)rand() / (double)RAND_MAX;
 	
 	do 
 	{
-		printf("\n");
+//		printf("\n");
 		/*
-			Calculate r <- Aw - b.
+			Calculate r <- Aw - b. NO, FROM THE PAPER, WRONG
+			Calculate r <- b - Aw http://www.netflixprize.com/community/viewtopic.php?id=837
 		*/
 		for (i = 0; i < size; i++)
 		{
-			r[i] = 0;
-			for (j = 0; j < size; j++) r[i] += a[(i * size) + j] * weights[j];
-			r[i] -= b[i];
+			r[i] = b[i];
+			for (j = 0; j < size; j++) r[i] -= a[(i * size) + j] * weights[j];
 		}
-		printf("Weights:\n");
-		for (i = 0; i < size; i++) printf("% 1.5f ", weights[i]);
-		printf("\n");
-		printf("r:\n");
-		for (i = 0; i < size; i++) printf("% 1.5f ", r[i]);
-		printf("\n");
+//		printf("Weights:\n");
+//		for (i = 0; i < size; i++) printf("% 1.10f ", weights[i]);
+//		printf("\n");
+//		printf("r:\n");
+//		for (i = 0; i < size; i++) printf("% 1.10f ", r[i]);
+//		printf("\n");
 		
 		/*
 			Non-negativity contraints.
@@ -492,30 +492,32 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 			for (j = 0; j < size; j++) Ar[i] += a[(i * size) + j] * r[j]; // A*r
 		}
 		for (i = 0; i < size; i++) interm += r[i] * Ar[i]; // trans(r) * Ar
+//		printf("Alpha: %1.10f\nInterim: %1.10f\n", alpha, interm);
 		alpha = alpha / interm;
 		
 		/*
 			Adjust step size to prevent negative values.
 		*/
-		for (i = 0; i < size; i++) if (r[i] < 0) alpha = MIN(alpha, -weights[i] / r[i]);
-		printf("Alpha: %f\n", alpha);
+//		printf("Alpha: %1.10f\n", alpha);
+//		for (i = 0; i < size; i++) if (r[i] < 0) alpha = MIN(alpha, -weights[i] / r[i]);
+//		printf("Alpha: %1.10f\n", alpha);
 		
 		/*
 			Adjust weights.
 		*/
 		for (i = 0; i < size; i++) weights[i] += alpha * r[i];
-		printf("Weights:\n");
-		for (i = 0; i < size; i++) printf("% 1.5f ", weights[i]);
-		printf("\n");
+//		printf("Weights:\n");
+//		for (i = 0; i < size; i++) printf("% 1.10f ", weights[i]);
+//		printf("\n");
 		
 		/*
 			Calculate magnitude.
 		*/
 		magnitude = 0;
 		for (i = 0; i < size; i++) magnitude += r[i] * r[i];
-		printf("Magnitude: %f\n", sqrt(magnitude));
-		iter++;
-	} while (iter < 2);
+		magnitude = sqrt(magnitude);
+		printf("Magnitude: %1.10f", magnitude);
+	} while (magnitude > THRESHOLD);
 	
 	delete [] r;
 	delete [] Ar;
