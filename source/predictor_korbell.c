@@ -16,7 +16,8 @@
 #define user_movie_support(user, movie) ((user_movie_support_bottom[user] && user_counts[user]) ? ((user_counts[user] * (user_movie_support_effect[user] / user_movie_support_bottom[user])) / (user_counts[user] + user_movie_support_alpha)) * (sqrt((double)movie_counts[movie]) - (user_movie_support_average[user] / user_counts[user])) : 0)
 #define movie_user_average(movie, user) ((movie_user_average_bottom[movie] && movie_counts[movie] && user_counts[user]) ? ((movie_counts[movie] * (movie_user_average_effect[movie] / movie_user_average_bottom[movie])) / (movie_counts[movie] + movie_user_average_alpha)) * ((user_average[user] / user_counts[user]) - (movie_user_average_average[movie] / movie_counts[movie])) : 0)
 #define movie_user_support(movie, user) ((movie_user_support_bottom[movie] && movie_counts[movie]) ? ((movie_counts[movie] * (movie_user_support_effect[movie] / movie_user_support_bottom[movie])) / (movie_counts[movie] + movie_user_support_alpha)) * (sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie])) : 0)
-#define THRESHOLD (0.00005)
+//#define THRESHOLD (0.00005)
+#define THRESHOLD (2.5e-11)
 
 /*
 	CSP_PREDICTOR_KORBELL::CSP_PREDICTOR_KORBELL()
@@ -223,7 +224,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		Apply the scaling for correlations based on coraters from paper.
 	*/
 	fprintf(stderr, "Scaling correlations... "); fflush(stderr);
-	//#pragma omp parallel for
+	#pragma omp parallel for
 	for (index = 0; index < (int64_t)tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; index++)
 		correlation[index] = correlation[index] * (float)(coraters[index] / (coraters[index] + 5.0));
 	fprintf(stderr, "done.\n"); fflush(stderr);
@@ -290,7 +291,6 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	}
 	bar_avg_dia_bot = dataset->number_items;
 	fprintf(stderr, "done.\n"); fflush(stderr);
-	fprintf(stderr, "Dia: % 1.10f\tTri: % 1.10f\n", bar_avg_dia_top / bar_avg_dia_bot, bar_avg_tri_top / bar_avg_tri_bot);
 }
 
 /*
@@ -442,81 +442,66 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 	uint64_t i, j;
 	double *r = new double[size];
 	double *Ar = new double[size];
-	double alpha, interm, magnitude;
-	//uint64_t iter = 0;
-	//
-	//printf("A:\n");
-	//for (i = 0; i < size; i++)
-	//{
-	//	for (j = 0; j < size; j++) printf("% 1.10f ", a[(i * size) + j]);
-	//	printf("\n");
-	//}
-	//printf("B:\n");
-	//for (i = 0; i < size; i++) printf("% 1.10f ", b[i]);
-	//printf("\n");
+	double alpha, interim, magnitude;
 	
 	for (i = 0; i < size; i++) weights[i] = (double)rand() / (double)RAND_MAX;
 	
 	do 
 	{
-//		printf("\n");
 		/*
-			Calculate r <- Aw - b. NO, FROM THE PAPER, WRONG
-			Calculate r <- b - Aw http://www.netflixprize.com/community/viewtopic.php?id=837
+			Calculate r <- Aw - b   FROM THE PAPER, WRONG
+			Calculate r <- b - Aw   Fixed: http://www.netflixprize.com/community/viewtopic.php?id=837
 		*/
 		for (i = 0; i < size; i++)
 		{
 			r[i] = b[i];
-			for (j = 0; j < size; j++) r[i] -= a[(i * size) + j] * weights[j];
+			for (j = 0; j < size; j++)
+				r[i] -= a[(i * size) + j] * weights[j];
 		}
-//		printf("Weights:\n");
-//		for (i = 0; i < size; i++) printf("% 1.10f ", weights[i]);
-//		printf("\n");
-//		printf("r:\n");
-//		for (i = 0; i < size; i++) printf("% 1.10f ", r[i]);
-//		printf("\n");
 		
 		/*
-			Non-negativity contraints.
+			Non-negativity contraints, and magnitude.
 		*/
-		for (i = 0; i < size; i++) if (weights[i] == 0 && r[i] < 0) r[i] = 0;
+		magnitude = 0;
+		for (i = 0; i < size; i++) 
+		{
+			if (weights[i] < 1e-10 && r[i] < 0)
+				r[i] = 0;
+			magnitude += r[i] * r[i];
+		}
+//		magnitude = sqrt(magnitude);
 		
 		/*
 			Calculate alpha <- trans(r)*r / trans(r) * Ar.
 		*/
-		alpha = interm = 0;
+		alpha = interim = 0;
 		for (i = 0; i < size; i++) alpha += r[i] * r[i]; // trans(r) * r
 		for (i = 0; i < size; i++)
 		{
 			Ar[i] = 0;
-			for (j = 0; j < size; j++) Ar[i] += a[(i * size) + j] * r[j]; // A*r
+			for (j = 0; j < size; j++)
+				Ar[i] += a[(i * size) + j] * r[j]; // A*r
 		}
-		for (i = 0; i < size; i++) interm += r[i] * Ar[i]; // trans(r) * Ar
-//		printf("Alpha: %1.10f\nInterim: %1.10f\n", alpha, interm);
-		alpha = alpha / interm;
+		for (i = 0; i < size; i++) interim += r[i] * Ar[i]; // trans(r) * Ar
+		alpha /= interim;
 		
 		/*
 			Adjust step size to prevent negative values.
 		*/
-//		printf("Alpha: %1.10f\n", alpha);
-//		for (i = 0; i < size; i++) if (r[i] < 0) alpha = MIN(alpha, -weights[i] / r[i]);
-//		printf("Alpha: %1.10f\n", alpha);
+		for (i = 0; i < size; i++) 
+			if (r[i] < 0) 
+				alpha = MIN(fabs(alpha), fabs(weights[i] / r[i])) * (alpha / fabs(alpha));
 		
 		/*
 			Adjust weights.
 		*/
-		for (i = 0; i < size; i++) weights[i] += alpha * r[i];
-//		printf("Weights:\n");
-//		for (i = 0; i < size; i++) printf("% 1.10f ", weights[i]);
-//		printf("\n");
+		for (i = 0; i < size; i++)
+			weights[i] += alpha * r[i];
 		
-		/*
-			Calculate magnitude.
-		*/
-		magnitude = 0;
-		for (i = 0; i < size; i++) magnitude += r[i] * r[i];
-		magnitude = sqrt(magnitude);
-		printf("Magnitude: %1.10f", magnitude);
+		for (i = 0; i < size; i++)
+			if (weights[i] < 1e-10)
+				weights[i] = 0; // robustness tip from Yehuda
+		
 	} while (magnitude > THRESHOLD);
 	
 	delete [] r;
@@ -560,7 +545,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	/*
 		Create the A hat matrix here, from precomputed A bar values
 	*/
-	fprintf(stderr, "Filling A hat matrix\n"); fflush(stderr);
+//	fprintf(stderr, "Filling A hat matrix\n"); fflush(stderr);
 	for (i = 0; i < MIN(k, position); i++)
 		for (j = 0; j < MIN(k, position); j++)
 			if (i == j)
@@ -578,7 +563,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	/*
 		Now create the b bar vector
 	*/
-	fprintf(stderr, "Filling b hat vector\n"); fflush(stderr);
+//	fprintf(stderr, "Filling b hat vector\n"); fflush(stderr);
 	for (j = 0; j < MIN(k, position); j++)
 	{
 		min = MIN(neighbours[j].movie_id, movie);
@@ -589,7 +574,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	/*
 		Now solve Aw = b for w
 	*/
-	fprintf(stderr, "Solving Aw = b for w\n"); fflush(stderr);
+//	fprintf(stderr, "Solving Aw = b for w\n"); fflush(stderr);
 	non_negative_quadratic_opt(ahat, bhat, MIN(k, position));
 	
 	/*
@@ -607,5 +592,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 */
 double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t day)
 {
-	return predict_statistics(user, movie, day) + predict_neighbour(user, movie, day);
+	return 
+		predict_statistics(user, movie, day) // 0.742112 Average MAE
+	  + predict_neighbour(user, movie, day); // 0.689149 Average MAE (k = 20)
 }

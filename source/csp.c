@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	//	case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
 	//	default: exit(puts("Unknown prediction method"));
 	//}
-	predictor = new CSP_predictor_korbell(dataset, 5, coraters);
+	predictor = new CSP_predictor_korbell(dataset, 20, coraters);
 	
 	metric = new CSP_metric_mae(dataset, predictor);
 	
@@ -194,18 +194,20 @@ int main(int argc, char **argv)
 //	ratings = dataset->test_ratings_for_user(user, &count);
 //	printf("Pred: %f\tAct: %lu\n", predictor->predict(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
 //	printf("S-Pred: %f\tAct: %lu\n", predictor->predict_statistics(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
+//	printf("%lu %f\n", user, metric->score(user));
 	double error = 0;
-	double last_error;
-	FILE *each = fopen("user.error.pk.txt", "w");
+	uint64_t predictions = 0;
+	#pragma omp parallel for private(i, ratings, count) reduction(+:error,predictions)
 	for (user = 0; user < dataset->number_users; user++)
 	{
-		last_error = metric->score(user);
-		error += last_error;
-		fprintf(each, "%lu %f\n", user, last_error);
+		if (user % 1000 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		ratings = dataset->test_ratings_for_user(user, &count);
+		for (i = 0; i < count; i++)
+			error += pow(dataset->rating(ratings[i]) - predictor->predict(dataset->user(ratings[i]), dataset->movie(ratings[i]), dataset->day(ratings)), 2);
+		predictions += count;
 	}
-	fclose(each);
-	error /= dataset->number_users;
-	printf("Avg MAE: %f\n", error);
+	error = sqrt(error / predictions);
+	printf("\nRMSE: %f\n", error);
 	
 	for (i = 0; stats->stats & CSP_stats::ERROR_RATED && i < dataset->number_items; i++)
 		printf("ER: %lu %f\n", i, error_rated[i] / dataset->number_users);
