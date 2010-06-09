@@ -109,14 +109,14 @@ void CSP_param_block::help(void)
 	
 	puts("STATISTICS");
 	puts("----------");
-	puts("-s[naeEgpS]      Measure and output the following statistics:");
+	puts("-s[naeEgp]       Measure and output the following statistics:");
 	puts("   n             None [default]");
 	puts("   a             AUC for presentation lists (number rated vs number presented)");
 	puts("   e             Error as function of number presented");
 	puts("   E             Error as function of number rated");
 	puts("   g             Time to generate presentation lists");
 	puts("   p             Time to generate predictions");
-	puts("   S             All of the above");
+//	puts("   S             All of the above");
 	
 	exit(EXIT_SUCCESS);
 }
@@ -177,9 +177,6 @@ void CSP_param_block::metrics(char *which)
 			case 'M': metrics_to_use |= CSP_metric_factory::NMAE; break;
 			case 'r': metrics_to_use |= CSP_metric_factory::RMSE; break;
 			case 'R': metrics_to_use |= CSP_metric_factory::NRMSE; break;
-			//case 'c': metrics_to_use |= CSP_metric_factory::ROC; break;
-			//case 'C': metrics_to_use |= CSP_metric_factory::CROC; break;
-			//case 'u': metrics_to_use |= CSP_metric_factory::UTILITY; break;
 			default: exit(printf("Unknown metric: '%c'\n", *which));
 		}
 		which++;
@@ -204,7 +201,7 @@ void CSP_param_block::statistics(char *which)
 			case 'E': stats |= CSP_stats::ERROR_RATED; break;
 			case 'g': stats |= CSP_stats::GENERATION_TIME; break;
 			case 'p': stats |= CSP_stats::PREDICTION_TIME; break;
-			case 'S': statistics("aeEgp"); break;
+//			case 'S': statistics("aeEgp"); break;
 			default: exit(printf("Unknown statistic: '%c'\n", *which));
 		}
 		which++;
