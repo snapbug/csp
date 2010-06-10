@@ -33,7 +33,8 @@ int main(int argc, char **argv)
 	CSP_predictor_korbell *predictor;
 	CSP_stats *stats;
 	//CSP_metric_factory *metric = new CSP_metric_factory;
-	CSP_metric_mae *metric;
+	//CSP_metric_mae *metric;
+	CSP_metric *metric;
 	uint64_t *presentation_list, *key, *ratings;
 	uint64_t position_up_to, last_presented_and_seen, number_seen;
 	uint64_t count, user, item, presented, rating, i, size;
@@ -85,9 +86,6 @@ int main(int argc, char **argv)
 	//	case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
 	//	default: exit(puts("Unknown prediction method"));
 	//}
-	predictor = new CSP_predictor_korbell(dataset, 20, coraters);
-	
-	metric = new CSP_metric_mae(dataset, predictor);
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
@@ -196,18 +194,20 @@ int main(int argc, char **argv)
 //	printf("S-Pred: %f\tAct: %lu\n", predictor->predict_statistics(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
 //	printf("%lu %f\n", user, metric->score(user));
 	double error = 0;
-	uint64_t predictions = 0;
-	#pragma omp parallel for private(i, ratings, count) reduction(+:error,predictions)
+	double last_error;
+	
+	predictor = new CSP_predictor_korbell(dataset, 20, coraters);
+	metric = new CSP_metric_mae(dataset, predictor);
+	
+	FILE *out = fopen("user.error.pk.stats.txt", "w");
 	for (user = 0; user < dataset->number_users; user++)
 	{
 		if (user % 1000 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		ratings = dataset->test_ratings_for_user(user, &count);
-		for (i = 0; i < count; i++)
-			error += pow(dataset->rating(ratings[i]) - predictor->predict(dataset->user(ratings[i]), dataset->movie(ratings[i]), dataset->day(ratings)), 2);
-		predictions += count;
+		last_error = metric->score(user);
+		error += last_error;
+		fprintf(out, "%lu %f\n", user, last_error);
 	}
-	error = sqrt(error / predictions);
-	printf("\nRMSE: %f\n", error);
+	printf("\n Avg RMSE: %f\n", error / dataset->number_users);
 	
 	for (i = 0; stats->stats & CSP_stats::ERROR_RATED && i < dataset->number_items; i++)
 		printf("ER: %lu %f\n", i, error_rated[i] / dataset->number_users);

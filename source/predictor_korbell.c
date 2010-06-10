@@ -17,7 +17,7 @@
 #define movie_user_average(movie, user) ((movie_user_average_bottom[movie] && movie_counts[movie] && user_counts[user]) ? ((movie_counts[movie] * (movie_user_average_effect[movie] / movie_user_average_bottom[movie])) / (movie_counts[movie] + movie_user_average_alpha)) * ((user_average[user] / user_counts[user]) - (movie_user_average_average[movie] / movie_counts[movie])) : 0)
 #define movie_user_support(movie, user) ((movie_user_support_bottom[movie] && movie_counts[movie]) ? ((movie_counts[movie] * (movie_user_support_effect[movie] / movie_user_support_bottom[movie])) / (movie_counts[movie] + movie_user_support_alpha)) * (sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie])) : 0)
 //#define THRESHOLD (0.00005)
-#define THRESHOLD (2.5e-11)
+#define THRESHOLD (2.5e-3)
 
 /*
 	CSP_PREDICTOR_KORBELL::CSP_PREDICTOR_KORBELL()
@@ -216,6 +216,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		}
 	}
 	
+	return;
 	fprintf(stderr, "Loading correlations from file... "); fflush(stderr);
 	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.correlations.item.residual", "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
@@ -405,14 +406,14 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 */
 double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, uint64_t day)
 {
-	UNUSED(day);
-	return global_average // 0.940119
-		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987
-		+ (user_effect[user] / (user_counts[user] + user_alpha)) // 0.755379
-		+ user_movie_average(user, movie) // 0.749824
-		+ user_movie_support(user, movie) // 0.744655
-		+ movie_user_average(movie, user) // 0.742681
-		+ movie_user_support(movie, user) // 0.742112
+	UNUSED(day);                                                      // Avg MAE   Avg RMSE
+	return global_average                                             // 0.940119  1.238528
+		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  1.072729
+		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379  0.931473
+		+ user_movie_average(user, movie)                             // 0.749824  0.922048
+		+ user_movie_support(user, movie)                             // 0.744655  0.912635
+		+ movie_user_average(movie, user)                             // 0.742681  0.910686
+		+ movie_user_support(movie, user)                             // 0.742112  0.907143
 	;
 }
 
@@ -475,14 +476,16 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 			Calculate alpha <- trans(r)*r / trans(r) * Ar.
 		*/
 		alpha = interim = 0;
-		for (i = 0; i < size; i++) alpha += r[i] * r[i]; // trans(r) * r
+		for (i = 0; i < size; i++)
+			alpha += r[i] * r[i]; // trans(r) * r
 		for (i = 0; i < size; i++)
 		{
 			Ar[i] = 0;
 			for (j = 0; j < size; j++)
 				Ar[i] += a[(i * size) + j] * r[j]; // A*r
 		}
-		for (i = 0; i < size; i++) interim += r[i] * Ar[i]; // trans(r) * Ar
+		for (i = 0; i < size; i++)
+			interim += r[i] * Ar[i]; // trans(r) * Ar
 		alpha /= interim;
 		
 		/*
@@ -592,7 +595,8 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 */
 double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t day)
 {
-	return 
-		predict_statistics(user, movie, day) // 0.742112 Average MAE
-	  + predict_neighbour(user, movie, day); // 0.689149 Average MAE (k = 20)
+	return                                   // Avg MAE   Avg RMSE
+		predict_statistics(user, movie, day) // 0.742112  0.907143
+//	  + predict_neighbour(user, movie, day)  // 0.689149  0.809202
+	;
 }
