@@ -588,7 +588,6 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	/*
 		Create the A hat matrix here, from precomputed A bar values
 	*/
-//	fprintf(stderr, "Filling A hat matrix\n"); fflush(stderr);
 	for (i = 0; i < MIN(k, position); i++)
 		for (j = 0; j < MIN(k, position); j++)
 			if (i == j)
@@ -606,7 +605,6 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	/*
 		Now create the b bar vector
 	*/
-//	fprintf(stderr, "Filling b hat vector\n"); fflush(stderr);
 	for (j = 0; j < MIN(k, position); j++)
 	{
 		min = MIN(neighbours[j].movie_id, movie);
@@ -617,7 +615,6 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	/*
 		Now solve Aw = b for w
 	*/
-//	fprintf(stderr, "Solving Aw = b for w\n"); fflush(stderr);
 	non_negative_quadratic_opt(ahat, bhat, MIN(k, position));
 	
 	/*
