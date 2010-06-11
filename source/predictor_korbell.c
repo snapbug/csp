@@ -112,6 +112,10 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	{
 		user_effect[user] = 0;
 		user_average[user] = 0;
+#ifdef TIME_EFFECTS
+		user_time_user_effect[user] = user_time_user_bottom[user] = user_time_user_average[user] = 0;
+		user_time_movie_effect[user] = user_time_movie_bottom[user] = user_time_movie_average[user] = 0;
+#endif
 		user_movie_average_effect[user] = user_movie_average_bottom[user] = user_movie_average_average[user] = 0;
 		user_movie_support_effect[user] = user_movie_average_bottom[user] = user_movie_support_average[user] = 0;
 	}
@@ -119,6 +123,10 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	{
 		movie_effect[movie] = 0;
 		movie_average[movie] = 0;
+#ifdef TIME_EFFECTS
+		movie_time_user_effect[movie] = movie_time_user_bottom[movie] = movie_time_user_average[movie] = 0;
+		movie_time_movie_effect[movie] = movie_time_movie_bottom[movie] = movie_time_movie_average[movie] = 0;
+#endif
 		movie_user_average_effect[movie] = movie_user_average_bottom[movie] = movie_user_average_average[movie] = 0;
 		movie_user_support_effect[movie] = movie_user_average_bottom[movie] = movie_user_support_average[movie] = 0;
 	}
@@ -155,7 +163,31 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 			user_average[user] += (double)rating;
 		}
 	}
+	
 #ifdef TIME_EFFECTS
+	/*
+		Calculate the User X Time(User) effect.
+	*/
+	fprintf(stderr, "Calculating User X Time(User) Effect.\n");
+	for (index = 0; index < (int64_t)dataset->number_users; index++)
+	{
+		user = index;
+		user_ratings = dataset->ratings_for_user(user, &user_counts[user]);
+		
+		user_first_ratings[user] = dataset->day(user_ratings);
+		for (i = 1; i < user_counts[user]; i++)
+			user_first_ratings[user] = MIN(user_first_ratings[user], dataset->day(user_ratings[i]));
+		
+		for (i = 0; i < user_counts[user]; i++)
+			user_time_user_average[user] += dataset->day(user_ratings[i]) - user_first_ratings[user];
+
+		for (i = 0; i < user_counts[user]; i++)
+		{
+			rating = dataset->rating(user_ratings[i]);
+			movie = dataset->movie(user_ratings[i]);
+			prediction = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha));
+		}
+	}
 #endif
 	
 	/*
