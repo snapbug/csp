@@ -9,6 +9,7 @@
 #include <omp.h>
 #include "csp_types.h"
 #include "dataset_netflix.h"
+#include "dataset_netflix_orig.h"
 #include "generator_factory.h"
 #include "predictor_factory.h"
 #include "param_block.h"
@@ -44,19 +45,50 @@ int main(int argc, char **argv)
 	//FILE *average_error = NULL;
 	
 	params->parse();
-	dataset = new CSP_dataset_netflix(params);
+	dataset = new CSP_dataset_netflix_orig(params);
 	stats = new CSP_stats(params->stats);
+	printf("Loaded dataset fine!\n");
 	
 	error_presented = new double[dataset->number_items];
 	error_rated = new double[dataset->number_items];
 
-	//if (params->generation_method == CSP_generator_factory::BAYESIAN || params->prediction_method == CSP_predictor_factory::KORBELL)
+	coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
+	/*
+		For every item.
+	*/
+	uint64_t *item_ratings, *user_ratings;
+	uint64_t item_count, user_count;
+	#pragma omp parallel for private(item_ratings, item_count, i, user_ratings, user_count, rating) schedule(dynamic, 500)
+	for (item = 0; item < dataset->number_items; item++)
 	{
-		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
-		fprintf(stderr, "Loading coraters from file... "); fflush(stdout);
-		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.coraters.item","rb"));
-		fprintf(stderr, "Done.\n"); fflush(stdout);
+		if (item % 100 == 0) { fprintf(stderr, "\r%5lu", item); fflush(stderr); }
+		item_ratings = dataset->ratings_for_movie(item, &item_count);
+		/*
+			For everyone that rated that item.
+		*/
+		for (i = 0; i < item_count; i++)
+		{
+			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
+			for (rating = 0; rating < user_count; rating++)
+			{
+				if (dataset->movie(user_ratings[rating]) > item)
+					coraters[tri_offset(item, dataset->movie(user_ratings[rating]))]++;
+			}
+		}
 	}
+	printf("\nDone calculating coraters!\n");
+	puts("");
+	printf("FOTR - TTT: %u\n", coraters[tri_offset(2451, 11520)]);
+	printf("FOTR - ROTK: %u\n", coraters[tri_offset(2451, 14239)]);
+	printf("TTT - ROTK: %u\n", coraters[tri_offset(11520, 14239)]);
+	puts("");
+//	//if (params->generation_method == CSP_generator_factory::BAYESIAN || params->prediction_method == CSP_predictor_factory::KORBELL)
+//	{
+//		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
+//		fprintf(stderr, "Loading coraters from file... "); fflush(stdout);
+//		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.coraters.item","rb"));
+//		fprintf(stderr, "Done.\n"); fflush(stdout);
+//	}
 	
 	/*
 		Set the error accumulators to 0.
@@ -193,21 +225,26 @@ int main(int argc, char **argv)
 //	printf("Pred: %f\tAct: %lu\n", predictor->predict(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
 //	printf("S-Pred: %f\tAct: %lu\n", predictor->predict_statistics(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
 //	printf("%lu %f\n", user, metric->score(user));
-	double error = 0;
-	double last_error;
+	double error = 0, pred;
+	uint64_t predictions = 0, test_count;
 	
 	predictor = new CSP_predictor_korbell(dataset, 20, coraters);
 	metric = new CSP_metric_mae(dataset, predictor);
 	
-	FILE *out = fopen("user.error.pk.stats.txt", "w");
 	for (user = 0; user < dataset->number_users; user++)
 	{
 		if (user % 1000 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		last_error = metric->score(user);
-		error += last_error;
-		fprintf(out, "%lu %f\n", user, last_error);
+		ratings = dataset->test_ratings_for_user(user, &test_count);
+		for (i = 0; i < test_count; i++)
+		{
+			pred = predictor->predict(user, dataset->movie(ratings[i]), dataset->day(ratings[i]));
+			pred = clip(pred, dataset->minimum, dataset->maximum);
+			error += pow(pred - dataset->rating(ratings[i]), 2);
+		}
+		predictions += test_count;
 	}
-	printf("\n Avg RMSE: %f\n", error / dataset->number_users);
+	printf("\nMade %lu predictions!\n", predictions);
+	printf("\nRMSE: %f\n", sqrt(error / predictions));
 	
 	for (i = 0; stats->stats & CSP_stats::ERROR_RATED && i < dataset->number_items; i++)
 		printf("ER: %lu %f\n", i, error_rated[i] / dataset->number_users);

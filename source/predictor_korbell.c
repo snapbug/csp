@@ -12,11 +12,22 @@
 /*
 	Save typing, increase readability, by defining these macros to calculate the effects.
 */
+#ifdef TIME_EFFECTS
+	#define user_time_user(user) (.25)
+	#define user_time_movie(user, movie) (.25)
+	#define movie_time_movie(movie) (.25)
+	#define movie_time_user(movie, user) (.25)
+#else
+	#define user_time_user(user) (0)
+	#define user_time_movie(user, movie) (0)
+	#define movie_time_movie(movie) (0)
+	#define movie_time_user(movie, user) (0)
+#endif
+
 #define user_movie_average(user, movie) ((user_movie_average_bottom[user] && user_counts[user] && movie_counts[movie]) ? ((user_counts[user] * (user_movie_average_effect[user] / user_movie_average_bottom[user])) / (user_counts[user] + user_movie_average_alpha)) * ((movie_average[movie] / movie_counts[movie]) - (user_movie_average_average[user] / user_counts[user])) : 0)
 #define user_movie_support(user, movie) ((user_movie_support_bottom[user] && user_counts[user]) ? ((user_counts[user] * (user_movie_support_effect[user] / user_movie_support_bottom[user])) / (user_counts[user] + user_movie_support_alpha)) * (sqrt((double)movie_counts[movie]) - (user_movie_support_average[user] / user_counts[user])) : 0)
 #define movie_user_average(movie, user) ((movie_user_average_bottom[movie] && movie_counts[movie] && user_counts[user]) ? ((movie_counts[movie] * (movie_user_average_effect[movie] / movie_user_average_bottom[movie])) / (movie_counts[movie] + movie_user_average_alpha)) * ((user_average[user] / user_counts[user]) - (movie_user_average_average[movie] / movie_counts[movie])) : 0)
 #define movie_user_support(movie, user) ((movie_user_support_bottom[movie] && movie_counts[movie]) ? ((movie_counts[movie] * (movie_user_support_effect[movie] / movie_user_support_bottom[movie])) / (movie_counts[movie] + movie_user_support_alpha)) * (sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie])) : 0)
-//#define THRESHOLD (0.00005)
 #define THRESHOLD (2.5e-3)
 
 /*
@@ -30,25 +41,46 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	int64_t index;
 	double prediction;
 	
-	global_average = 3.601435;
+	global_average = 3.6;
 	min = max = 1;
 
 	/*
 		Alpha Values from: http://www.netflixprize.com/community/viewtopic.php?pid=5563#p5563
 	*/
-	movie_alpha = 25.0;
-	user_alpha = 7.0;
-	movie_time_alpha = 4000.0;
-	user_movie_average_alpha = 90.0;
-	user_movie_support_alpha = 90.0;
-	movie_user_average_alpha = 50.0;
-	movie_user_support_alpha = 50.0;
-	beta = 500.0;
+	movie_alpha = 25;
+	user_alpha = 7;
+#ifdef TIME_EFFECTS
+	user_time_user_alpha = 550;
+	user_time_movie_alpha = 150;
+	movie_time_movie_alpha = 4000;
+	movie_time_user_alpha = 500;
+#endif
+	user_movie_average_alpha = 90;
+	user_movie_support_alpha = 90;
+	movie_user_average_alpha = 50;
+	movie_user_support_alpha = 50;
+	beta = 500;
 	
 	movie_effect = new double[dataset->number_items];
 	movie_counts = new uint64_t[dataset->number_items];
 	user_effect = new double[dataset->number_users];
 	user_counts = new uint64_t[dataset->number_users];
+#ifdef TIME_EFFECTS
+	user_first_ratings = new double[dataset->number_users];
+	movie_first_ratings = new double[dataset->number_items];
+	user_time_user_effect = new double[dataset->number_users];
+	user_time_user_bottom = new double[dataset->number_users];
+	user_time_user_average = new double[dataset->number_users];
+	user_time_movie_effect = new double[dataset->number_users];
+	user_time_movie_bottom = new double[dataset->number_users];
+	user_time_movie_average = new double[dataset->number_users];
+	movie_time_movie_effect = new double[dataset->number_items];
+	movie_time_movie_bottom = new double[dataset->number_items];
+	movie_time_movie_average = new double[dataset->number_items];
+	movie_time_user_effect = new double[dataset->number_items];
+	movie_time_user_bottom = new double[dataset->number_items];
+	movie_time_user_average = new double[dataset->number_items];
+#endif
 	user_movie_average_effect = new double[dataset->number_users];
 	user_movie_average_bottom = new double[dataset->number_users];
 	user_movie_average_average = new double[dataset->number_users];
@@ -123,6 +155,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 			user_average[user] += (double)rating;
 		}
 	}
+#ifdef TIME_EFFECTS
+#endif
 	
 	/*
 		Calculate the User X Movie(Average) effect.
@@ -406,14 +440,20 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 */
 double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, uint64_t day)
 {
-	UNUSED(day);                                                      // Avg MAE   Avg RMSE
-	return global_average                                             // 0.940119  1.238528
-		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  1.072729
-		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379  0.931473
-		+ user_movie_average(user, movie)                             // 0.749824  0.922048
-		+ user_movie_support(user, movie)                             // 0.744655  0.912635
-		+ movie_user_average(movie, user)                             // 0.742681  0.910686
-		+ movie_user_support(movie, user)                             // 0.742112  0.907143
+	UNUSED(day);                                                      // Avg MAE   Avg RMSE  Probe RMSE
+	return global_average                                             // 0.940119  1.238528  1.129834
+		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  1.072729  1.052684
+		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379  0.931473  0.984044
+#ifdef TIME_EFFECTS
+		+ user_time_user(user)
+//		+ user_time_movie(user, movie)
+//		+ movie_time_movie(movie)
+//		+ movie_time_user(movie, user)
+#endif
+//		+ user_movie_average(user, movie)                             // 0.749824  0.922048
+//		+ user_movie_support(user, movie)                             // 0.744655  0.912635
+//		+ movie_user_average(movie, user)                             // 0.742681  0.910686
+//		+ movie_user_support(movie, user)                             // 0.742112  0.907143
 	;
 }
 
@@ -595,7 +635,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 */
 double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t day)
 {
-	return                                   // Avg MAE   Avg RMSE
+	return                                   // Avg MAE   Avg RMSE  Probe RMSE
 		predict_statistics(user, movie, day) // 0.742112  0.907143
 //	  + predict_neighbour(user, movie, day)  // 0.689149  0.809202
 	;

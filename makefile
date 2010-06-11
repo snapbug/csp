@@ -3,7 +3,7 @@ BINDIR = bin
 OBJDIR = bin
 
 LDFLAGS = -lm -fopenmp
-MINUS_D = 
+MINUS_D = -DTIME_EFFECTS
 ifeq ($(CORR),abs)
 MINUS_D += -DABS_CORR
 endif
@@ -17,6 +17,7 @@ CC = g++
 
 PARTS = \
 	dataset_netflix.o \
+	dataset_netflix_orig.o \
 	generator_entropy.o \
 	generator_item_avg.o \
 	generator_naive_bayes.o \
@@ -53,7 +54,7 @@ $(PARTS_W_DIR) : makefile
 
 .PHONY : clean
 clean :
-	\rm $(OBJDIR)/*.o $(BINDIR)/csp
+	\rm -f $(OBJDIR)/*.o $(BINDIR)/csp
 
 .PHONY : depend
 depend :
