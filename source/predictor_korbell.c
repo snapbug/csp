@@ -13,21 +13,21 @@
 	Save typing, increase readability, by defining these macros to calculate the effects.
 */
 #ifdef TIME_EFFECTS
-	#define user_time_user(user) (.25)
-	#define user_time_movie(user, movie) (.25)
-	#define movie_time_movie(movie) (.25)
-	#define movie_time_user(movie, user) (.25)
+	#define user_time_user(user, day) ((user_time_user_bottom[user] && user_counts[user]) ? (((user_counts[user] * (user_time_user_effect[user] / user_time_user_bottom[user])) / (user_counts[user] + user_time_user_alpha)) * (sqrt((double)(day - user_first_ratings[user])) - (user_time_user_average[user] / user_counts[user]))) : 0)
+	#define user_time_movie(user, movie, day) ((user_time_movie_bottom[user] && user_counts[user]) ? (((user_counts[user] * (user_time_movie_effect[user] / user_time_movie_bottom[user])) / (user_counts[user] + user_time_movie_alpha)) * (sqrt((double)(day - movie_first_ratings[movie])) - (user_time_movie_average[user] / user_counts[user]))) : 0)
+	#define movie_time_movie(movie, day) ((movie_time_movie_bottom[movie] && movie_counts[movie]) ? (((movie_counts[movie] * (movie_time_movie_effect[movie] / movie_time_movie_bottom[movie])) / (movie_counts[movie] + movie_time_movie_alpha)) * (sqrt((double)(day - movie_first_ratings[movie])) - (movie_time_movie_average[movie] / movie_counts[movie]))) : 0)
+	#define movie_time_user(movie, user, day) ((movie_time_user_bottom[movie] && movie_counts[movie]) ? (((movie_counts[movie] * (movie_time_user_effect[movie] / movie_time_user_bottom[movie])) / (movie_counts[movie] + movie_time_user_alpha)) * (sqrt((double)(day - user_first_ratings[user])) - (movie_time_user_average[movie] / movie_counts[movie]))) : 0)
 #else
-	#define user_time_user(user) (0)
-	#define user_time_movie(user, movie) (0)
-	#define movie_time_movie(movie) (0)
-	#define movie_time_user(movie, user) (0)
+	#define user_time_user(user, day) (0)
+	#define user_time_movie(user, movie, day) (0)
+	#define movie_time_movie(movie, day) (0)
+	#define movie_time_user(movie, user, day) (0)
 #endif
-
 #define user_movie_average(user, movie) ((user_movie_average_bottom[user] && user_counts[user] && movie_counts[movie]) ? ((user_counts[user] * (user_movie_average_effect[user] / user_movie_average_bottom[user])) / (user_counts[user] + user_movie_average_alpha)) * ((movie_average[movie] / movie_counts[movie]) - (user_movie_average_average[user] / user_counts[user])) : 0)
 #define user_movie_support(user, movie) ((user_movie_support_bottom[user] && user_counts[user]) ? ((user_counts[user] * (user_movie_support_effect[user] / user_movie_support_bottom[user])) / (user_counts[user] + user_movie_support_alpha)) * (sqrt((double)movie_counts[movie]) - (user_movie_support_average[user] / user_counts[user])) : 0)
 #define movie_user_average(movie, user) ((movie_user_average_bottom[movie] && movie_counts[movie] && user_counts[user]) ? ((movie_counts[movie] * (movie_user_average_effect[movie] / movie_user_average_bottom[movie])) / (movie_counts[movie] + movie_user_average_alpha)) * ((user_average[user] / user_counts[user]) - (movie_user_average_average[movie] / movie_counts[movie])) : 0)
 #define movie_user_support(movie, user) ((movie_user_support_bottom[movie] && movie_counts[movie]) ? ((movie_counts[movie] * (movie_user_support_effect[movie] / movie_user_support_bottom[movie])) / (movie_counts[movie] + movie_user_support_alpha)) * (sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie])) : 0)
+
 #define THRESHOLD (2.5e-3)
 
 /*
@@ -36,7 +36,7 @@
 */
 CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters) : CSP_predictor(dataset), coraters(coraters), k(k)
 {
-	uint64_t i, min, max, movie, user, rating;
+	uint64_t i, min, max, movie, user, rating, day;
 	uint64_t *item_ratings, *user_ratings;
 	int64_t index;
 	double prediction;
@@ -66,8 +66,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	user_effect = new double[dataset->number_users];
 	user_counts = new uint64_t[dataset->number_users];
 #ifdef TIME_EFFECTS
-	user_first_ratings = new double[dataset->number_users];
-	movie_first_ratings = new double[dataset->number_items];
+	user_first_ratings = new uint64_t[dataset->number_users];
+	movie_first_ratings = new uint64_t[dataset->number_items];
 	user_time_user_effect = new double[dataset->number_users];
 	user_time_user_bottom = new double[dataset->number_users];
 	user_time_user_average = new double[dataset->number_users];
@@ -124,8 +124,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		movie_effect[movie] = 0;
 		movie_average[movie] = 0;
 #ifdef TIME_EFFECTS
-		movie_time_user_effect[movie] = movie_time_user_bottom[movie] = movie_time_user_average[movie] = 0;
 		movie_time_movie_effect[movie] = movie_time_movie_bottom[movie] = movie_time_movie_average[movie] = 0;
+		movie_time_user_effect[movie] = movie_time_user_bottom[movie] = movie_time_user_average[movie] = 0;
 #endif
 		movie_user_average_effect[movie] = movie_user_average_bottom[movie] = movie_user_average_average[movie] = 0;
 		movie_user_support_effect[movie] = movie_user_average_bottom[movie] = movie_user_support_average[movie] = 0;
@@ -169,6 +169,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		Calculate the User X Time(User) effect.
 	*/
 	fprintf(stderr, "Calculating User X Time(User) Effect.\n");
+	#pragma omp parallel for private(user, user_ratings, i, rating, movie, day, prediction)
 	for (index = 0; index < (int64_t)dataset->number_users; index++)
 	{
 		user = index;
@@ -179,13 +180,99 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 			user_first_ratings[user] = MIN(user_first_ratings[user], dataset->day(user_ratings[i]));
 		
 		for (i = 0; i < user_counts[user]; i++)
-			user_time_user_average[user] += dataset->day(user_ratings[i]) - user_first_ratings[user];
+			user_time_user_average[user] += sqrt((double)(dataset->day(user_ratings[i]) - user_first_ratings[user]));
 
 		for (i = 0; i < user_counts[user]; i++)
 		{
 			rating = dataset->rating(user_ratings[i]);
 			movie = dataset->movie(user_ratings[i]);
+			day = dataset->day(user_ratings[i]);
 			prediction = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha));
+			user_time_user_effect[user] += (rating - prediction) * (sqrt((double)(day - user_first_ratings[user])) - (user_time_user_average[user] / user_counts[user]));
+			user_time_user_bottom[user] += pow(sqrt((double)(day - user_first_ratings[user])) - (user_time_user_average[user] / user_counts[user]), 2);
+		}
+	}
+	
+	/*
+		Calculate the User X Time(Movie) effect.
+	*/
+	fprintf(stderr, "Calculating User X Time(Movie) Effect.\n");
+	for (index = 0; index < (int64_t)dataset->number_items; index++)
+	{
+		movie = index;
+		item_ratings = dataset->ratings_for_movie(movie, &movie_counts[movie]);
+		movie_first_ratings[movie] = dataset->day(item_ratings);
+		for (i = 1; i < movie_counts[movie]; i++)
+			movie_first_ratings[movie] = MIN(movie_first_ratings[movie], dataset->day(item_ratings[i]));
+	}
+	
+	#pragma omp parallel for private(user, user_ratings, i, rating, movie, day, prediction)
+	for (index = 0; index < (int64_t)dataset->number_users; index++)
+	{
+		user = index;
+		user_ratings = dataset->ratings_for_user(user, &user_counts[user]);
+		
+		for (i = 0; i < user_counts[user]; i++)
+			user_time_movie_average[user] += sqrt((double)(dataset->day(user_ratings[i]) - movie_first_ratings[dataset->movie(user_ratings[i])]));
+		
+		for (i = 0; i < user_counts[user]; i++)
+		{
+			rating = dataset->rating(user_ratings[i]);
+			movie = dataset->movie(user_ratings[i]);
+			day = dataset->day(user_ratings[i]);
+			prediction = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_time_user(user, day);
+			
+			user_time_movie_effect[user] += (rating - prediction) * (sqrt((double)(day - movie_first_ratings[movie])) - (user_time_movie_average[user] / user_counts[user]));
+			user_time_movie_bottom[user] += pow(sqrt((double)(day - movie_first_ratings[movie])) - (user_time_movie_average[user] / user_counts[user]), 2);
+		}
+	}
+	
+	/*
+		Calculate the Movie X Time(Movie) effect.
+	*/
+	fprintf(stderr, "Calculating Movie X Time(Movie) Effect.\n");
+	#pragma omp parallel for private(user, item_ratings, i, rating, movie, day, prediction)
+	for (index = 0; index < (int64_t)dataset->number_items; index++)
+	{
+		movie = index;
+		item_ratings = dataset->ratings_for_movie(movie, &movie_counts[movie]);
+		
+		for (i = 0; i < movie_counts[movie]; i++)
+			movie_time_movie_average[movie] += sqrt((double)(dataset->day(item_ratings[i]) - movie_first_ratings[movie]));
+
+		for (i = 0; i < movie_counts[movie]; i++)
+		{
+			rating = dataset->rating(item_ratings[i]);
+			user = dataset->user(item_ratings[i]);
+			day = dataset->day(item_ratings[i]);
+			prediction = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_time_user(user, day) + user_time_movie(user, movie, day);
+			movie_time_movie_effect[movie] += (rating - prediction) * (sqrt((double)(day - movie_first_ratings[movie])) - (movie_time_movie_average[movie] / movie_counts[movie]));
+			movie_time_movie_bottom[movie] += pow(sqrt((double)(day - movie_first_ratings[movie])) - (movie_time_movie_average[movie] / movie_counts[movie]), 2);
+		}
+	}
+	
+	/*
+		Calculate the Movie X Time(User) effect.
+	*/
+	fprintf(stderr, "Calculating Movie X Time(User) Effect.\n");
+	#pragma omp parallel for private(user, item_ratings, i, rating, movie, day, prediction)
+	for (index = 0; index < (int64_t)dataset->number_items; index++)
+	{
+		movie = index;
+		item_ratings = dataset->ratings_for_movie(movie, &movie_counts[movie]);
+		
+		for (i = 0; i < movie_counts[movie]; i++)
+			movie_time_user_average[movie] += sqrt((double)(dataset->day(item_ratings[i]) - user_first_ratings[dataset->user(item_ratings[i])]));
+		
+		for (i = 0; i < movie_counts[movie]; i++)
+		{
+			rating = dataset->rating(item_ratings[i]);
+			user = dataset->user(item_ratings[i]);
+			day = dataset->day(item_ratings[i]);
+			prediction = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_time_user(user, day) + user_time_user(user, day) + user_time_movie(user, movie, day) + movie_time_movie(movie, day);
+			
+			movie_time_user_effect[movie] += (rating - prediction) * (sqrt((double)(day - user_first_ratings[user])) - (movie_time_user_average[movie] / movie_counts[movie]));
+			movie_time_user_bottom[movie] += pow(sqrt((double)(day - user_first_ratings[user])) - (movie_time_user_average[movie] / movie_counts[movie]), 2);
 		}
 	}
 #endif
@@ -208,6 +295,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 			rating = dataset->rating(user_ratings[i]);
 			movie = dataset->movie(user_ratings[i]);
 			prediction = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha));
+			day = dataset->day(user_ratings[i]);
+			prediction += user_time_user(user, day) + user_time_movie(user, movie, day) + movie_time_movie(movie, day) + movie_time_user(movie, user, day);
 			user_movie_average_effect[user] += (rating - prediction) * ((movie_average[movie] / movie_counts[movie]) - (user_movie_average_average[user] / user_counts[user]));
 			user_movie_average_bottom[user] += pow((movie_average[movie] / movie_counts[movie]) - (user_movie_average_average[user] / user_counts[user]), 2);
 		}
@@ -231,6 +320,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 			rating = dataset->rating(user_ratings[i]);
 			movie = dataset->movie(user_ratings[i]);
 			prediction = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_movie_average(user, movie);
+			day = dataset->day(user_ratings[i]);
+			prediction += user_time_user(user, day) + user_time_movie(user, movie, day) + movie_time_movie(movie, day) + movie_time_user(movie, user, day);
 			user_movie_support_effect[user] += (rating - prediction) * (sqrt((double)movie_counts[movie]) - (user_movie_support_average[user] / user_counts[user]));
 			user_movie_support_bottom[user] += pow(sqrt((double)movie_counts[movie]) - (user_movie_support_average[user] / user_counts[user]), 2);
 		}
@@ -254,6 +345,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 			rating = dataset->rating(item_ratings[i]);
 			user = dataset->user(item_ratings[i]);
 			prediction = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_movie_average(user, movie) + user_movie_support(user, movie);
+			day = dataset->day(item_ratings[i]);
+			prediction += user_time_user(user, day) + user_time_movie(user, movie, day) + movie_time_movie(movie, day) + movie_time_user(movie, user, day);
 			movie_user_average_effect[movie] += (rating - prediction) * ((user_average[user] / user_counts[user]) - (movie_user_average_average[movie] / movie_counts[movie]));
 			movie_user_average_bottom[movie] += pow((user_average[user] / user_counts[user]) - (movie_user_average_average[movie] / movie_counts[movie]), 2);
 		}
@@ -277,14 +370,16 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 			rating = dataset->rating(item_ratings[i]);
 			user = dataset->user(item_ratings[i]);
 			prediction = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_movie_average(user, movie) + user_movie_support(user, movie) + movie_user_average(movie, user);
+			day = dataset->day(item_ratings[i]);
+			prediction += user_time_user(user, day) + user_time_movie(user, movie, day) + movie_time_movie(movie, day) + movie_time_user(movie, user, day);
 			movie_user_support_effect[movie] += (rating - prediction) * (sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie]));
 			movie_user_support_bottom[movie] += pow(sqrt((double)user_counts[user]) - (movie_user_support_average[movie] / movie_counts[movie]), 2);
 		}
 	}
 	
-	return;
 	fprintf(stderr, "Loading correlations from file... "); fflush(stderr);
-	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.correlations.item.residual", "rb"));
+//	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.correlations.item.residual", "rb"));
+	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/correlations.item.original.data", "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
 	
 	/*
@@ -299,35 +394,29 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	/*
 		Precalculate the A bar and b bar
 	*/
-	double residual_i, residual_j;
+/*	double residual_i, residual_j;
 	uint64_t other, item_count, user_count, j;
 	bar_avg_tri_top = 0;
 	fprintf(stderr, "Calculating A bar...\n"); fflush(stderr);
-	#pragma omp parallel for private(movie, item_ratings, item_count, user_ratings, user_count, residual_i, residual_j, i, j, other) schedule(dynamic, 500) num_threads(8)
+	#pragma omp parallel for private(movie, item_ratings, item_count, user_ratings, user_count, residual_i, residual_j, i, j, other) schedule(dynamic, 500) num_threads(7)
 	for (index = 0; index < (int64_t)dataset->number_items; index++)
 	{
 		movie = index;
 		if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
 		item_ratings = dataset->ratings_for_movie(movie, &item_count);
-		/*
 			For everyone that watched that movie.
-		*/
 		for (i = 0; i < item_count; i++)
 		{
 			residual_i = dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), movie, dataset->day(item_ratings[i]));
 			
 			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
-			/*
 				For every movie they saw.
-			*/
 			for (j = 0; j < user_count; j++)
 			{
 				other = dataset->movie(user_ratings[j]);
 				if (movie < other)
 				{
-					/*
 						Update the intermediate values.
-					*/
 					residual_j = dataset->rating(user_ratings[j]) - predict_statistics(dataset->user(user_ratings[j]), other, dataset->day(user_ratings[j]));
 					abar_tri[tri_offset(movie, other)] += residual_i * residual_j;
 				}
@@ -357,6 +446,16 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		bar_avg_dia_top += abar_dia[movie];
 	}
 	bar_avg_dia_bot = dataset->number_items;
+	*/
+	fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/abar_tri.original.data", "rb"));
+	fread(abar_dia, sizeof(*abar_dia), dataset->number_items, fopen("./data/abar_dia.original.data", "rb"));
+	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; i++)
+		bar_avg_tri_top += abar_tri[i];
+	bar_avg_tri_bot = tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1;
+	for (i = 0; i < dataset->number_items; i++)
+		bar_avg_dia_top += abar_dia[i];
+	bar_avg_dia_bot = dataset->number_items;
+	
 	fprintf(stderr, "done.\n"); fflush(stderr);
 }
 
@@ -472,20 +571,20 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 */
 double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, uint64_t day)
 {
-	UNUSED(day);                                                      // Avg MAE   Avg RMSE  Probe RMSE
-	return global_average                                             // 0.940119  1.238528  1.129834
-		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  1.072729  1.052684
-		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379  0.931473  0.984044
+	                                                                  // Avg MAE   Avg RMSE  Quiz
+	return global_average                                             // 0.940119  1.238528  1.131419
+		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  1.072729  1.054314
+		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379  0.931473  0.982653
 #ifdef TIME_EFFECTS
-		+ user_time_user(user)
-//		+ user_time_movie(user, movie)
-//		+ movie_time_movie(movie)
-//		+ movie_time_user(movie, user)
+		+ user_time_user(user, day)                                   //    NA        NA     0.978032
+		+ user_time_movie(user, movie, day)                           //    NA        NA     0.975434
+		+ movie_time_movie(movie, day)                                //    NA        NA     0.973580
+		+ movie_time_user(movie, user, day)                           //    NA        NA     0.972888
 #endif
-//		+ user_movie_average(user, movie)                             // 0.749824  0.922048
-//		+ user_movie_support(user, movie)                             // 0.744655  0.912635
-//		+ movie_user_average(movie, user)                             // 0.742681  0.910686
-//		+ movie_user_support(movie, user)                             // 0.742112  0.907143
+		+ user_movie_average(user, movie)                             // 0.749824  0.922048  0.968554
+		+ user_movie_support(user, movie)                             // 0.744655  0.912635  0.964815
+		+ movie_user_average(movie, user)                             // 0.742681  0.910686  0.963609
+		+ movie_user_support(movie, user)                             // 0.742112  0.907143  0.962599
 	;
 }
 
@@ -531,6 +630,10 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 			for (j = 0; j < size; j++)
 				r[i] -= a[(i * size) + j] * weights[j];
 		}
+		//printf("A: "); for (i = 0; i < size; i++) printf("% 1.10f", a[i]); printf("\n");
+		//printf("b: "); for (i = 0; i < size; i++) printf("% 1.10f", b[i]); printf("\n");
+		//printf("Weights: "); for (i = 0; i < size; i++) printf("% 1.10f", weights[i]); printf("\n");
+		//printf("R: "); for (i = 0; i < size; i++) printf("% 1.10f", r[i]); printf("\n");
 		
 		/*
 			Non-negativity contraints, and magnitude.
@@ -542,7 +645,7 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 				r[i] = 0;
 			magnitude += r[i] * r[i];
 		}
-//		magnitude = sqrt(magnitude);
+		//printf("R: "); for (i = 0; i < size; i++) printf("% 1.10f", r[i]); printf("\n");
 		
 		/*
 			Calculate alpha <- trans(r)*r / trans(r) * Ar.
@@ -566,17 +669,22 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 		for (i = 0; i < size; i++) 
 			if (r[i] < 0) 
 				alpha = MIN(fabs(alpha), fabs(weights[i] / r[i])) * (alpha / fabs(alpha));
+		if (isnan(alpha) || alpha == 0)
+			alpha = 0.0001;
+		//printf("Alpha: % 1.10f\n");
 		
 		/*
 			Adjust weights.
 		*/
 		for (i = 0; i < size; i++)
 			weights[i] += alpha * r[i];
+		//printf("Weights: "); for (i = 0; i < size; i++) printf("% 1.10f", weights[i]); printf("\n");
 		
 		for (i = 0; i < size; i++)
 			if (weights[i] < 1e-10)
 				weights[i] = 0; // robustness tip from Yehuda
-		
+		//printf("Weights: "); for (i = 0; i < size; i++) printf("% 1.10f", weights[i]); printf("\n");
+		//printf("Magnitude: % 1.10f\n\n\n", sqrt(magnitude));
 	} while (magnitude > THRESHOLD);
 	
 	delete [] r;
@@ -596,8 +704,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
 	for (i = 0; i < user_count; i++)
-	{
-		if (dataset->included(user_ratings[i]))
+//		if (dataset->included(user_ratings[i]))
 		{
 			min = MIN(movie, dataset->movie(user_ratings[i]));
 			max = MAX(movie, dataset->movie(user_ratings[i]));
@@ -610,7 +717,6 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 			
 			position++;
 		}
-	}
 	
 	/*
 		Sort to get the closest neighbours at the top.
@@ -652,7 +758,6 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	/*
 		Now use the weights for the prediction.
 	*/
-
 	for (i = 0; i < MIN(k, position); i++)
 		prediction += weights[i] * neighbours[i].residual;
 	return prediction;
@@ -664,8 +769,8 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 */
 double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t day)
 {
-	return                                   // Avg MAE   Avg RMSE  Probe RMSE
-		predict_statistics(user, movie, day) // 0.742112  0.907143
-//	  + predict_neighbour(user, movie, day)  // 0.689149  0.809202
+	return                                   // Avg MAE   Avg RMSE  Quiz RMSE
+		predict_statistics(user, movie, day) // 0.742112  0.907143  0.962599
+	  + predict_neighbour(user, movie, day)  // 0.689149  0.809202  0.907961
 	;
 }

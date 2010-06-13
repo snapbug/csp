@@ -25,6 +25,18 @@ int movie_search(const void *a, const void *b)
 	return (key > item) - (key < item);
 }
 
+int sort(const void *a, const void *b)
+{
+	uint64_t x = *(uint64_t *)a;
+	uint64_t y = *(uint64_t *)b;
+	
+	if ((x >> 15 & 32767) < (y >> 15 & 32767)) return -1;
+	if ((x >> 15 & 32767) > (y >> 15 & 32767)) return 1;
+	if ((x >> 30 & 524287) < (y >> 30 & 524287)) return -1;
+	if ((x >> 30 & 524287) > (y >> 30 & 524287)) return 1;
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	CSP_param_block *params = new CSP_param_block(argc, argv);
@@ -47,48 +59,17 @@ int main(int argc, char **argv)
 	params->parse();
 	dataset = new CSP_dataset_netflix_orig(params);
 	stats = new CSP_stats(params->stats);
-	printf("Loaded dataset fine!\n");
 	
 	error_presented = new double[dataset->number_items];
 	error_rated = new double[dataset->number_items];
 
-	coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
-	/*
-		For every item.
-	*/
-	uint64_t *item_ratings, *user_ratings;
-	uint64_t item_count, user_count;
-	#pragma omp parallel for private(item_ratings, item_count, i, user_ratings, user_count, rating) schedule(dynamic, 500)
-	for (item = 0; item < dataset->number_items; item++)
+	//if (params->generation_method == CSP_generator_factory::BAYESIAN || params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
-		if (item % 100 == 0) { fprintf(stderr, "\r%5lu", item); fflush(stderr); }
-		item_ratings = dataset->ratings_for_movie(item, &item_count);
-		/*
-			For everyone that rated that item.
-		*/
-		for (i = 0; i < item_count; i++)
-		{
-			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
-			for (rating = 0; rating < user_count; rating++)
-			{
-				if (dataset->movie(user_ratings[rating]) > item)
-					coraters[tri_offset(item, dataset->movie(user_ratings[rating]))]++;
-			}
-		}
+		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
+		fprintf(stderr, "Loading coraters from file... "); fflush(stdout);
+		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/coraters.item.original.data","rb"));
+		fprintf(stderr, "Done.\n"); fflush(stdout);
 	}
-	printf("\nDone calculating coraters!\n");
-	puts("");
-	printf("FOTR - TTT: %u\n", coraters[tri_offset(2451, 11520)]);
-	printf("FOTR - ROTK: %u\n", coraters[tri_offset(2451, 14239)]);
-	printf("TTT - ROTK: %u\n", coraters[tri_offset(11520, 14239)]);
-	puts("");
-//	//if (params->generation_method == CSP_generator_factory::BAYESIAN || params->prediction_method == CSP_predictor_factory::KORBELL)
-//	{
-//		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
-//		fprintf(stderr, "Loading coraters from file... "); fflush(stdout);
-//		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.coraters.item","rb"));
-//		fprintf(stderr, "Done.\n"); fflush(stdout);
-//	}
 	
 	/*
 		Set the error accumulators to 0.
@@ -106,18 +87,18 @@ int main(int argc, char **argv)
 		default: exit(puts("Unknown generation method"));
 	}
 	
-	//switch (params->prediction_method)
-	//{
-	//	case CSP_predictor_factory::CONSTANT: predictor = new CSP_predictor_constant(dataset); break;
-	//	case CSP_predictor_factory::GLOBAL_AVERAGE: predictor = new CSP_predictor_global_avg(dataset); break;
-	//	case CSP_predictor_factory::ITEM_AVERAGE: predictor = new CSP_predictor_item_avg(dataset); break;
-	//	case CSP_predictor_factory::ITEM_ITEM_KNN: predictor = new CSP_predictor_item_knn(dataset, 20); break;
-	//	case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 20, coraters); break;
-	//	case CSP_predictor_factory::RANDOM: predictor = new CSP_predictor_random(dataset); break;
-	//	case CSP_predictor_factory::USER_AVERAGE: predictor = new CSP_predictor_user_avg(dataset); break;
-	//	case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
-	//	default: exit(puts("Unknown prediction method"));
-	//}
+	/*switch (params->prediction_method)
+	{
+		case CSP_predictor_factory::CONSTANT: predictor = new CSP_predictor_constant(dataset); break;
+		case CSP_predictor_factory::GLOBAL_AVERAGE: predictor = new CSP_predictor_global_avg(dataset); break;
+		case CSP_predictor_factory::ITEM_AVERAGE: predictor = new CSP_predictor_item_avg(dataset); break;
+		case CSP_predictor_factory::ITEM_ITEM_KNN: predictor = new CSP_predictor_item_knn(dataset, 20); break;
+		case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 20, coraters); break;
+		case CSP_predictor_factory::RANDOM: predictor = new CSP_predictor_random(dataset); break;
+		case CSP_predictor_factory::USER_AVERAGE: predictor = new CSP_predictor_user_avg(dataset); break;
+		case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
+		default: exit(puts("Unknown prediction method"));
+	}*/
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
@@ -220,31 +201,34 @@ int main(int argc, char **argv)
 			error_presented[item] += last_prediction_error;
 	}
 	
-//	user = 168;
-//	ratings = dataset->test_ratings_for_user(user, &count);
-//	printf("Pred: %f\tAct: %lu\n", predictor->predict(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
-//	printf("S-Pred: %f\tAct: %lu\n", predictor->predict_statistics(user, dataset->movie(ratings), dataset->day(ratings)), dataset->rating(ratings));
-//	printf("%lu %f\n", user, metric->score(user));
 	double error = 0, pred;
-	uint64_t predictions = 0, test_count;
-	
+	uint64_t predictions = 0, test_count, uc;
+
 	predictor = new CSP_predictor_korbell(dataset, 20, coraters);
 	metric = new CSP_metric_mae(dataset, predictor);
 	
+	user = 480185;
 	for (user = 0; user < dataset->number_users; user++)
 	{
 		if (user % 1000 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		ratings = dataset->test_ratings_for_user(user, &test_count);
 		for (i = 0; i < test_count; i++)
 		{
-			pred = predictor->predict(user, dataset->movie(ratings[i]), dataset->day(ratings[i]));
-			pred = clip(pred, dataset->minimum, dataset->maximum);
-			error += pow(pred - dataset->rating(ratings[i]), 2);
+			if (dataset->included(ratings[i]))
+			{
+				pred = predictor->predict(user, dataset->movie(ratings[i]), dataset->day(ratings[i]));
+				pred = clip(pred, dataset->minimum, dataset->maximum);
+				error += pow(pred - dataset->rating(ratings[i]), 2);
+				predictions++;
+				break;
+			}
 		}
-		predictions += test_count;
 	}
-	printf("\nMade %lu predictions!\n", predictions);
-	printf("\nRMSE: %f\n", sqrt(error / predictions));
+	puts("");
+	puts("");
+	printf("Made %lu predictions!\n", predictions);
+	puts("");
+	printf("RMSE: %f\n", sqrt(error / predictions));
 	
 	for (i = 0; stats->stats & CSP_stats::ERROR_RATED && i < dataset->number_items; i++)
 		printf("ER: %lu %f\n", i, error_rated[i] / dataset->number_users);

@@ -11,7 +11,7 @@
 	typedef signed int int32_t;
 	typedef signed short int16_t;
 	typedef signed char int8_t; 
-	#include <float.h> // for _isnan
+	#include <float.h> // for _isnan and _finite
 	#define isnan _isnan
 	#define isinf(x) (!_finite(x) && !isnan(x))
 #else

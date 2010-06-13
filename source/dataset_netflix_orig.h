@@ -33,13 +33,16 @@ public:
 	inline virtual uint64_t rating(uint64_t example) { return example >> 0 & 7; }
 	
 private:
-	uint64_t data[99072112]; // this is the most possible ratings we could have, won't use all this space
+//	uint64_t data[99072112]; // this is the most possible ratings we could have, won't use all this space
+	uint64_t data[100480507];
 	uint64_t index[480189];
 	
-	uint64_t testing_data[1408395]; // the largest test set is the proportional one
+//	uint64_t testing_data[1408395]; // the largest test set is the proportional one
+	uint64_t testing_data[2817131]; 
 	uint64_t testing_index[480189];
 	
-	uint64_t extra_data[99072112];
+//	uint64_t extra_data[99072112];
+	uint64_t extra_data[100480507];
 	uint64_t extra_index[17770];
 };
 

@@ -23,7 +23,7 @@ private:
 	double *user_effect, *movie_effect;
 	uint64_t *user_counts, *movie_counts;
 #ifdef TIME_EFFECTS
-	double *user_first_ratings, *movie_first_ratings;
+	uint64_t *user_first_ratings, *movie_first_ratings;
 	double *user_time_user_effect, *user_time_user_bottom, *user_time_user_average;
 	double *user_time_movie_effect, *user_time_movie_bottom, *user_time_movie_average;
 	double *movie_time_movie_effect, *movie_time_movie_bottom, *movie_time_movie_average;
@@ -46,9 +46,7 @@ private:
 	double beta;
 	double *weights;
 	
-public:
 	double predict_statistics(uint64_t user, uint64_t movie, uint64_t day);
-private:
 	double predict_neighbour(uint64_t user, uint64_t movie, uint64_t day);
 	static int neighbour_compare(const void *a, const void *b);
 	void non_negative_quadratic_opt(float *a, float *b, uint64_t size);

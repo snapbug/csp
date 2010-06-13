@@ -22,14 +22,14 @@ CSP_dataset_netflix_orig::CSP_dataset_netflix_orig(CSP_param_block *params) : CS
 	
 	number_items = 17770;
 	number_users = 480189;
-	number_ratings = 99072112;
-	number_test_ratings = 1408395;
+	number_ratings = 100480507;
+	number_test_ratings = 2817131;
 	
 	/*
 		Setup the filenames correctly.
 	*/
-	sprintf(testing_filename, "./data/probe.user");
-	sprintf(training_filename, "./data/training.mp.user");
+	sprintf(testing_filename, "./data/orig.judging.user");
+	sprintf(training_filename, "./data/orig.netflix.users");
 	
 	/*
 		Now actually load the data.
@@ -47,7 +47,7 @@ CSP_dataset_netflix_orig::CSP_dataset_netflix_orig(CSP_param_block *params) : CS
 	{
 		loaded_extra = TRUE;
 		fprintf(stderr, "Loading extra data... "); fflush(stderr);
-		sprintf(training_filename, "./data/training.mp.movie");
+		sprintf(training_filename, "./data/orig.netflix.movie");
 		size = fread(&extra_data, sizeof(*extra_data), number_ratings, fopen(training_filename, "rb"));
 		size = fread(&extra_index, sizeof(*extra_index), number_items, fopen(strcat(training_filename, ".index"), "rb"));
 		fprintf(stderr, "done.\n"); fflush(stderr);

@@ -2,7 +2,7 @@ SRCDIR = source
 BINDIR = bin
 OBJDIR = bin
 
-#MINUS_D = -DSINGLE
+MINUS_D = -DTIME_EFFECTS
 CFLAGS = /W4 -D_CRT_SECURE_NO_WARNINGS /nologo /Zi $(MINUS_D) /Ox /fp:fast /GL /Gy /openmp
 
 FIXED = /link /fixed:no
@@ -12,6 +12,7 @@ CC = @cl
 
 PARTS = \
 	$(OBJDIR)\dataset_netflix.obj \
+	$(OBJDIR)\dataset_netflix_orig.obj \
 	$(OBJDIR)\generator_entropy.obj \
 	$(OBJDIR)\generator_item_avg.obj \
 	$(OBJDIR)\generator_naive_bayes.obj \
