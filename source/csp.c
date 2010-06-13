@@ -220,7 +220,6 @@ int main(int argc, char **argv)
 				pred = clip(pred, dataset->minimum, dataset->maximum);
 				error += pow(pred - dataset->rating(ratings[i]), 2);
 				predictions++;
-				break;
 			}
 		}
 	}

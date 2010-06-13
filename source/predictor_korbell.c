@@ -771,6 +771,6 @@ double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t da
 {
 	return                                   // Avg MAE   Avg RMSE  Quiz RMSE
 		predict_statistics(user, movie, day) // 0.742112  0.907143  0.962599
-	  + predict_neighbour(user, movie, day)  // 0.689149  0.809202  0.907961
+	  + predict_neighbour(user, movie, day)  // 0.689149  0.809202  0.911633
 	;
 }
