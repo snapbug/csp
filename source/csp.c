@@ -214,7 +214,7 @@ int main(int argc, char **argv)
 		ratings = dataset->test_ratings_for_user(user, &test_count);
 		for (i = 0; i < test_count; i++)
 		{
-			if (dataset->included(ratings[i]))
+			if (!dataset->included(ratings[i]))
 			{
 				pred = predictor->predict(user, dataset->movie(ratings[i]), dataset->day(ratings[i]));
 				pred = clip(pred, dataset->minimum, dataset->maximum);
