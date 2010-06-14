@@ -96,14 +96,10 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	movie_user_support_bottom = new double[dataset->number_items];
 	movie_user_support_average = new double[dataset->number_items];
 	
-	neighbours = new neighbour[dataset->number_items];	
 	correlation = new float[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
 	abar_tri = new double[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
 	abar_dia = new double[dataset->number_items];
 	bbar = abar_tri; // bbar's values are the same as abar's, but make this alias to make it look nicer
-	ahat = new float[k * k];
-	bhat = new float[k];
-	weights = new double[k];
 	
 	/*
 		Initialise everything.
@@ -446,6 +442,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	}
 	bar_avg_dia_bot = dataset->number_items;
 	*/
+	fprintf(stderr, "Loading abar from file... ");
 	fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.abar_tri.item.residual", "rb"));
 	fread(abar_dia, sizeof(*abar_dia), dataset->number_items, fopen("./data/netflix.abar_dia.item.residual", "rb"));
 	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; i++)
@@ -454,7 +451,6 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	for (i = 0; i < dataset->number_items; i++)
 		bar_avg_dia_top += abar_dia[i];
 	bar_avg_dia_bot = dataset->number_items;
-	
 	fprintf(stderr, "done.\n"); fflush(stderr);
 }
 
@@ -570,6 +566,7 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 */
 double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, uint64_t day)
 {
+	UNUSED(day);
 	                                                                  // Avg MAE   Avg RMSE  Quiz
 	return global_average                                             // 0.940119  1.238528  1.131419
 		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  1.072729  1.054314
@@ -608,14 +605,20 @@ int CSP_predictor_korbell::neighbour_compare(const void *a, const void *b)
 	CSP_PREDICTOR_KORBELL::NON_NEGATIVE_QUADRATIC_OPT()
 	---------------------------------------------------
 */
-void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint64_t size)
+void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, double *w, uint64_t size)
 {
 	uint64_t i, j;
 	double *r = new double[size];
 	double *Ar = new double[size];
 	double alpha, interim, magnitude;
 	
-	for (i = 0; i < size; i++) weights[i] = (double)rand() / (double)RAND_MAX;
+	/*
+		Initialis weights
+	*/
+//	for (i = 0; i < size; i++)
+//		w[i] = (double)rand() / (double)RAND_MAX;
+	for (i = 0; i < size; i++)
+		w[i] = 1e-9;//(double)rand() / (double)RAND_MAX;
 	
 	do 
 	{
@@ -627,11 +630,11 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 		{
 			r[i] = b[i];
 			for (j = 0; j < size; j++)
-				r[i] -= a[(i * size) + j] * weights[j];
+				r[i] -= a[(i * size) + j] * w[j];
 		}
 		//printf("A: "); for (i = 0; i < size; i++) printf("% 1.10f", a[i]); printf("\n");
 		//printf("b: "); for (i = 0; i < size; i++) printf("% 1.10f", b[i]); printf("\n");
-		//printf("Weights: "); for (i = 0; i < size; i++) printf("% 1.10f", weights[i]); printf("\n");
+		//printf("W: "); for (i = 0; i < size; i++) printf("% 1.10f", w[i]); printf("\n");
 		//printf("R: "); for (i = 0; i < size; i++) printf("% 1.10f", r[i]); printf("\n");
 		
 		/*
@@ -640,7 +643,7 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 		magnitude = 0;
 		for (i = 0; i < size; i++) 
 		{
-			if (weights[i] < 1e-10 && r[i] < 0)
+			if (w[i] < 1e-10 && r[i] < 0)
 				r[i] = 0;
 			magnitude += r[i] * r[i];
 		}
@@ -667,7 +670,7 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 		*/
 		for (i = 0; i < size; i++) 
 			if (r[i] < 0) 
-				alpha = MIN(fabs(alpha), fabs(weights[i] / r[i])) * (alpha / fabs(alpha));
+				alpha = MIN(fabs(alpha), fabs(w[i] / r[i])) * (alpha / fabs(alpha));
 		if (isnan(alpha) || alpha == 0)
 			alpha = 0.0001;
 		//printf("Alpha: % 1.10f\n");
@@ -676,13 +679,13 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 			Adjust weights.
 		*/
 		for (i = 0; i < size; i++)
-			weights[i] += alpha * r[i];
-		//printf("Weights: "); for (i = 0; i < size; i++) printf("% 1.10f", weights[i]); printf("\n");
+			w[i] += alpha * r[i];
+		//printf("W: "); for (i = 0; i < size; i++) printf("% 1.10f", w[i]); printf("\n");
 		
 		for (i = 0; i < size; i++)
-			if (weights[i] < 1e-10)
-				weights[i] = 0; // robustness tip from Yehuda
-		//printf("Weights: "); for (i = 0; i < size; i++) printf("% 1.10f", weights[i]); printf("\n");
+			if (w[i] < 1e-10)
+				w[i] = 0; // robustness tip from Yehuda
+		//printf("W: "); for (i = 0; i < size; i++) printf("% 1.10f", w[i]); printf("\n");
 		//printf("Magnitude: % 1.10f\n\n\n", sqrt(magnitude));
 	} while (magnitude > THRESHOLD);
 	
@@ -697,13 +700,18 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, uint6
 double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, uint64_t day)
 {
 	UNUSED(day);
+	double *weights = new double[k];
+	float *ahat = new float[k * k];
+	float *bhat = new float[k];
+	neighbour *neighbours = new neighbour[dataset->number_items];	
+	
 	uint64_t *user_ratings, user_count, movie_count;
 	uint64_t i, j, min, max, position = 0;
 	double prediction = 0;
 	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
 	for (i = 0; i < user_count; i++)
-//		if (dataset->included(user_ratings[i]))
+		if (dataset->included(user_ratings[i]))
 		{
 			min = MIN(movie, dataset->movie(user_ratings[i]));
 			max = MAX(movie, dataset->movie(user_ratings[i]));
@@ -752,13 +760,19 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	/*
 		Now solve Aw = b for w
 	*/
-	non_negative_quadratic_opt(ahat, bhat, MIN(k, position));
+	non_negative_quadratic_opt(ahat, bhat, weights, MIN(k, position));
 	
 	/*
 		Now use the weights for the prediction.
 	*/
 	for (i = 0; i < MIN(k, position); i++)
 		prediction += weights[i] * neighbours[i].residual;
+	
+	delete [] weights;
+	delete [] ahat;
+	delete [] bhat;
+	delete [] neighbours;
+	
 	return prediction;
 }
 

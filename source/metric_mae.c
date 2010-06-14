@@ -4,6 +4,7 @@
 */
 
 #include <math.h>
+#include <stdio.h>
 #include "metric_mae.h"
 
 /*
