@@ -43,7 +43,6 @@ int main(int argc, char **argv)
 	
 	params->parse();
 	stats = new CSP_stats(params->stats);
-	
 	dataset = new CSP_dataset_netflix(params);
 	
 	error_presented = new double[dataset->number_items];
@@ -87,38 +86,14 @@ int main(int argc, char **argv)
 	}
 	
 	metric = new CSP_metric_mae(dataset, predictor);
-	double sum_error = 0, prediction;
-	uint64_t test_count, predictions = 0;
-	clock_t start, end;
-	printf("Predictions!!\n");
-	start = clock();
-	#pragma omp parallel for private(user, ratings, test_count, count, prediction) reduction(+:sum_error, predictions) schedule(dynamic, 500)
-	for (user = 0; user < dataset->number_users; user++)
-	{
-		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		ratings = dataset->test_ratings_for_user(user, &test_count);
-		for (count = 0; count < test_count; count++)
-		{
-			prediction = predictor->predict(user, dataset->movie(ratings[count]), dataset->day(ratings[count]));
-			prediction = clip(prediction, dataset->minimum, dataset->maximum);
-			sum_error += pow(prediction - dataset->rating(ratings[count]), 2);
-		}
-		predictions += test_count;
-	}
-	end = clock();
-	puts("");
-	printf("%lu predictions.\n", predictions);
-	printf("%f RMSE.\n", sqrt(sum_error / predictions));
-	printf("%f s.\n", (double)(end - start) / CLOCKS_PER_SEC);
-	return EXIT_SUCCESS;
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
 	for (user = 0; user < dataset->number_users; user++)
-	if (false)
+	//if (false)
 	{
-		if (user % 1000 == 0) { fprintf(stderr, "\r%lu", user); fflush(stderr); }
+		/* if (user % 1000 == 0) */ { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		
 		/*
 			Reset things for this user.

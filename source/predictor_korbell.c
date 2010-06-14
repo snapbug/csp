@@ -611,12 +611,11 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 	double *r = new double[size];
 	double *Ar = new double[size];
 	double alpha, interim, magnitude;
+	uint64_t iterations = 0;
 	
 	/*
 		Initialis weights
 	*/
-//	for (i = 0; i < size; i++)
-//		w[i] = (double)rand() / (double)RAND_MAX;
 	for (i = 0; i < size; i++)
 		w[i] = 1e-9;//(double)rand() / (double)RAND_MAX;
 	
@@ -687,7 +686,8 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 				w[i] = 0; // robustness tip from Yehuda
 		//printf("W: "); for (i = 0; i < size; i++) printf("% 1.10f", w[i]); printf("\n");
 		//printf("Magnitude: % 1.10f\n\n\n", sqrt(magnitude));
-	} while (magnitude > THRESHOLD);
+		iterations++;
+	} while (magnitude > THRESHOLD && iterations < 10000);
 	
 	delete [] r;
 	delete [] Ar;
