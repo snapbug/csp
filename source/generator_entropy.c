@@ -37,7 +37,7 @@ CSP_generator_entropy::CSP_generator_entropy(CSP_dataset *dataset) : CSP_generat
 	
 	movie_counts = new uint64_t*[dataset->number_items];
 	most_entropic = new movie[dataset->number_items];
-	weights = new double[(int)dataset->maximum - (int)dataset->minimum + 2]; // +2 to include 0 and maximum
+	weights = new double[dataset->maximum - dataset->minimum + 2]; // +2 to include 0 and maximum
 	
 	sum_weights = weights[0] = 0.5; // hard code non-votes to be 0.5 weight
 	for (i = 1; i < dataset->maximum - dataset->minimum + 2; i++)
@@ -48,9 +48,9 @@ CSP_generator_entropy::CSP_generator_entropy(CSP_dataset *dataset) : CSP_generat
 	*/
 	for (i = 0; i < dataset->number_items; i++)
 	{
-		movie_counts[i] = new uint64_t[(int)dataset->maximum - (int)dataset->minimum + 2];
-		for (j = (int)dataset->minimum; j < dataset->maximum + 2; j++)
-			movie_counts[i][j - (int)dataset->minimum] = 0;
+		movie_counts[i] = new uint64_t[dataset->maximum - dataset->minimum + 2];
+		for (j = dataset->minimum; j < dataset->maximum + 2; j++)
+			movie_counts[i][j - dataset->minimum] = 0;
 		most_entropic[i].entropy = 0;
 		most_entropic[i].ratings = 0;
 		most_entropic[i].movie_id = i;

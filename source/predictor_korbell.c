@@ -572,10 +572,10 @@ double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, 
 		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  1.072729  1.054314
 		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379  0.931473  0.982653
 #ifdef TIME_EFFECTS
-		+ user_time_user(user, day)                                   //    NA        NA     0.978032
-		+ user_time_movie(user, movie, day)                           //    NA        NA     0.975434
-		+ movie_time_movie(movie, day)                                //    NA        NA     0.973580
-		+ movie_time_user(movie, user, day)                           //    NA        NA     0.972888
+		+ user_time_user(user, day)                                   //     -         -     0.978032
+		+ user_time_movie(user, movie, day)                           //     -         -     0.975434
+		+ movie_time_movie(movie, day)                                //     -         -     0.973580
+		+ movie_time_user(movie, user, day)                           //     -         -     0.972888
 #endif
 		+ user_movie_average(user, movie)                             // 0.749824  0.922048  0.968554
 		+ user_movie_support(user, movie)                             // 0.744655  0.912635  0.964815
@@ -631,10 +631,6 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 			for (j = 0; j < size; j++)
 				r[i] -= a[(i * size) + j] * w[j];
 		}
-		//printf("A: "); for (i = 0; i < size; i++) printf("% 1.10f", a[i]); printf("\n");
-		//printf("b: "); for (i = 0; i < size; i++) printf("% 1.10f", b[i]); printf("\n");
-		//printf("W: "); for (i = 0; i < size; i++) printf("% 1.10f", w[i]); printf("\n");
-		//printf("R: "); for (i = 0; i < size; i++) printf("% 1.10f", r[i]); printf("\n");
 		
 		/*
 			Non-negativity contraints, and magnitude.
@@ -646,7 +642,6 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 				r[i] = 0;
 			magnitude += r[i] * r[i];
 		}
-		//printf("R: "); for (i = 0; i < size; i++) printf("% 1.10f", r[i]); printf("\n");
 		
 		/*
 			Calculate alpha <- trans(r)*r / trans(r) * Ar.
@@ -666,28 +661,25 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 		
 		/*
 			Adjust step size to prevent negative values.
+			Modified so that it will converge - from forums.
 		*/
 		for (i = 0; i < size; i++) 
 			if (r[i] < 0) 
 				alpha = MIN(fabs(alpha), fabs(w[i] / r[i])) * (alpha / fabs(alpha));
 		if (isnan(alpha) || alpha == 0)
 			alpha = 0.0001;
-		//printf("Alpha: % 1.10f\n");
 		
 		/*
 			Adjust weights.
 		*/
 		for (i = 0; i < size; i++)
 			w[i] += alpha * r[i];
-		//printf("W: "); for (i = 0; i < size; i++) printf("% 1.10f", w[i]); printf("\n");
 		
 		for (i = 0; i < size; i++)
 			if (w[i] < 1e-10)
 				w[i] = 0; // robustness tip from Yehuda
-		//printf("W: "); for (i = 0; i < size; i++) printf("% 1.10f", w[i]); printf("\n");
-		//printf("Magnitude: % 1.10f\n\n\n", sqrt(magnitude));
 		iterations++;
-	} while (magnitude > THRESHOLD && iterations < 10000);
+	} while (magnitude > THRESHOLD && iterations < 10000); // make sure that we'll exit at some point
 	
 	delete [] r;
 	delete [] Ar;
