@@ -14,7 +14,6 @@ PARTS = \
 	$(OBJDIR)\dataset_netflix_orig.obj \
 	$(OBJDIR)\generator_entropy.obj \
 	$(OBJDIR)\generator_item_avg.obj \
-	$(OBJDIR)\generator_naive_bayes.obj \
 	$(OBJDIR)\generator_popularity.obj \
 	$(OBJDIR)\generator_random.obj \
 	$(OBJDIR)\metric_mae.obj \

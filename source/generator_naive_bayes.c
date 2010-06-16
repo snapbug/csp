@@ -75,10 +75,10 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 		Take care of the one they could rate, gives us something to multiply on for the ones they couldn't rate.
 	*/
 	//other_ratings = dataset->ratings_for_movie(presentation_list[ratable], &other_count);
-	i = MIN(presentation_list[ratable], movie);
-	j = MAX(presentation_list[ratable], movie);
-	co_raters = coraters[tri_offset(i, j)];
-	
+	//i = MIN(presentation_list[ratable], movie);
+	//j = MAX(presentation_list[ratable], movie);
+	//co_raters = coraters[tri_offset(i, j)];
+	//
 //	p_other = 1.0 * other_count;
 //	p_movie_and_other = 1.0 * co_raters;
 //	p_movie_given_other = p_movie_and_other / p_other;
@@ -117,7 +117,7 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 	CSP_GENERATOR_NAIVE_BAYES::GENERATE()
 	-------------------------------------
 */
-uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_presented)
+void CSP_generator_naive_bayes::generate(uint64_t user, uint64_t *presentation_list, uint64_t number_presented)
 {
 	uint64_t i, item_count;
 	
@@ -128,7 +128,7 @@ uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_pre
 			dataset->ratings_for_movie(i, &item_count);
 			probabilities[i] = log(1.0 - (1.0 * item_count / number_ratings));
 		}
-		presentation_list =  CSP_generator_entropy::generate(user, number_presented);
+		CSP_generator_entropy::generate(user, presentation_list, number_presented);
 	}
 	else
 	{
@@ -158,6 +158,4 @@ uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_pre
 	}
 	
 	last_presented_and_seen = number_presented;
-	
-	return presentation_list;
 }

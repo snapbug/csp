@@ -13,7 +13,7 @@ public:
 	CSP_generator_naive_bayes(CSP_dataset *dataset, uint32_t *coraters);
 	virtual ~CSP_generator_naive_bayes() {}
 
-	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
+	virtual void generate(uint64_t user, uint64_t *presentation_list, uint64_t number_presented);
 
 private:
 	static int probability_cmp(const void *a, const void *b);

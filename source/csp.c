@@ -38,6 +38,7 @@ int main(int argc, char **argv)
 	uint64_t position_up_to, last_presented_and_seen, number_seen;
 	uint64_t count, user, item, presented, rating, i, size;
 	uint32_t *coraters = NULL;
+	int64_t index;
 	double last_prediction_error;
 	double *error_presented, *error_rated, *auc;
 	
@@ -65,11 +66,11 @@ int main(int argc, char **argv)
 	
 	switch (params->generation_method)
 	{
-		case CSP_generator_factory::BAYESIAN: generator = new CSP_generator_naive_bayes(dataset, coraters); break;
-		case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
-		case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
+		//case CSP_generator_factory::BAYESIAN: generator = new CSP_generator_naive_bayes(dataset, coraters); break;
+		//case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
+		//case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
+		//case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
-		case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
 		default: exit(puts("Unknown generation method"));
 	}
 	
@@ -87,21 +88,24 @@ int main(int argc, char **argv)
 	}
 	
 	metric = new CSP_metric_mae(dataset, predictor);
+	presentation_list = new uint64_t[dataset->number_items];
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	#pragma omp parallel for private(user, position_up_to, last_presented_and_seen, number_seen, presented, presentation_list, key, last_prediction_error, ratings, count, rating) firstprivate(generator) schedule(dynamic, 500)
-	for (user = 0; user < dataset->number_users; user++)
+	//#pragma omp parallel for private(user, position_up_to, last_presented_and_seen, number_seen, presented, presentation_list, key, last_prediction_error, ratings, count, rating) firstprivate(generator) schedule(dynamic, 500)
+	//for (index = 0; index < (int64_t)dataset->number_users; index++)
 	//if (false)
+	index = 0;
 	{
-		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		user = index;
+//		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		
 		/*
 			Reset things for this user.
 		*/
 		position_up_to = last_presented_and_seen = number_seen = presented = 0;
-		presentation_list = key = NULL;
+		key = NULL;
 		auc[user] = last_prediction_error = 0;
 		
 		/*
@@ -118,10 +122,8 @@ int main(int argc, char **argv)
 			Before we add any ratings, we should see how well we can do.
 		*/
 		if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
-			#pragma omp critical
 			last_prediction_error = metric->score(user);
 		if (stats->stats & CSP_stats::ERROR_RATED)
-			#pragma omp critical
 			error_rated[number_seen] += last_prediction_error;
 		
 		/*
@@ -132,7 +134,7 @@ int main(int argc, char **argv)
 			/*
 				Generate the list of movies to present to the user.
 			*/
-			presentation_list = generator->generate(user, position_up_to);
+			generator->generate(user, presentation_list, position_up_to);
 			
 			/*
 				Find the next rating that the person can rate.
@@ -140,7 +142,6 @@ int main(int argc, char **argv)
 			for (presented = position_up_to; presented < dataset->number_items; presented++)
 			{
 				if (stats->stats & CSP_stats::ERROR_PRESENTED)
-					#pragma omp critical
 					error_presented[presented] += last_prediction_error;
 				
 				if ((key = (uint64_t *)bsearch(&presentation_list[presented], ratings, count, sizeof(*ratings), movie_search)) != NULL)
@@ -167,7 +168,6 @@ int main(int argc, char **argv)
 					if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
 						last_prediction_error = metric->score(user);
 					if (stats->stats & CSP_stats::ERROR_RATED)
-						#pragma omp critical
 						error_rated[number_seen] += last_prediction_error;
 					
 					/*
@@ -188,11 +188,9 @@ int main(int argc, char **argv)
 			Fill in the 'missing' values to give smooth graphs.
 		*/
 		for (item = number_seen + 1; stats->stats & CSP_stats::ERROR_RATED && item < dataset->number_items; item++)
-			#pragma omp critical
 			error_rated[item] += last_prediction_error;
 		
 		for (item = presented; stats->stats & CSP_stats::ERROR_PRESENTED && item < dataset->number_items; item++)
-			#pragma omp critical
 			error_presented[item] += last_prediction_error;
 	}
 	

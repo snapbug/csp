@@ -13,10 +13,11 @@ public:
 	CSP_generator_item_avg(CSP_dataset *dataset);
 	virtual ~CSP_generator_item_avg() {}
 
-	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
-	static int average_cmp(const void *a, const void *b);
+	virtual void generate(uint64_t user, uint64_t *presentation_list, uint64_t number_presented);
 
 private:
+	static int average_cmp(const void *a, const void *b);
+	
 	typedef struct {
 		double average;
 		uint64_t count;

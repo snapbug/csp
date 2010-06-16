@@ -13,10 +13,11 @@ public:
 	CSP_generator_popularity(CSP_dataset *dataset);
 	virtual ~CSP_generator_popularity() {}
 
-	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
-	static int number_ratings_cmp(const void *a, const void *b);
+	virtual void generate(uint64_t user, uint64_t *presentation_list, uint64_t number_presented);
 
 private:
+	static int number_ratings_cmp(const void *a, const void *b);
+	
 	typedef struct {
 		uint64_t number_ratings;
 		uint64_t movie_id;
