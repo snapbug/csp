@@ -44,7 +44,6 @@ private:
 	uint32_t *coraters;
 	uint64_t k;
 	double beta;
-//	double *weights;
 	
 	double predict_statistics(uint64_t user, uint64_t movie, uint64_t day);
 	double predict_neighbour(uint64_t user, uint64_t movie, uint64_t day);
@@ -52,8 +51,7 @@ private:
 	void non_negative_quadratic_opt(float *a, float *b, double *w, uint64_t size);
 	
 	float *correlation;
-	double *abar_tri, *abar_dia, *bbar;
-//	float *ahat, *bhat;
+	float *abar_tri, *abar_dia, *bbar;
 	double bar_avg_tri_top, bar_avg_dia_top;
 	uint64_t bar_avg_tri_bot, bar_avg_dia_bot;
 	
@@ -64,7 +62,7 @@ private:
 		uint64_t considered;
 		double residual;
 	} neighbour;
-//	neighbour *neighbours;
+	
 };
 
 #endif /* PREDICTOR_KORBELL_H_ */

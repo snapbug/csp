@@ -97,8 +97,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	movie_user_support_average = new double[dataset->number_items];
 	
 	correlation = new float[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
-	abar_tri = new double[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
-	abar_dia = new double[dataset->number_items];
+	abar_tri = new float[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
+	abar_dia = new float[dataset->number_items];
 	bbar = abar_tri; // bbar's values are the same as abar's, but make this alias to make it look nicer
 	
 	/*
@@ -443,8 +443,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	bar_avg_dia_bot = dataset->number_items;
 	*/
 	fprintf(stderr, "Loading abar from file... ");
-	fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.abar_tri.item.residual", "rb"));
-	fread(abar_dia, sizeof(*abar_dia), dataset->number_items, fopen("./data/netflix.abar_dia.item.residual", "rb"));
+	fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.abar_tri.item.residual.f", "rb"));
+	fread(abar_dia, sizeof(*abar_dia), dataset->number_items, fopen("./data/netflix.abar_dia.item.residual.f", "rb"));
 	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; i++)
 		bar_avg_tri_top += abar_tri[i];
 	bar_avg_tri_bot = tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1;
