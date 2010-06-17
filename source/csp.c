@@ -93,13 +93,11 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	//#pragma omp parallel for private(user, position_up_to, last_presented_and_seen, number_seen, presented, presentation_list, key, last_prediction_error, ratings, count, rating) firstprivate(generator) schedule(dynamic, 500)
-	//for (index = 0; index < (int64_t)dataset->number_users; index++)
+	for (index = 0; index < (int64_t)dataset->number_users; index++)
 	//if (false)
-	index = 0;
 	{
 		user = index;
-//		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		
 		/*
 			Reset things for this user.
