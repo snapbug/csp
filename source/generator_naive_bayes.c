@@ -60,9 +60,11 @@ int CSP_generator_naive_bayes::probability_cmp(const void *a, const void *b)
 */
 double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t non_ratable, uint64_t ratable)
 {
+	UNUSED(ratable);
 	//uint64_t *other_ratings, other_count;
 	uint64_t *movie_ratings, movie_count;
-	uint64_t presented_movie, i, j, co_raters;
+	uint64_t presented_movie, co_raters = 0;
+//	uint64_t i, j;
 	double probability = 1;
 //	double p_other, p_not_other, p_movie_and_other, p_movie_and_not_other, p_movie_given_other, p_movie_given_not_other;
 	

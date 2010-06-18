@@ -109,14 +109,14 @@ void CSP_param_block::help(void)
 	
 	puts("STATISTICS");
 	puts("----------");
-	puts("-s[naeEgp]       Measure and output the following statistics:");
+	puts("-s[naAeEgp]      Measure and output the following statistics:");
 	puts("   n             None [default]");
-	puts("   a             AUC for presentation lists (number rated vs number presented)");
+	puts("   a             All statistics");
+	puts("   A             AUC for presentation lists (number rated vs number presented)");
 	puts("   e             Error as function of number presented");
 	puts("   E             Error as function of number rated");
 	puts("   g             Time to generate presentation lists");
 	puts("   p             Time to generate predictions");
-//	puts("   S             All of the above");
 	
 	exit(EXIT_SUCCESS);
 }
@@ -196,12 +196,12 @@ void CSP_param_block::statistics(char *which)
 		switch (*which)
 		{
 			case 'n': stats = CSP_stats::NONE; break;
-			case 'a': stats |= CSP_stats::AUC; break;
+			case 'a': statistics("AeEgp"); break;
+			case 'A': stats |= CSP_stats::AUC; break;
 			case 'e': stats |= CSP_stats::ERROR_PRESENTED; break;
 			case 'E': stats |= CSP_stats::ERROR_RATED; break;
 			case 'g': stats |= CSP_stats::GENERATION_TIME; break;
 			case 'p': stats |= CSP_stats::PREDICTION_TIME; break;
-//			case 'S': statistics("aeEgp"); break;
 			default: exit(printf("Unknown statistic: '%c'\n", *which));
 		}
 		which++;
@@ -213,7 +213,7 @@ void CSP_param_block::statistics(char *which)
 	CSP_PARAM_BLOCK::PARSE()
 	------------------------
 */
-void CSP_param_block::parse(void)
+int64_t CSP_param_block::parse(void)
 {
 	int64_t param;
 	char *command;
@@ -248,4 +248,6 @@ void CSP_param_block::parse(void)
 		else
 			break;
 	}
+	
+	return param;
 }

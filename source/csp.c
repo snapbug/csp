@@ -36,15 +36,27 @@ int main(int argc, char **argv)
 	CSP_metric *metric;
 	uint64_t *presentation_list, *key, *ratings;
 	uint64_t position_up_to, last_presented_and_seen, number_seen;
-	uint64_t count, user, item, presented, rating, i, size;
+	uint64_t count, user, item, presented, rating, i, size, first_user;
 	uint32_t *coraters = NULL;
-	int64_t index;
+	int64_t index, last_param;
+	char *endptr;
 	double last_prediction_error;
 	double *error_presented, *error_rated, *auc;
 	
-	params->parse();
+	last_param = params->parse();
+	
+	first_user = last_param < argc ? strtoull(argv[last_param], &endptr, 10) : 0;
+	
 	stats = new CSP_stats(params->stats);
 	dataset = new CSP_dataset_netflix(params);
+	
+	for (user = 0; user < dataset->number_users; user++)
+	{
+		dataset->ratings_for_user(user, &count);
+		dataset->test_ratings_for_user(user, &number_seen);
+		printf("%lu %lu %lu\n", user, count, number_seen);
+	}
+	return EXIT_SUCCESS;
 	
 	error_presented = new double[dataset->number_items];
 	error_rated = new double[dataset->number_items];

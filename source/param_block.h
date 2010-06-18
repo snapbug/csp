@@ -23,7 +23,7 @@ public:
 
 	void usage(void);
 	void help(void);
-	void parse(void);
+	int64_t parse(void);
 
 	uint64_t generation_method; // how are we going to generate the lists to present
 	uint64_t dataset; // which dataset to use
