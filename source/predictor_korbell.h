@@ -50,8 +50,8 @@ private:
 	static int neighbour_compare(const void *a, const void *b);
 	void non_negative_quadratic_opt(float *a, float *b, double *w, uint64_t size);
 	
-	float *correlation;
-	float *abar_tri, *abar_dia, *bbar;
+	int8_t *correlation, *abar_tri, *bbar;
+	float *abar_dia;
 	double bar_avg_tri_top, bar_avg_dia_top;
 	uint64_t bar_avg_tri_bot, bar_avg_dia_bot;
 	

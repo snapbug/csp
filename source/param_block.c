@@ -75,11 +75,10 @@ void CSP_param_block::help(void)
 	
 	puts("GENERATION");
 	puts("----------");
-	puts("-g[beinpr]       Generate lists to present to the user using:");
+	puts("-g[beipr]        Generate lists to present to the user using:");
 	puts("   b             Naive Bayes (dynamic)");
 	puts("   e             Entropy0");
 	puts("   i             Average");
-	puts("   n             None");
 	puts("   p             Popularity");
 	puts("   r             Random [default]");
 	puts("");
@@ -87,11 +86,11 @@ void CSP_param_block::help(void)
 	puts("PREDICTION");
 	puts("----------");
 	puts("-p[cgiIkruU]     Use the following method for rating prediction:");
-	puts("   c             Constant [default]");
+	puts("   c             Constant");
 	puts("   g             Global average");
-	puts("   i             Item average");
+	puts("   i             Item average [default]");
 	puts("   I      *      Item k-nearest neighbour");
-	puts("   k      *      KorBell model");
+	puts("   k             KorBell model");
 	puts("   r             Random");
 	puts("   u             User average");
 	puts("   U      *      User k-nearest neighbour");
@@ -127,13 +126,12 @@ void CSP_param_block::help(void)
 */
 void CSP_param_block::generation(char *which)
 {
-	generation_method = CSP_generator_factory::NONE;
+	generation_method = CSP_generator_factory::RANDOM;
 	switch (*which)
 	{
 		case 'b': generation_method = CSP_generator_factory::BAYESIAN; break;
 		case 'e': generation_method = CSP_generator_factory::ENTROPY; break;
 		case 'i': generation_method = CSP_generator_factory::ITEM_AVERAGE; break;
-		case 'n': generation_method = CSP_generator_factory::NONE; break;
 		case 'p': generation_method = CSP_generator_factory::POPULARITY; break;
 		case 'r': generation_method = CSP_generator_factory::RANDOM; break;
 		default: exit(printf("Unknown generation method: '%c'\n", *which));
@@ -146,7 +144,7 @@ void CSP_param_block::generation(char *which)
 */
 void CSP_param_block::prediction(char *which)
 {
-	prediction_method = CSP_predictor_factory::GLOBAL_AVERAGE;
+	prediction_method = CSP_predictor_factory::ITEM_AVERAGE;
 	switch (*which)
 	{
 		case 'c': prediction_method = CSP_predictor_factory::CONSTANT; break;

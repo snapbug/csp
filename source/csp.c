@@ -53,9 +53,9 @@ int main(int argc, char **argv)
 	if (/*params->generation_method == CSP_generator_factory::BAYESIAN || */params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
-		fprintf(stderr, "Loading coraters from file... "); fflush(stdout);
+		fprintf(stderr, "Loading coraters from file... "); fflush(stderr);
 		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.coraters.item","rb"));
-		fprintf(stderr, "Done.\n"); fflush(stdout);
+		fprintf(stderr, "Done.\n"); fflush(stderr);
 	}
 	
 	switch (params->generation_method)
@@ -188,6 +188,13 @@ int main(int argc, char **argv)
 		
 		fclose(output);
 	}
+	double sum_error = 0;
+	for (user = 0; user < dataset->number_users; user++)
+	{
+		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		sum_error += metric->score(user);
+	}
+	printf("\nAvg Error: %f\n", sum_error / dataset->number_users);
 	
 	/*
 		Clean up.
