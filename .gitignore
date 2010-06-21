@@ -1,5 +1,6 @@
-cscope.*
 bin
 data
+output
 vc90.pdb
+cscope.*
 *.swp

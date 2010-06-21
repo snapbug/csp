@@ -35,34 +35,22 @@ int main(int argc, char **argv)
 	CSP_stats *stats;
 	CSP_metric *metric;
 	uint64_t *presentation_list, *key, *ratings;
-	uint64_t position_up_to, last_presented_and_seen, number_seen;
-	uint64_t count, user, item, presented, rating, i, size, first_user;
+	uint64_t position_up_to, last_presented_and_seen, number_seen, count, user, item, presented, rating, size;
 	uint32_t *coraters = NULL;
-	int64_t index, last_param;
-	char *endptr;
-	double last_prediction_error;
-	double *error_presented, *error_rated, *auc;
+	int64_t last_param;
+	double last_prediction_error, auc;
+	char filename[25];
+	FILE *output = NULL;
 	
 	last_param = params->parse();
-	
-	first_user = last_param < argc ? strtoull(argv[last_param], &endptr, 10) : 0;
 	
 	stats = new CSP_stats(params->stats);
 	dataset = new CSP_dataset_netflix(params);
 	
-	for (user = 0; user < dataset->number_users; user++)
-	{
-		dataset->ratings_for_user(user, &count);
-		dataset->test_ratings_for_user(user, &number_seen);
-		printf("%lu %lu %lu\n", user, count, number_seen);
-	}
-	return EXIT_SUCCESS;
-	
-	error_presented = new double[dataset->number_items];
-	error_rated = new double[dataset->number_items];
-	auc = new double[dataset->number_users];
-	
-	if (params->generation_method == CSP_generator_factory::BAYESIAN || params->prediction_method == CSP_predictor_factory::KORBELL)
+	/*
+		Load the precalculated co-raters if necessary.
+	*/
+	if (/*params->generation_method == CSP_generator_factory::BAYESIAN || */params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
 		fprintf(stderr, "Loading coraters from file... "); fflush(stdout);
@@ -70,18 +58,12 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Done.\n"); fflush(stdout);
 	}
 	
-	/*
-		Set the error accumulators to 0.
-	*/
-	for (item = 0; item < dataset->number_items; item++)
-		error_rated[item] = error_presented[item] = 0;
-	
 	switch (params->generation_method)
 	{
-		//case CSP_generator_factory::BAYESIAN: generator = new CSP_generator_naive_bayes(dataset, coraters); break;
-		//case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
-		//case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
-		//case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
+		case CSP_generator_factory::BAYESIAN: generator = new CSP_generator_naive_bayes(dataset, coraters); break;
+		case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
+		case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
+		case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
 		default: exit(puts("Unknown generation method"));
 	}
@@ -105,18 +87,19 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	for (index = 0; index < (int64_t)dataset->number_users; index++)
-	//if (false)
+	for (; last_param < argc; last_param++)
 	{
-		user = index;
-		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		user = strtoul(argv[last_param], (char **)NULL, 10);
+		sprintf(filename, "./output/user.%06lu.txt", user);
+		output = fopen(filename, "w");
+		/*if (user % 100 == 0) */{ fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		
 		/*
 			Reset things for this user.
 		*/
 		position_up_to = last_presented_and_seen = number_seen = presented = 0;
 		key = NULL;
-		auc[user] = last_prediction_error = 0;
+		last_prediction_error = auc = 0;
 		
 		/*
 			Get the ratings for this user, and then remove them all from the dataset.
@@ -134,7 +117,7 @@ int main(int argc, char **argv)
 		if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
 			last_prediction_error = metric->score(user);
 		if (stats->stats & CSP_stats::ERROR_RATED)
-			error_rated[number_seen] += last_prediction_error;
+			fprintf(output, "R %lu %lu %f\n", user, number_seen, last_prediction_error);
 		
 		/*
 			While the user can still add more ratings.
@@ -152,12 +135,12 @@ int main(int argc, char **argv)
 			for (presented = position_up_to; presented < dataset->number_items; presented++)
 			{
 				if (stats->stats & CSP_stats::ERROR_PRESENTED)
-					error_presented[presented] += last_prediction_error;
+					fprintf(output, "P %lu %lu %f\n", user, presented, last_prediction_error);
 				
 				if ((key = (uint64_t *)bsearch(&presentation_list[presented], ratings, count, sizeof(*ratings), movie_search)) != NULL)
 				{
 					if (stats->stats & CSP_stats::AUC)
-						auc[user] += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen / count);
+						auc += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen / count);
 					number_seen++;
 					
 					/*
@@ -178,7 +161,7 @@ int main(int argc, char **argv)
 					if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
 						last_prediction_error = metric->score(user);
 					if (stats->stats & CSP_stats::ERROR_RATED)
-						error_rated[number_seen] += last_prediction_error;
+						fprintf(output, "R %lu %lu %f\n", user, number_seen, last_prediction_error);
 					
 					/*
 						Stop looking for the next rating so we can re-generate presentation list.
@@ -192,22 +175,19 @@ int main(int argc, char **argv)
 			Update the AUC for the presentation list, and print it out.
 		*/
 		if (stats->stats & CSP_stats::AUC)
-			printf("AUC %lu %f\n", user, auc[user] + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
+			fprintf(output, "A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
 	
 		/*
 			Fill in the 'missing' values to give smooth graphs.
 		*/
 		for (item = number_seen + 1; stats->stats & CSP_stats::ERROR_RATED && item < dataset->number_items; item++)
-			error_rated[item] += last_prediction_error;
+			fprintf(output, "R %lu %lu %f\n", user, item, last_prediction_error);
 		
 		for (item = presented; stats->stats & CSP_stats::ERROR_PRESENTED && item < dataset->number_items; item++)
-			error_presented[item] += last_prediction_error;
+			fprintf(output, "P %lu %lu %f\n", user, item, last_prediction_error);
+		
+		fclose(output);
 	}
-	
-	for (i = 0; stats->stats & CSP_stats::ERROR_RATED && i < dataset->number_items; i++)
-		printf("ER %lu %f\n", i, error_rated[i] / dataset->number_users);
-	for (i = 0; stats->stats & CSP_stats::ERROR_PRESENTED && i < dataset->number_items; i++)
-		printf("EP %lu %f\n", i, error_presented[i] / dataset->number_users);
 	
 	/*
 		Clean up.
