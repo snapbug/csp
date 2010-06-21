@@ -568,19 +568,19 @@ double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, 
 {
 	UNUSED(day);
 	                                                                  // Avg MAE   Avg RMSE  Quiz
-	return global_average                                             // 0.940119  1.238528  1.131419
-		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  1.072729  1.054314
-		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379  0.931473  0.982653
+	return global_average                                             // 0.940119  ********  1.131419
+		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  ********  1.054314
+		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379  ********  0.982653
 #ifdef TIME_EFFECTS
 		+ user_time_user(user, day)                                   //     -         -     0.978032
 		+ user_time_movie(user, movie, day)                           //     -         -     0.975434
 		+ movie_time_movie(movie, day)                                //     -         -     0.973580
 		+ movie_time_user(movie, user, day)                           //     -         -     0.972888
 #endif
-		+ user_movie_average(user, movie)                             // 0.749824  0.922048  0.968554
-		+ user_movie_support(user, movie)                             // 0.744655  0.912635  0.964815
-		+ movie_user_average(movie, user)                             // 0.742681  0.910686  0.963609
-		+ movie_user_support(movie, user)                             // 0.742112  0.907143  0.962599
+		+ user_movie_average(user, movie)                             // 0.749824  ********  0.968554
+		+ user_movie_support(user, movie)                             // 0.744655  ********  0.964815
+		+ movie_user_average(movie, user)                             // 0.742681  ********  0.963609
+		+ movie_user_support(movie, user)                             // 0.742112  0.895805  0.962599
 	;
 }
 
@@ -775,7 +775,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 double CSP_predictor_korbell::predict(uint64_t user, uint64_t movie, uint64_t day)
 {
 	return                                   // Avg MAE   Avg RMSE  Quiz RMSE
-		predict_statistics(user, movie, day) // 0.742112  0.907143  0.962599
-	  + predict_neighbour(user, movie, day)  // 0.689149  0.809202  0.911633
+		predict_statistics(user, movie, day) // 0.742112  0.895805  0.962599
+	  + predict_neighbour(user, movie, day)  // 0.689149  0.838939  0.911633
 	;
 }

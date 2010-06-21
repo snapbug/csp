@@ -67,6 +67,7 @@ int main(int argc, char **argv)
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
 		default: exit(puts("Unknown generation method"));
 	}
+	fprintf(stderr, "Created generator.\n"); fflush(stderr);
 	
 	switch (params->prediction_method)
 	{
@@ -80,8 +81,9 @@ int main(int argc, char **argv)
 		case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
 		default: exit(puts("Unknown prediction method"));
 	}
+	fprintf(stderr, "Created predictor.\n"); fflush(stderr);
 	
-	metric = new CSP_metric_mae(dataset, predictor);
+	metric = new CSP_metric_rmse(dataset, predictor);
 	presentation_list = new uint64_t[dataset->number_items];
 	
 	/*
@@ -118,6 +120,8 @@ int main(int argc, char **argv)
 			last_prediction_error = metric->score(user);
 		if (stats->stats & CSP_stats::ERROR_RATED)
 			fprintf(output, "R %lu %lu %f\n", user, number_seen, last_prediction_error);
+		if (stats->stats & CSP_stats::ERROR_PRESENTED)
+			fprintf(output, "P %lu %lu %f\n", user, presented, last_prediction_error);
 		
 		/*
 			While the user can still add more ratings.
@@ -134,9 +138,6 @@ int main(int argc, char **argv)
 			*/
 			for (presented = position_up_to; presented < dataset->number_items; presented++)
 			{
-				if (stats->stats & CSP_stats::ERROR_PRESENTED)
-					fprintf(output, "P %lu %lu %f\n", user, presented, last_prediction_error);
-				
 				if ((key = (uint64_t *)bsearch(&presentation_list[presented], ratings, count, sizeof(*ratings), movie_search)) != NULL)
 				{
 					if (stats->stats & CSP_stats::AUC)
@@ -162,12 +163,16 @@ int main(int argc, char **argv)
 						last_prediction_error = metric->score(user);
 					if (stats->stats & CSP_stats::ERROR_RATED)
 						fprintf(output, "R %lu %lu %f\n", user, number_seen, last_prediction_error);
-					
-					/*
-						Stop looking for the next rating so we can re-generate presentation list.
-					*/
-					break;
 				}
+				
+				if (stats->stats & CSP_stats::ERROR_PRESENTED)
+					fprintf(output, "P %lu %lu %f\n", user, presented + 1, last_prediction_error);
+				
+				/*
+					Stop looking for the next rating so we can re-generate presentation list.
+				*/
+				if (key != NULL)
+					break;
 			}
 		}
 		
@@ -188,13 +193,6 @@ int main(int argc, char **argv)
 		
 		fclose(output);
 	}
-	double sum_error = 0;
-	for (user = 0; user < dataset->number_users; user++)
-	{
-		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		sum_error += metric->score(user);
-	}
-	printf("\nAvg Error: %f\n", sum_error / dataset->number_users);
 	
 	/*
 		Clean up.
