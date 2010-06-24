@@ -165,7 +165,7 @@ void CSP_param_block::prediction(char *which)
 */
 void CSP_param_block::metrics(char *which)
 {
-	metrics_to_use = CSP_metric_factory::NONE;
+	metrics_to_use = CSP_metric_factory::MAE;
 	do
 	{
 		switch (*which)
@@ -211,12 +211,12 @@ void CSP_param_block::statistics(char *which)
 	CSP_PARAM_BLOCK::PARSE()
 	------------------------
 */
-int64_t CSP_param_block::parse(void)
+uint64_t CSP_param_block::parse(void)
 {
-	int64_t param;
+	uint64_t param;
 	char *command;
 	
-	for (param = 1; param < argc; param++)
+	for (param = 1; param < (uint64_t)argc; param++)
 	{
 		if (*argv[param] == '-')
 		{

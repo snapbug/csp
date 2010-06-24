@@ -14,6 +14,8 @@ CSP_generator_random::CSP_generator_random(CSP_dataset *dataset) : CSP_generator
 {
 	uint64_t i;
 	
+	mids = new uint64_t[dataset->number_items];
+	
 	for (i = 0; i < dataset->number_items; i++)
 		mids[i] = i;
 	

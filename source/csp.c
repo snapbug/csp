@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	uint64_t *presentation_list, *key, *ratings;
 	uint64_t position_up_to, last_presented_and_seen, number_seen, count, user, item, presented, rating, size;
 	uint32_t *coraters = NULL;
-	int64_t last_param;
+	uint64_t last_param;
 	double last_prediction_error, auc;
 	char filename[25];
 	FILE *output = NULL;
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 	/*
 		Load the precalculated co-raters if necessary.
 	*/
-	if (/*params->generation_method == CSP_generator_factory::BAYESIAN || */params->prediction_method == CSP_predictor_factory::KORBELL)
+	if (params->generation_method == CSP_generator_factory::BAYESIAN ||params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
 		fprintf(stderr, "Loading coraters from file... "); fflush(stderr);
@@ -67,7 +67,6 @@ int main(int argc, char **argv)
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
 		default: exit(puts("Unknown generation method"));
 	}
-	fprintf(stderr, "Created generator.\n"); fflush(stderr);
 	
 	switch (params->prediction_method)
 	{
@@ -81,7 +80,6 @@ int main(int argc, char **argv)
 		case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
 		default: exit(puts("Unknown prediction method"));
 	}
-	fprintf(stderr, "Created predictor.\n"); fflush(stderr);
 	
 	metric = new CSP_metric_rmse(dataset, predictor);
 	presentation_list = new uint64_t[dataset->number_items];
@@ -89,11 +87,12 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	for (; last_param < argc; last_param++)
+	for (; last_param < (uint64_t)argc; last_param++)
 	{
 		user = strtoul(argv[last_param], (char **)NULL, 10);
 		sprintf(filename, "./output/user.%06lu.txt", user);
 		output = fopen(filename, "w");
+		
 		/*if (user % 100 == 0) */{ fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		
 		/*
@@ -177,7 +176,7 @@ int main(int argc, char **argv)
 		}
 		
 		/*
-			Update the AUC for the presentation list, and print it out.
+			Print out the AUC for this user for this presentation list.
 		*/
 		if (stats->stats & CSP_stats::AUC)
 			fprintf(output, "A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
@@ -187,7 +186,6 @@ int main(int argc, char **argv)
 		*/
 		for (item = number_seen + 1; stats->stats & CSP_stats::ERROR_RATED && item < dataset->number_items; item++)
 			fprintf(output, "R %lu %lu %f\n", user, item, last_prediction_error);
-		
 		for (item = presented; stats->stats & CSP_stats::ERROR_PRESENTED && item < dataset->number_items; item++)
 			fprintf(output, "P %lu %lu %f\n", user, item, last_prediction_error);
 		

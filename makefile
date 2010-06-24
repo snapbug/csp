@@ -50,7 +50,7 @@ $(BINDIR)/csp : $(PARTS_W_DIR) $(OBJDIR)/csp.o
 	@echo Building $(notdir $@)
 	@$(CC) $(LDFLAGS) -o $@ $^
 
-$(PARTS_W_DIR) : makefile
+$(PARTS_W_DIR) : makefile makefile.dependencies
 
 .PHONY : clean
 clean :
