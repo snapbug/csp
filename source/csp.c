@@ -41,10 +41,19 @@ int main(int argc, char **argv)
 	double last_prediction_error, auc;
 	char filename[25];
 	FILE *output = NULL;
+	uint64_t sample_size, num_samples, sample, num_done;
+	double *error_presented, *error_rated;
+	uint64_t *count_presented, *count_rated;
 	
 	last_param = params->parse();
+	sample_size = strtoul(argv[last_param++], (char **)NULL, 10);
+	num_samples = strtoul(argv[last_param], (char**)NULL, 10);
 	
 	stats = new CSP_stats(params->stats);
+	
+	if (!(stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED))
+		exit(printf("Not collecting error data, so exiting\n"));
+	
 	dataset = new CSP_dataset_netflix(params);
 	
 	/*
@@ -83,112 +92,163 @@ int main(int argc, char **argv)
 	
 	metric = new CSP_metric_rmse(dataset, predictor);
 	presentation_list = new uint64_t[dataset->number_items];
+	error_presented = new double[dataset->number_items + 1];
+	error_rated = new double[dataset->number_items];
+	count_presented = new uint64_t[dataset->number_items + 1];
+	count_rated = new uint64_t[dataset->number_items];
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	for (; last_param < (uint64_t)argc; last_param++)
+	//for (; last_param < (uint64_t)argc; last_param++)
+	for (sample = 0; sample < num_samples; sample++)
 	{
-		user = strtoul(argv[last_param], (char **)NULL, 10);
-		sprintf(filename, "./output/user.%06lu.txt", user);
+		sprintf(filename, "./output/sample.%04lu.txt", sample);
 		output = fopen(filename, "w");
-		
-		/*if (user % 100 == 0) */{ fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		
-		/*
-			Reset things for this user.
-		*/
-		position_up_to = last_presented_and_seen = number_seen = presented = 0;
-		key = NULL;
-		last_prediction_error = auc = 0;
-		
-		/*
-			Get the ratings for this user, and then remove them all from the dataset.
-		*/
-		ratings = dataset->ratings_for_user(user, &count);
-		for (rating = 0; rating < count; rating++)
+		for (item = 0; item < dataset->number_items; item++)
 		{
-			dataset->remove_rating(&ratings[rating]);
-			predictor->removed_rating(&ratings[rating]);
+			error_presented[item] = error_rated[item] = 0;
+			count_presented[item] = count_rated[item] = 0;
 		}
+		error_presented[dataset->number_items] = 0;
+		count_presented[dataset->number_items] = 0;
 		
-		/*
-			Before we add any ratings, we should see how well we can do.
-		*/
-		if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
-			last_prediction_error = metric->score(user);
-		if (stats->stats & CSP_stats::ERROR_RATED)
-			fprintf(output, "R %lu %lu %f\n", user, number_seen, last_prediction_error);
-		if (stats->stats & CSP_stats::ERROR_PRESENTED)
-			fprintf(output, "P %lu %lu %f\n", user, presented, last_prediction_error);
-		
-		/*
-			While the user can still add more ratings.
-		*/
-		while (number_seen < count)
+		fprintf(stderr, "\n");
+		for (num_done = 0; num_done < sample_size; num_done++)
 		{
-			/*
-				Generate the list of movies to present to the user.
-			*/
-			generator->generate(user, presentation_list, position_up_to);
+			user = (uint64_t)((dataset->number_users * rand()) / (RAND_MAX + 1.0));
+			fprintf(output, "%lu ", user);
 			
 			/*
-				Find the next rating that the person can rate.
+				Reset things for this user.
 			*/
-			for (presented = position_up_to; presented < dataset->number_items; presented++)
+			position_up_to = last_presented_and_seen = number_seen = presented = 0;
+			key = NULL;
+			last_prediction_error = auc = 0;
+			
+			/*
+				Get the ratings for this user, and then remove them all from the dataset.
+			*/
+			ratings = dataset->ratings_for_user(user, &count);
+			for (rating = 0; rating < count; rating++)
 			{
-				if ((key = (uint64_t *)bsearch(&presentation_list[presented], ratings, count, sizeof(*ratings), movie_search)) != NULL)
-				{
-					if (stats->stats & CSP_stats::AUC)
-						auc += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen / count);
-					number_seen++;
-					
-					/*
-						Add the rating we came across.
-					*/
-					dataset->add_rating(key);
-					predictor->added_rating(key);
-					
-					/*
-						Make a note of where we are up to.
-					*/
-					last_presented_and_seen = presented++;
-					position_up_to = presented;
-					
-					/*
-						Now check our predictions on the test set for this user.
-					*/
-					if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
-						last_prediction_error = metric->score(user);
-					if (stats->stats & CSP_stats::ERROR_RATED)
-						fprintf(output, "R %lu %lu %f\n", user, number_seen, last_prediction_error);
-				}
-				
-				if (stats->stats & CSP_stats::ERROR_PRESENTED)
-					fprintf(output, "P %lu %lu %f\n", user, presented + 1, last_prediction_error);
+				dataset->remove_rating(&ratings[rating]);
+				predictor->removed_rating(&ratings[rating]);
+			}
+			
+			/*
+				Before we add any ratings, we should see how well we can do.
+			*/
+			if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
+				last_prediction_error = metric->score(user);
+			if (stats->stats & CSP_stats::ERROR_RATED && !isnan(last_prediction_error))
+			{
+				error_rated[number_seen] += last_prediction_error;
+				count_rated[number_seen]++;
+			}
+			if (stats->stats & CSP_stats::ERROR_PRESENTED && !isnan(last_prediction_error))
+			{
+				error_presented[presented] += last_prediction_error;
+				count_presented[presented]++;
+			}
+			
+			/*
+				While the user can still add more ratings.
+			*/
+			while (number_seen < count)
+			{
+				if (number_seen % 10 == 0) { fprintf(stderr, "\r%lu/%lu %lu/%lu %lu/%lu", sample + 1, num_samples, num_done + 1, sample_size, number_seen, count); fflush(stderr); }
+			
+				/*
+					Generate the list of movies to present to the user.
+				*/
+				generator->generate(user, presentation_list, position_up_to);
 				
 				/*
-					Stop looking for the next rating so we can re-generate presentation list.
+					Find the next rating that the person can rate.
 				*/
-				if (key != NULL)
-					break;
+				for (presented = position_up_to; presented < dataset->number_items; presented++)
+				{
+					if ((key = (uint64_t *)bsearch(&presentation_list[presented], ratings, count, sizeof(*ratings), movie_search)) != NULL)
+					{
+						if (stats->stats & CSP_stats::AUC)
+							auc += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen / count);
+						number_seen++;
+						
+						/*
+							Add the rating we came across.
+						*/
+						dataset->add_rating(key);
+						predictor->added_rating(key);
+						
+						/*
+							Make a note of where we are up to.
+						*/
+						last_presented_and_seen = presented++;
+						position_up_to = presented;
+						
+						/*
+							Now check our predictions on the test set for this user.
+						*/
+						if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
+							last_prediction_error = metric->score(user);
+						if (stats->stats & CSP_stats::ERROR_RATED && !isnan(last_prediction_error))
+						{
+							error_rated[number_seen] += last_prediction_error;
+							count_rated[number_seen]++;
+						}
+						if (stats->stats & CSP_stats::ERROR_PRESENTED && !isnan(last_prediction_error))
+						{
+							error_presented[presented] += last_prediction_error;
+							count_presented[presented]++;
+						}
+					}
+					else
+					{
+						if (stats->stats & CSP_stats::ERROR_PRESENTED && !isnan(last_prediction_error))
+						{
+							error_presented[presented + 1] += last_prediction_error;
+							count_presented[presented + 1]++;
+						}
+					}
+					
+					/*
+						Stop looking for the next rating so we can re-generate presentation list.
+					*/
+					if (key != NULL)
+						break;
+				}
 			}
+			
+			/*
+				Print out the AUC for this user for this presentation list.
+			*/
+			if (stats->stats & CSP_stats::AUC)
+				fprintf(output, "A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
+		
+			/*
+				Fill in the 'missing' values to give smooth graphs.
+			*/
+			for (item = number_seen + 1; item < dataset->number_items; item++)
+				if (stats->stats & CSP_stats::ERROR_RATED && !isnan(last_prediction_error))
+				{
+					error_rated[item] += last_prediction_error;
+					count_rated[item]++;
+				}
+			for (item = presented + 1; item <= dataset->number_items; item++)
+				if (stats->stats & CSP_stats::ERROR_PRESENTED && !isnan(last_prediction_error))
+				{
+					error_presented[item] += last_prediction_error;
+					count_presented[item]++;
+				}
+			
 		}
 		
-		/*
-			Print out the AUC for this user for this presentation list.
-		*/
-		if (stats->stats & CSP_stats::AUC)
-			fprintf(output, "A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
-	
-		/*
-			Fill in the 'missing' values to give smooth graphs.
-		*/
-		for (item = number_seen + 1; stats->stats & CSP_stats::ERROR_RATED && item < dataset->number_items; item++)
-			fprintf(output, "R %lu %lu %f\n", user, item, last_prediction_error);
-		for (item = presented; stats->stats & CSP_stats::ERROR_PRESENTED && item < dataset->number_items; item++)
-			fprintf(output, "P %lu %lu %f\n", user, item, last_prediction_error);
-		
+		fprintf(output, "\n");
+		for (item = 0; item <= dataset->number_items; item++)
+			fprintf(output, "P %lu %f\n", item, error_presented[item] / count_presented[item]);
+		for (item = 0; item < dataset->number_items; item++)
+			fprintf(output, "R %lu %f\n", item, error_rated[item] / count_rated[item]);
 		fclose(output);
 	}
 	
