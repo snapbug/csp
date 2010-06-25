@@ -97,6 +97,8 @@ int main(int argc, char **argv)
 	count_presented = new uint64_t[dataset->number_items + 1];
 	count_rated = new uint64_t[dataset->number_items];
 	
+	srand((unsigned)time(NULL));
+	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
