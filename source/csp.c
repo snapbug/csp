@@ -102,6 +102,7 @@ int main(int argc, char **argv)
 	{
 		user = strtoull(argv[last_param], (char **)NULL, 10);
 		printf("%lu ", user);
+		fprintf(stderr, "\r%6lu", user); fflush(stderr);
 		
 		/*
 			Reset things for this user.
