@@ -95,17 +95,19 @@ CSP_generator_entropy::CSP_generator_entropy(CSP_dataset *dataset) : CSP_generat
 	}
 	
 	qsort(most_entropic, dataset->number_items, sizeof(*most_entropic), CSP_generator_entropy::entropy_cmp);
+	
+	for (i = 0; i < dataset->number_items; i++)
+		presentation_list[i] = most_entropic[i].movie_id;
 }
 
 /*
 	CSP_GENERATOR_ENTROPY::GENERATE()
 	---------------------------------
 */
-void CSP_generator_entropy::generate(uint64_t user, uint64_t *presentation_list, uint64_t number_presented)
+uint64_t *CSP_generator_entropy::generate(uint64_t user, uint64_t number_presented)
 {
-	uint64_t i;
 	UNUSED(user);
+	UNUSED(number_presented);
 	
-	for (i = number_presented; i < dataset->number_items; i++)
-		presentation_list[i] = most_entropic[i].movie_id;
+	return presentation_list;
 }

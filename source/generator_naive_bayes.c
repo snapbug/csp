@@ -119,7 +119,7 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 	CSP_GENERATOR_NAIVE_BAYES::GENERATE()
 	-------------------------------------
 */
-void CSP_generator_naive_bayes::generate(uint64_t user, uint64_t *presentation_list, uint64_t number_presented)
+uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_presented)
 {
 	uint64_t i, item_count;
 	
@@ -130,7 +130,7 @@ void CSP_generator_naive_bayes::generate(uint64_t user, uint64_t *presentation_l
 			dataset->ratings_for_movie(i, &item_count);
 			probabilities[i] = log(1.0 - (1.0 * item_count / number_ratings));
 		}
-		CSP_generator_entropy::generate(user, presentation_list, number_presented);
+		CSP_generator_entropy::generate(user, number_presented);
 	}
 	else
 	{
@@ -160,4 +160,5 @@ void CSP_generator_naive_bayes::generate(uint64_t user, uint64_t *presentation_l
 	}
 	
 	last_presented_and_seen = number_presented;
+	return presentation_list;
 }

@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 				/*
 					Generate the list of movies to present to the user.
 				*/
-				generator->generate(user, presentation_list, position_up_to);
+				generator->generate(user, position_up_to);
 				
 				/*
 					Find the next rating that the person can rate.

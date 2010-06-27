@@ -13,7 +13,7 @@ public:
 	CSP_generator_popularity(CSP_dataset *dataset);
 	virtual ~CSP_generator_popularity() {}
 
-	virtual void generate(uint64_t user, uint64_t *presentation_list, uint64_t number_presented);
+	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
 
 private:
 	static int number_ratings_cmp(const void *a, const void *b);

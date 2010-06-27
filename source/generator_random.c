@@ -14,12 +14,10 @@ CSP_generator_random::CSP_generator_random(CSP_dataset *dataset) : CSP_generator
 {
 	uint64_t i;
 	
-	mids = new uint64_t[dataset->number_items];
-	
 	for (i = 0; i < dataset->number_items; i++)
-		mids[i] = i;
+		presentation_list[i] = i;
 	
-	shuffle(mids, dataset->number_items);
+	shuffle(presentation_list, dataset->number_items);
 }
 
 /*
@@ -47,9 +45,8 @@ void CSP_generator_random::shuffle(uint64_t *start, uint64_t number)
 	CSP_GENERATOR_RANDOM::GENERATE()
 	--------------------------------
 */
-void CSP_generator_random::generate(uint64_t user, uint64_t *presentation_list, uint64_t number_presented)
+uint64_t *CSP_generator_random::generate(uint64_t user, uint64_t number_presented)
 {
-	uint64_t i;
 	UNUSED(user);
 	
 	/*
@@ -57,8 +54,7 @@ void CSP_generator_random::generate(uint64_t user, uint64_t *presentation_list, 
 		Sample for how we need to deal with this for dynamic generators.
 	*/
 	if (number_presented == 0)
-		shuffle(mids, dataset->number_items);
-		
-	for (i = number_presented; i < dataset->number_items; i++)
-		presentation_list[i] = mids[i];
+		shuffle(presentation_list, dataset->number_items);
+	
+	return presentation_list;
 }
