@@ -14,6 +14,7 @@
 	#include <float.h> // for _isnan and _finite
 	#define isnan _isnan
 	#define isinf(x) (!_finite(x) && !isnan(x))
+	#define strtoull(x, y, z) _strtoui64(x, y, z)
 #else
 	#include <stdint.h>
 #endif

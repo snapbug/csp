@@ -373,85 +373,31 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		}
 	}
 	
+	/*
+		Load correlations.
+	*/
 	fprintf(stderr, "Loading correlations from file... "); fflush(stderr);
 	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.correlations.byte", "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
 	
 	/*
-		Apply the scaling for correlations based on coraters from paper.
-	*/
-//	fprintf(stderr, "Scaling correlations... "); fflush(stderr);
-//	#pragma omp parallel for
-//	for (index = 0; index < (int64_t)tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; index++)
-//		correlation[index] = correlation[index] * (float)(coraters[index] / (coraters[index] + 5.0));
-//	fprintf(stderr, "done.\n"); fflush(stderr);
-	
-	/*
-		Precalculate the A bar and b bar
-	*/
-/*	double residual_i, residual_j;
-	uint64_t other, item_count, user_count, j;
-	bar_avg_tri_top = 0;
-	fprintf(stderr, "Calculating A bar...\n"); fflush(stderr);
-	#pragma omp parallel for private(movie, item_ratings, item_count, user_ratings, user_count, residual_i, residual_j, i, j, other) schedule(dynamic, 500) num_threads(7)
-	for (index = 0; index < (int64_t)dataset->number_items; index++)
-	{
-		movie = index;
-		if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
-		item_ratings = dataset->ratings_for_movie(movie, &item_count);
-			For everyone that watched that movie.
-		for (i = 0; i < item_count; i++)
-		{
-			residual_i = dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), movie, dataset->day(item_ratings[i]));
-			
-			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
-				For every movie they saw.
-			for (j = 0; j < user_count; j++)
-			{
-				other = dataset->movie(user_ratings[j]);
-				if (movie < other)
-				{
-						Update the intermediate values.
-					residual_j = dataset->rating(user_ratings[j]) - predict_statistics(dataset->user(user_ratings[j]), other, dataset->day(user_ratings[j]));
-					abar_tri[tri_offset(movie, other)] += residual_i * residual_j;
-				}
-			}
-		}
-		for (other = movie + 1; other < dataset->number_items; other++)
-		{
-			abar_tri[tri_offset(movie, other)] /= coraters[tri_offset(movie, other)];
-			if (isnan(abar_tri[tri_offset(movie, other)]) || isinf(abar_tri[tri_offset(movie, other)]))
-				abar_tri[tri_offset(movie, other)] = 0;
-			bar_avg_tri_top += abar_tri[tri_offset(movie, other)];
-		}
-	}
-	bar_avg_tri_bot = tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1;
-	
-	fprintf(stderr, "\rnon-diagonal done... "); fflush(stderr);
-	bar_avg_dia_top = 0;
-	for (index = 0; index < (int64_t)dataset->number_items; index++)
-	{
-		movie = index;
-		item_ratings = dataset->ratings_for_movie(movie, &item_count);
-		for (i = 0; i < item_count; i++)
-			abar_dia[movie] += pow(dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), movie, dataset->day(item_ratings[i])), 2);
-		abar_dia[movie] /= item_count;
-		if (isnan(abar_dia[movie]) || isinf(abar_dia[movie]))
-			abar_dia[movie] = 0;
-		bar_avg_dia_top += abar_dia[movie];
-	}
-	bar_avg_dia_bot = dataset->number_items;
+		Load pre-calculated A-bar.
 	*/
 	fprintf(stderr, "Loading abar from file... ");
 	fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.abar_tri.byte", "rb"));
 	fread(abar_dia, sizeof(*abar_dia), dataset->number_items, fopen("./data/netflix.abar_dia.item.residual", "rb"));
+	fprintf(stderr, "done.\n"); fflush(stderr);
+	
+	/*
+		Calculate average entries for A-bar.
+	*/
+	bar_avg_tri_top = bar_avg_dia_top = 0;
 	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; i++)
 		bar_avg_tri_top += abar_tri[i] / 127.0;
 	bar_avg_tri_bot = tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1;
 	for (i = 0; i < dataset->number_items; i++)
 		bar_avg_dia_top += abar_dia[i];
 	bar_avg_dia_bot = dataset->number_items;
-	fprintf(stderr, "done.\n"); fflush(stderr);
 }
 
 /*
@@ -678,6 +624,7 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 		for (i = 0; i < size; i++)
 			if (w[i] < 1e-10)
 				w[i] = 0; // robustness tip from Yehuda
+		
 		iterations++;
 	} while (magnitude > THRESHOLD && iterations < 10000); // make sure that we'll exit at some point
 	
@@ -698,7 +645,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	neighbour *neighbours = new neighbour[dataset->number_items];	
 	
 	uint64_t *user_ratings, user_count, movie_count;
-	uint64_t i, j, min, max, position = 0;
+	uint64_t i, j, min, max, offset, position = 0;
 	double prediction = 0;
 	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
@@ -707,11 +654,12 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 		{
 			min = MIN(movie, dataset->movie(user_ratings[i]));
 			max = MAX(movie, dataset->movie(user_ratings[i]));
+			offset = tri_offset(min, max);
 			
 			neighbours[position].movie_id = dataset->movie(user_ratings[i]);
 			neighbours[position].considered = TRUE;
-			neighbours[position].coraters = coraters[tri_offset(min, max)];
-			neighbours[position].correlation = (correlation[tri_offset(min, max)] / 127.0) * (coraters[position] / (coraters[position] + 5.0));
+			neighbours[position].coraters = coraters[offset];
+			neighbours[position].correlation = (float)((correlation[offset] / 127.0) * (coraters[offset] / (coraters[offset] + 5.0)));
 			neighbours[position].residual = dataset->rating(user_ratings[i]) - predict_statistics(user, dataset->movie(user_ratings[i]), dataset->day(user_ratings[i]));
 			
 			position++;
@@ -736,7 +684,8 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 			{
 				min = MIN(neighbours[j].movie_id, neighbours[i].movie_id);
 				max = MAX(neighbours[j].movie_id, neighbours[i].movie_id);
-				ahat[(i * MIN(k, position)) + j] = (float)(((coraters[tri_offset(min, max)] * (abar_tri[tri_offset(min, max)] / 127.0)) + (beta * bar_avg_tri_top / bar_avg_tri_bot)) / (coraters[tri_offset(min, max)] + beta));
+				offset = tri_offset(min, max);
+				ahat[(i * MIN(k, position)) + j] = (float)(((coraters[offset] * (abar_tri[offset] / 127.0)) + (beta * bar_avg_tri_top / bar_avg_tri_bot)) / (coraters[offset] + beta));
 			}
 	
 	/*
@@ -746,7 +695,8 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	{
 		min = MIN(neighbours[j].movie_id, movie);
 		max = MAX(neighbours[j].movie_id, movie);
-		bhat[j] = (float)(((coraters[tri_offset(min, max)] * (bbar[tri_offset(min, max)] / 127.0)) + (beta * bar_avg_tri_top / bar_avg_tri_bot)) / (coraters[tri_offset(min, max)] + beta));
+		offset = tri_offset(min, max);
+		bhat[j] = (float)(((coraters[offset] * (bbar[offset] / 127.0)) + (beta * bar_avg_tri_top / bar_avg_tri_bot)) / (coraters[offset] + beta));
 	}
 	
 	/*
