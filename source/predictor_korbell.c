@@ -681,9 +681,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 		Create the A hat matrix here, from precomputed A bar values
 	*/
 	for (i = 0; i < MIN(k, position); i++)
-	{
 		for (j = 0; j < MIN(k, position); j++)
-		{
 			if (i == j)
 			{
 				dataset->ratings_for_movie(neighbours[i].movie_id, &movie_count);
@@ -696,8 +694,6 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 				offset = tri_offset(min, max);
 				ahat[(i * MIN(k, position)) + j] = (float)(((coraters[offset] * (abar_tri[offset] / 127.0)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
 			}
-		}
-	}
 	
 	/*
 		Now create the b bar vector

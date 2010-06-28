@@ -213,21 +213,17 @@ int main(int argc, char **argv)
 			Fill in the 'missing' values to give smooth graphs.
 		*/
 		for (item = number_seen + 1; item <= dataset->number_items; item++)
-		{
 			if (stats->stats & CSP_stats::ERROR_RATED)
 			{
 				error_rated[item] += last_prediction_error;
 				count_rated[item]++;
 			}
-		}
 		for (item = presented + 1; item <= dataset->number_items; item++)
-		{
 			if (stats->stats & CSP_stats::ERROR_PRESENTED)
 			{
 				error_presented[item] += last_prediction_error;
 				count_presented[item]++;
 			}
-		}
 	}
 	
 	printf("\n");
