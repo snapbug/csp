@@ -52,8 +52,7 @@ private:
 	
 	int8_t *correlation, *abar_tri, *bbar;
 	float *abar_dia;
-	double bar_avg_tri_top, bar_avg_dia_top;
-	uint64_t bar_avg_tri_bot, bar_avg_dia_bot;
+	double bar_avg_tri, bar_avg_dia;
 	
 	typedef struct {
 		float correlation;

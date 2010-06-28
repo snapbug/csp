@@ -391,13 +391,13 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	/*
 		Calculate average entries for A-bar.
 	*/
-	bar_avg_tri_top = bar_avg_dia_top = 0;
+	bar_avg_tri = bar_avg_dia = 0;
 	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; i++)
-		bar_avg_tri_top += abar_tri[i] / 127.0;
-	bar_avg_tri_bot = tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1;
+		bar_avg_tri += abar_tri[i] / 127.0;
+	bar_avg_tri /= tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1;
 	for (i = 0; i < dataset->number_items; i++)
-		bar_avg_dia_top += abar_dia[i];
-	bar_avg_dia_bot = dataset->number_items;
+		bar_avg_dia += abar_dia[i];
+	bar_avg_dia /= dataset->number_items;
 }
 
 /*
@@ -681,19 +681,23 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 		Create the A hat matrix here, from precomputed A bar values
 	*/
 	for (i = 0; i < MIN(k, position); i++)
+	{
 		for (j = 0; j < MIN(k, position); j++)
+		{
 			if (i == j)
 			{
 				dataset->ratings_for_movie(neighbours[i].movie_id, &movie_count);
-				ahat[(i * MIN(k, position)) + j] = (float)(((movie_count * abar_dia[neighbours[i].movie_id]) + (beta * bar_avg_dia_top / bar_avg_dia_bot)) / (movie_count + beta));
+				ahat[(i * MIN(k, position)) + j] = (float)(((movie_count * abar_dia[neighbours[i].movie_id]) + (beta * bar_avg_dia)) / (movie_count + beta));
 			}
 			else
 			{
 				min = MIN(neighbours[j].movie_id, neighbours[i].movie_id);
 				max = MAX(neighbours[j].movie_id, neighbours[i].movie_id);
 				offset = tri_offset(min, max);
-				ahat[(i * MIN(k, position)) + j] = (float)(((coraters[offset] * (abar_tri[offset] / 127.0)) + (beta * bar_avg_tri_top / bar_avg_tri_bot)) / (coraters[offset] + beta));
+				ahat[(i * MIN(k, position)) + j] = (float)(((coraters[offset] * (abar_tri[offset] / 127.0)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
 			}
+		}
+	}
 	
 	/*
 		Now create the b bar vector
@@ -703,7 +707,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 		min = MIN(neighbours[j].movie_id, movie);
 		max = MAX(neighbours[j].movie_id, movie);
 		offset = tri_offset(min, max);
-		bhat[j] = (float)(((coraters[offset] * (bbar[offset] / 127.0)) + (beta * bar_avg_tri_top / bar_avg_tri_bot)) / (coraters[offset] + beta));
+		bhat[j] = (float)(((coraters[offset] * (bbar[offset] / 127.0)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
 	}
 	
 	/*
