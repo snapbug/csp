@@ -556,7 +556,7 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 	uint64_t i, j;
 	double *r = new double[size];
 	double *Ar = new double[size];
-	double alpha, interim, magnitude;
+	double alpha, interim, magnitude = 0, old_magnitude;
 	uint64_t iterations = 0;
 	
 	/*
@@ -581,6 +581,7 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 		/*
 			Non-negativity contraints, and magnitude.
 		*/
+		old_magnitude = magnitude;
 		magnitude = 0;
 		for (i = 0; i < size; i++) 
 		{
@@ -588,6 +589,12 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 				r[i] = 0;
 			magnitude += r[i] * r[i];
 		}
+		
+		/*
+			Robustness tip from Yehuda, to stop divergent case.
+		*/
+		if (magnitude > old_magnitude + 1)
+			return;
 		
 		/*
 			Calculate alpha <- trans(r)*r / trans(r) * Ar.
