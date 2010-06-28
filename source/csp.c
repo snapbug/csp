@@ -83,17 +83,15 @@ int main(int argc, char **argv)
 	metric = new CSP_metric_mae(dataset, predictor);
 	
 	error_presented = new double[dataset->number_items + 1];
-	error_rated = new double[dataset->number_items];
+	error_rated = new double[dataset->number_items + 1];
 	count_presented = new uint64_t[dataset->number_items + 1];
-	count_rated = new uint64_t[dataset->number_items];
+	count_rated = new uint64_t[dataset->number_items + 1];
 	
-	for (item = 0; item < dataset->number_items; item++)
+	for (item = 0; item <= dataset->number_items; item++)
 	{
 		error_presented[item] = error_rated[item] = 0;
 		count_presented[item] = count_rated[item] = 0;
 	}
-	error_presented[item] = 0;
-	count_presented[item] = 0;
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
@@ -214,7 +212,7 @@ int main(int argc, char **argv)
 		/*
 			Fill in the 'missing' values to give smooth graphs.
 		*/
-		for (item = number_seen + 1; item < dataset->number_items; item++)
+		for (item = number_seen + 1; item <= dataset->number_items; item++)
 		{
 			if (stats->stats & CSP_stats::ERROR_RATED)
 			{
@@ -237,7 +235,7 @@ int main(int argc, char **argv)
 		for (item = 0; item <= dataset->number_items; item++)
 			printf("P %lu %f\n", item, error_presented[item] / count_presented[item]);
 	if (stats->stats & CSP_stats::ERROR_RATED)
-		for (item = 0; item < dataset->number_items; item++)
+		for (item = 0; item <= dataset->number_items; item++)
 			printf("R %lu %f\n", item, error_rated[item] / count_rated[item]);
 	
 	/*
