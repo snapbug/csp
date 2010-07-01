@@ -94,21 +94,13 @@ int main(int argc, char **argv)
 		error_presented[item] = error_rated[item] = 0;
 		count_presented[item] = count_rated[item] = 0;
 	}
-	for (user = 0; user < dataset->number_users; user++)
-	{
-		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		error_presented[0] += metric->score(user);
-	}
-	exit(printf("\n%f\n", error_presented[0] / dataset->number_users));
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	//for (; last_param < (uint64_t)argc; last_param++)
-	for (user = 0; user < dataset->number_users; user++)
+	for (; last_param < (uint64_t)argc; last_param++)
 	{
-		//user = strtoull(argv[last_param], (char **)NULL, 10);
-		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		user = strtoull(argv[last_param], (char **)NULL, 10);
 		
 		/*
 			Reset things for this user.
