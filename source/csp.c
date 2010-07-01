@@ -7,6 +7,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <assert.h>
 #include <omp.h>
 #include "csp_types.h"
 #include "dataset_netflix.h"
@@ -57,16 +58,6 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Done.\n"); fflush(stderr);
 	}
 	
-	switch (params->generation_method)
-	{
-		case CSP_generator_factory::BAYESIAN: generator = new CSP_generator_naive_bayes(dataset, coraters); break;
-		case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
-		case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
-		case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
-		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
-		default: exit(puts("Unknown generation method"));
-	}
-	
 	switch (params->prediction_method)
 	{
 		case CSP_predictor_factory::CONSTANT: predictor = new CSP_predictor_constant(dataset); break;
@@ -80,7 +71,18 @@ int main(int argc, char **argv)
 		default: exit(puts("Unknown prediction method"));
 	}
 	
-	metric = new CSP_metric_mae(dataset, predictor);
+	switch (params->generation_method)
+	{
+		case CSP_generator_factory::BAYESIAN: generator = new CSP_generator_naive_bayes(dataset, coraters); break;
+		case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
+		case CSP_generator_factory::GREEDY_CHEAT: generator = new CSP_generator_greedy_cheat(dataset, predictor); break;
+		case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
+		case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
+		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
+		default: exit(puts("Unknown generation method"));
+	}
+	
+	metric = new CSP_metric_rmse(dataset, predictor);
 	
 	error_presented = new double[dataset->number_items + 1];
 	error_rated = new double[dataset->number_items + 1];
@@ -92,14 +94,21 @@ int main(int argc, char **argv)
 		error_presented[item] = error_rated[item] = 0;
 		count_presented[item] = count_rated[item] = 0;
 	}
+	for (user = 0; user < dataset->number_users; user++)
+	{
+		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		error_presented[0] += metric->score(user);
+	}
+	exit(printf("\n%f\n", error_presented[0] / dataset->number_users));
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	for (; last_param < (uint64_t)argc; last_param++)
+	//for (; last_param < (uint64_t)argc; last_param++)
+	for (user = 0; user < dataset->number_users; user++)
 	{
-		user = strtoull(argv[last_param], (char **)NULL, 10);
-		printf("%lu ", user);
+		//user = strtoull(argv[last_param], (char **)NULL, 10);
+		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		
 		/*
 			Reset things for this user.
@@ -139,7 +148,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count)
 		{
-			if (number_seen % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
+		//	if (number_seen % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			/*
 				Generate the list of movies to present to the user.
 			*/
@@ -224,6 +233,12 @@ int main(int argc, char **argv)
 				error_presented[item] += last_prediction_error;
 				count_presented[item]++;
 			}
+	}
+	
+	for (item = 0; item <= dataset->number_items; item++)
+	{
+		assert(count_rated[item] == dataset->number_users);
+		assert(count_presented[item] == dataset->number_users);
 	}
 	
 	printf("\n");

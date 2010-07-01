@@ -4,6 +4,7 @@
 */
 
 #include "generator.h"
+#include "generator_greedy_cheat.h"
 #include "generator_random.h"
 #include "generator_entropy.h"
 #include "generator_popularity.h"
@@ -22,7 +23,8 @@ public:
 		RANDOM,
 		POPULARITY,
 		BAYESIAN,
-		ENTROPY
+		ENTROPY,
+		GREEDY_CHEAT
 	};
 };
 

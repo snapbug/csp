@@ -513,20 +513,20 @@ void CSP_predictor_korbell::removed_rating(uint64_t *key)
 double CSP_predictor_korbell::predict_statistics(uint64_t user, uint64_t movie, uint64_t day)
 {
 	UNUSED(day);
-	                                                                  // Avg MAE   Avg RMSE  Quiz
-	return global_average                                             // 0.940119  ********  1.131419
-		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987  ********  1.054314
-		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379  ********  0.982653
+	                                                                  // Avg MAE    Avg RMSE   Quiz
+	return global_average                                             // 0.940119   1.067615   1.131419
+		+ (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) // 0.833987   0.983308   1.054314
+		+ (user_effect[user] / (user_counts[user] + user_alpha))      // 0.755379   0.909070   0.982653
 #ifdef TIME_EFFECTS
-		+ user_time_user(user, day)                                   //     -         -     0.978032
-		+ user_time_movie(user, movie, day)                           //     -         -     0.975434
-		+ movie_time_movie(movie, day)                                //     -         -     0.973580
-		+ movie_time_user(movie, user, day)                           //     -         -     0.972888
+		+ user_time_user(user, day)                                   //     -          -      0.978032
+		+ user_time_movie(user, movie, day)                           //     -          -      0.975434
+		+ movie_time_movie(movie, day)                                //     -          -      0.973580
+		+ movie_time_user(movie, user, day)                           //     -          -      0.972888
 #endif
-		+ user_movie_average(user, movie)                             // 0.749824  ********  0.968554
-		+ user_movie_support(user, movie)                             // 0.744655  ********  0.964815
-		+ movie_user_average(movie, user)                             // 0.742681  ********  0.963609
-		+ movie_user_support(movie, user)                             // 0.742112  0.895805  0.962599
+		+ user_movie_average(user, movie)                             // 0.749824   0.903716   0.968554
+		+ user_movie_support(user, movie)                             // 0.744655   0.899066   0.964815
+		+ movie_user_average(movie, user)                             // 0.742681   0.897352   0.963609
+		+ movie_user_support(movie, user)                             // 0.742112   0.895805   0.962599
 	;
 }
 
@@ -599,15 +599,15 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 		/*
 			Calculate alpha <- trans(r)*r / trans(r) * Ar.
 		*/
-		alpha = interim = 0;
-		for (i = 0; i < size; i++)
-			alpha += r[i] * r[i]; // trans(r) * r
 		for (i = 0; i < size; i++)
 		{
 			Ar[i] = 0;
 			for (j = 0; j < size; j++)
 				Ar[i] += a[(i * size) + j] * r[j]; // A*r
 		}
+		alpha = interim = 0;
+		for (i = 0; i < size; i++)
+			alpha += r[i] * r[i]; // trans(r) * r
 		for (i = 0; i < size; i++)
 			interim += r[i] * Ar[i]; // trans(r) * Ar
 		alpha /= interim;
@@ -646,16 +646,15 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, uint64_t day)
 {
 	UNUSED(day);
+	uint64_t *user_ratings, user_count, movie_count, i, j, min, max, offset, position = 0;
+	double prediction = 0;
 	double *weights = new double[k];
 	float *ahat = new float[k * k];
 	float *bhat = new float[k];
 	neighbour *neighbours = new neighbour[dataset->number_items];	
 	
-	uint64_t *user_ratings, user_count, movie_count;
-	uint64_t i, j, min, max, offset, position = 0;
-	double prediction = 0;
-	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
+	
 	for (i = 0; i < user_count; i++)
 		if (dataset->included(user_ratings[i]))
 		{
@@ -667,7 +666,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 			neighbours[position].considered = TRUE;
 			neighbours[position].coraters = coraters[offset];
 			neighbours[position].correlation = (float)((correlation[offset] / 127.0) * (coraters[offset] / (coraters[offset] + 5.0)));
-			neighbours[position].residual = dataset->rating(user_ratings[i]) - predict_statistics(user, dataset->movie(user_ratings[i]), dataset->day(user_ratings[i]));
+			neighbours[position].data = user_ratings[i];
 			
 			position++;
 		}
@@ -715,7 +714,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 		Now use the weights for the prediction.
 	*/
 	for (i = 0; i < MIN(k, position); i++)
-		prediction += weights[i] * neighbours[i].residual;
+		prediction += weights[i] * (dataset->rating(neighbours[i].data) - predict_statistics(user, neighbours[i].movie_id, dataset->day(neighbours[i].data)));
 	
 	delete [] weights;
 	delete [] ahat;

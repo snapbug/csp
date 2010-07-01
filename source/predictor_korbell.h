@@ -59,7 +59,7 @@ private:
 		uint32_t coraters;
 		uint64_t movie_id;
 		uint64_t considered;
-		double residual;
+		uint64_t data;
 	} neighbour;
 	
 };

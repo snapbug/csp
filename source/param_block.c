@@ -75,9 +75,10 @@ void CSP_param_block::help(void)
 	
 	puts("GENERATION");
 	puts("----------");
-	puts("-g[beipr]        Generate lists to present to the user using:");
+	puts("-g[begipr]       Generate lists to present to the user using:");
 	puts("   b             Naive Bayes (dynamic)");
 	puts("   e             Entropy0");
+	puts("   g             Greedy Cheat (not to be used for real experiments)");
 	puts("   i             Average");
 	puts("   p             Popularity");
 	puts("   r             Random [default]");
@@ -131,6 +132,7 @@ void CSP_param_block::generation(char *which)
 	{
 		case 'b': generation_method = CSP_generator_factory::BAYESIAN; break;
 		case 'e': generation_method = CSP_generator_factory::ENTROPY; break;
+		case 'g': generation_method = CSP_generator_factory::GREEDY_CHEAT; break;
 		case 'i': generation_method = CSP_generator_factory::ITEM_AVERAGE; break;
 		case 'p': generation_method = CSP_generator_factory::POPULARITY; break;
 		case 'r': generation_method = CSP_generator_factory::RANDOM; break;

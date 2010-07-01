@@ -19,6 +19,7 @@ CC = g++
 PARTS = \
 	dataset_netflix.o \
 	generator_entropy.o \
+	generator_greedy_cheat.o \
 	generator_item_avg.o \
 	generator_naive_bayes.o \
 	generator_popularity.o \
