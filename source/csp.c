@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count)
 		{
-		//	if (number_seen % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
+			if (number_seen % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			/*
 				Generate the list of movies to present to the user.
 			*/
@@ -225,12 +225,6 @@ int main(int argc, char **argv)
 				error_presented[item] += last_prediction_error;
 				count_presented[item]++;
 			}
-	}
-	
-	for (item = 0; item <= dataset->number_items; item++)
-	{
-		assert(count_rated[item] == dataset->number_users);
-		assert(count_presented[item] == dataset->number_users);
 	}
 	
 	printf("\n");
