@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 	for (user = 0; user < dataset->number_users; user++)
 	{
 		//user = strtoull(argv[last_param], (char **)NULL, 10);
-		{ fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		
 		/*
 			Reset things for this user.
