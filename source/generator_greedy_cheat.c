@@ -34,15 +34,24 @@ int CSP_generator_greedy_cheat::error_cmp(const void *a, const void *b)
 uint64_t *CSP_generator_greedy_cheat::generate(uint64_t user, uint64_t number_presented)
 {
 	uint64_t *user_ratings, user_count;
-	uint64_t included = 0, i;
+	uint64_t included = number_presented, i;
 	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
 	
+	/*
+		If we have a new user, reset the error_reduction array.
+	*/
 	if (number_presented == 0)
 	{
 		delete [] error_reduction;
 		error_reduction = new movie[user_count];
+	}
 	
+	/*
+		Update the entries every 10 ratings (from looking at the results when we only do it once.
+	*/
+//	if (number_presented % 5 == 0)
+	{
 		for (i = 0; i < user_count; i++)
 		{
 			/*
@@ -63,9 +72,9 @@ uint64_t *CSP_generator_greedy_cheat::generate(uint64_t user, uint64_t number_pr
 			}
 		}
 		
-		qsort(error_reduction, included, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
+		qsort(error_reduction + number_presented, included - number_presented, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
 		
-		for (i = 0; i < included; i++)
+		for (i = number_presented; i < included; i++)
 			presentation_list[i] = error_reduction[i].movie_id;
 	}
 	

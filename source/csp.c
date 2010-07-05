@@ -98,11 +98,12 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	//for (; last_param < (uint64_t)argc; last_param++)
-	for (user = 0; user < dataset->number_users; user++)
+	for (; last_param < (uint64_t)argc; last_param++)
+	//for (user = 0; user < dataset->number_users; user++)
 	{
-		//user = strtoull(argv[last_param], (char **)NULL, 10);
-		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		user = strtoull(argv[last_param], (char **)NULL, 10);
+		//if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		printf("%lu ", user);
 		
 		/*
 			Reset things for this user.
@@ -142,7 +143,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count)
 		{
-			//if (number_seen % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
+			if (number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			/*
 				Generate the list of movies to present to the user.
 			*/
