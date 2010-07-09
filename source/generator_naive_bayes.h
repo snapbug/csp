@@ -20,6 +20,7 @@ private:
 	double calculate_probability(uint64_t movie, uint64_t non_ratable, uint64_t ratable);
 	
 	uint32_t *coraters;
+	uint64_t last_presented_and_seen;
 };
 
 #endif /* GENERATOR_NAIVE_BAYES_H_ */

@@ -44,8 +44,24 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 */
 uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_presented)
 {
+	uint64_t i;
 	UNUSED(user);
-	UNUSED(number_presented);
+	
+	if (number_presented == 0)
+		last_presented_and_seen = 0;
+	else
+	{
+		printf("From %lu -> %lu was presented! ", last_presented_and_seen, number_presented - 1);
+		printf("Saw %lu @ %lu\n", presentation_list[number_presented - 1], number_presented - 1);
+		
+		/*
+			For each remaining item, need to update the probabilities we've seen them.
+		*/
+		for (i = number_presented; i < dataset->number_items; i++)
+		{
+		}
+	}
+	last_presented_and_seen = number_presented;
 	
 	return presentation_list;
 }
