@@ -15,8 +15,6 @@ public:
 	virtual ~CSP_predictor_item_knn() {}
 	
 	virtual double predict(uint64_t user, uint64_t movie, uint64_t day);
-	virtual void added_rating(uint64_t *key);
-	virtual void removed_rating(uint64_t *key);
 
 	static int similarity_cmp(const void *a, const void *b);
 

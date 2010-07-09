@@ -90,8 +90,8 @@ void CSP_param_block::help(void)
 	puts("   c             Constant");
 	puts("   g             Global average");
 	puts("   i             Item average [default]");
-	puts("   I      *      Item k-nearest neighbour");
-	puts("   k             KorBell model");
+	puts("   I             Item k-nearest neighbour");
+	puts("   k             KorBell");
 	puts("   r             Random");
 	puts("   u             User average");
 	puts("   U      *      User k-nearest neighbour");
