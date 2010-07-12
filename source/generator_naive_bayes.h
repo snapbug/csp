@@ -21,6 +21,13 @@ private:
 	
 	uint32_t *coraters;
 	uint64_t last_presented_and_seen;
+	
+	typedef struct {
+		uint64_t movie_id;
+		double probability;
+	} movie;
+	
+	movie *movies;
 };
 
 #endif /* GENERATOR_NAIVE_BAYES_H_ */

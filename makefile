@@ -3,7 +3,7 @@ BINDIR = bin
 OBJDIR = bin
 
 LDFLAGS = -lm -fopenmp
-MINUS_D = 
+MINUS_D = -DNON_RATABLE
 #MINUS_D = -DTIME_EFFECTS
 ifeq ($(CORR),abs)
 MINUS_D += -DABS_CORR

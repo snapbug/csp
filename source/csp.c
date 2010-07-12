@@ -42,6 +42,7 @@ int main(int argc, char **argv)
 	double last_prediction_error, auc;
 	double *error_presented, *error_rated;
 	uint64_t *count_presented, *count_rated;
+	FILE *out = fopen("output/gb.run.txt", "w");
 	
 	last_param = params->parse();
 	stats = new CSP_stats(params->stats);
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
 	/*
 		Load the precalculated co-raters if necessary.
 	*/
-	if (/*params->generation_method == CSP_generator_factory::BAYESIAN ||*/ params->prediction_method == CSP_predictor_factory::KORBELL)
+	if (params->generation_method == CSP_generator_factory::BAYESIAN || params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
 		fprintf(stderr, "Loading coraters from file... "); fflush(stderr);
@@ -98,12 +99,12 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	user = 168;
+	//user = 168;
 	//for (; last_param < (uint64_t)argc; last_param++)
-	//for (user = 0; user < dataset->number_users; user++)
+	for (user = 0; user < dataset->number_users; user++)
 	{
 		//user = strtoull(argv[last_param], (char **)NULL, 10);
-		//if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
+		if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		//printf("%lu ", user);
 		
 		/*
@@ -128,12 +129,12 @@ int main(int argc, char **argv)
 		*/
 		if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
 			last_prediction_error = metric->score(user);
-		if (stats->stats & CSP_stats::ERROR_RATED && !isnan(last_prediction_error))
+		if (stats->stats & CSP_stats::ERROR_RATED)
 		{
 			error_rated[number_seen] += last_prediction_error;
 			count_rated[number_seen]++;
 		}
-		if (stats->stats & CSP_stats::ERROR_PRESENTED && !isnan(last_prediction_error))
+		if (stats->stats & CSP_stats::ERROR_PRESENTED)
 		{
 			error_presented[presented] += last_prediction_error;
 			count_presented[presented]++;
@@ -144,7 +145,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count)
 		{
-			//if (number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
+		//	/* if (number_seen % 10 == 0)*/ { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count - 1); fflush(stderr); }
 			/*
 				Generate the list of movies to present to the user.
 			*/
@@ -212,7 +213,10 @@ int main(int argc, char **argv)
 			Print out the AUC for this user for this presentation list.
 		*/
 		if (stats->stats & CSP_stats::AUC)
-			printf("A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
+		{
+			fprintf(out, "A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
+			fflush(out);
+		}
 	
 		/*
 			Fill in the 'missing' values to give smooth graphs.
