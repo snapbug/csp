@@ -70,20 +70,18 @@ uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_pre
 	
 	if (number_presented == 0)
 	{
+		CSP_generator_entropy::generate(user, number_presented);
+		
 		for (i = 0; i < dataset->number_items; i++)
 		{
-			movies[i].movie_id = i;
+			movies[i].movie_id = presentation_list[i];
 			movies[i].probability = 1;
 		}
-		
-		last_presented_and_seen = 0;
-		
-		return CSP_generator_entropy::generate(user, number_presented);
 	}
 	else
  	{
-//		printf("From %lu -> %lu was presented! ", last_presented_and_seen, number_presented - 1);
-//		printf("Saw %lu @ %lu\n", presentation_list[number_presented - 1], number_presented - 1);
+	//	printf("From %lu -> %lu was presented! ", last_presented_and_seen, number_presented - 1);
+	//	printf("Saw %lu @ %lu\n", presentation_list[number_presented - 1], number_presented - 1);
 		
 		/*
 			For each remaining item, need to update the probabilities we've seen them.
