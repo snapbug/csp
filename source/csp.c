@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 		default: exit(puts("Unknown prediction method"));
 	}
 	
-	metric = new CSP_metric_rmse(dataset, predictor);
+	metric = new CSP_metric_mae(dataset, predictor);
 	
 	switch (params->generation_method)
 	{

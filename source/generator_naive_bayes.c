@@ -40,12 +40,17 @@ int CSP_generator_naive_bayes::probability_cmp(const void *a, const void *b)
 double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t non_ratable, uint64_t ratable)
 {
 	double probability = 1;
-	uint64_t i, min, max;
-	uint64_t count, other_count;
+	uint64_t min, max, count, other_count;
+#ifdef NON_RATABLE
+	uint64_t i = non_ratable;
+#else
+	UNUSED(non_ratable);
+#endif
 	
 	dataset->ratings_for_movie(movie, &count);
+	
 #ifdef NON_RATABLE
-	for (i = non_ratable; i < ratable; i++)
+	for (; i < ratable; i++)
 	{
 		dataset->ratings_for_movie(presentation_list[i], &other_count);
 		min = MIN(movie, presentation_list[i]);
@@ -56,8 +61,8 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 	dataset->ratings_for_movie(presentation_list[ratable], &other_count);
 	min = MIN(movie, presentation_list[ratable]);
 	max = MAX(movie, presentation_list[ratable]);
-	probability *= ((1.0 * coraters[tri_offset(min, max)]) / other_count);
-	return probability;
+	
+	return probability * ((1.0 * coraters[tri_offset(min, max)]) / other_count);
 }
 
 /*
@@ -87,9 +92,8 @@ uint64_t *CSP_generator_naive_bayes::generate(uint64_t user, uint64_t number_pre
 			For each remaining item, need to update the probabilities we've seen them.
 		*/
 		for (i = number_presented; i < dataset->number_items; i++)
-		{
 			movies[i].probability *= calculate_probability(movies[i].movie_id, last_presented_and_seen, number_presented - 1);
-		}
+		
 		qsort(movies + number_presented, dataset->number_items - number_presented, sizeof(*movies), CSP_generator_naive_bayes::probability_cmp);
 		
 		for (i = number_presented; i < dataset->number_items; i++)

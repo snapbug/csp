@@ -3,10 +3,21 @@ BINDIR = bin
 OBJDIR = bin
 
 LDFLAGS = -lm -fopenmp
-MINUS_D = -DNON_RATABLE
-#MINUS_D = -DTIME_EFFECTS
+NON_RATABLE ?= yes
+TIME_EFFECTS ?= no
+CORR ?= real
+
+MINUS_D = 
 ifeq ($(CORR),abs)
 MINUS_D += -DABS_CORR
+endif
+
+ifeq ($(NON_RATABLE),yes)
+MINUS_D += -DNON_RATABLE
+endif
+
+ifeq ($(TIME_EFFECTS),yes)
+MINUS_D += -DTIME_EFFECTS
 endif
 
 # Normal
@@ -44,8 +55,7 @@ PARTS_W_DIR = $(PARTS:%=$(OBJDIR)/%)
 all : $(BINDIR)/csp
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@echo $(notdir $<)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BINDIR)/csp : $(PARTS_W_DIR) $(OBJDIR)/csp.o
 	@echo Building $(notdir $@)
