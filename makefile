@@ -2,7 +2,6 @@ SRCDIR = source
 BINDIR = bin
 OBJDIR = bin
 
-LDFLAGS = -lm -fopenmp
 NON_RATABLE ?= yes
 TIME_EFFECTS ?= no
 CORR ?= real
@@ -19,6 +18,8 @@ endif
 ifeq ($(TIME_EFFECTS),yes)
 MINUS_D += -DTIME_EFFECTS
 endif
+
+LDFLAGS = -lm -fopenmp
 
 # Normal
 CFLAGS = -Wall -Wextra -O3 -pedantic -ansi -Wno-long-long $(MINUS_D) -fopenmp
@@ -55,7 +56,8 @@ PARTS_W_DIR = $(PARTS:%=$(OBJDIR)/%)
 all : $(BINDIR)/csp
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	@echo $(basename $(notdir $<))
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(BINDIR)/csp : $(PARTS_W_DIR) $(OBJDIR)/csp.o
 	@echo Building $(notdir $@)
