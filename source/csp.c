@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
 		fprintf(stderr, "Loading coraters from file... "); fflush(stderr);
 		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.coraters.item","rb"));
-		fprintf(stderr, "Done.\n"); fflush(stderr);
+		fprintf(stderr, "done.\n"); fflush(stderr);
 	}
 	
 	switch (params->prediction_method)
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
 			}
 	}
 	
-	printf("\n");
+	fprintf(stderr, "\n");
 	if (stats->stats & CSP_stats::ERROR_PRESENTED)
 		for (item = 0; item <= dataset->number_items; item++)
 			printf("P %lu %f\n", item, error_presented[item] / count_presented[item]);

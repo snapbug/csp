@@ -17,14 +17,16 @@ public:
 
 private:
 	static int probability_cmp(const void *a, const void *b);
-	double calculate_probability(uint64_t movie, uint64_t non_ratable, uint64_t ratable);
+	double calculate_probability_yes(uint64_t movie, uint64_t non_ratable, uint64_t ratable);
+	double calculate_probability_no(uint64_t movie, uint64_t non_ratable, uint64_t ratable);
 	
 	uint32_t *coraters;
 	uint64_t last_presented_and_seen;
 	
 	typedef struct {
 		uint64_t movie_id;
-		double probability;
+		double probability_yes;
+		double probability_no;
 	} movie;
 	
 	movie *movies;
