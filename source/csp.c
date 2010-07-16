@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 	{
 		user = strtoull(argv[last_param], (char **)NULL, 10);
 		//if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		fprintf(stderr, "\r%6lu", user);
+		//fprintf(stderr, "\r%6lu", user);
 		
 		/*
 			Reset things for this user.
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count)
 		{
-			if (number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
+			//if (number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			/*
 				Generate the list of movies to present to the user.
 			*/

@@ -6,15 +6,12 @@ NON_RATABLE ?= yes
 TIME_EFFECTS ?= no
 CORR ?= real
 
-MINUS_D = 
+MINUS_D = -DNON_RATABLE
+#MINUS_D = 
+
 ifeq ($(CORR),abs)
 MINUS_D += -DABS_CORR
 endif
-
-ifeq ($(NON_RATABLE),yes)
-MINUS_D += -DNON_RATABLE
-endif
-
 ifeq ($(TIME_EFFECTS),yes)
 MINUS_D += -DTIME_EFFECTS
 endif

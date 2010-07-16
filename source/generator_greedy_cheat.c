@@ -47,36 +47,30 @@ uint64_t *CSP_generator_greedy_cheat::generate(uint64_t user, uint64_t number_pr
 		error_reduction = new movie[user_count];
 	}
 	
-	/*
-		Update the entries every 10 ratings (from looking at the results when we only do it once.
-	*/
-//	if (number_presented % 5 == 0)
+	for (i = 0; i < user_count; i++)
 	{
-		for (i = 0; i < user_count; i++)
+		/*
+			If it hasn't been added already, add it, see what error we'd get, then remove it again.
+		*/
+		if (!dataset->included(user_ratings[i]))
 		{
-			/*
-				If it hasn't been added already, add it, see what error we'd get, then remove it again.
-			*/
-			if (!dataset->included(user_ratings[i]))
-			{
-				dataset->add_rating(&user_ratings[i]);
-				predictor->added_rating(&user_ratings[i]);
-				
-				error_reduction[included].movie_id = dataset->movie(user_ratings[i]);
-				error_reduction[included].prediction_error = metric->score(user);
-				
-				dataset->remove_rating(&user_ratings[i]);
-				predictor->removed_rating(&user_ratings[i]);
-				
-				included++;
-			}
+			dataset->add_rating(&user_ratings[i]);
+			predictor->added_rating(&user_ratings[i]);
+			
+			error_reduction[included].movie_id = dataset->movie(user_ratings[i]);
+			error_reduction[included].prediction_error = metric->score(user);
+			
+			dataset->remove_rating(&user_ratings[i]);
+			predictor->removed_rating(&user_ratings[i]);
+			
+			included++;
 		}
-		
-		qsort(error_reduction + number_presented, included - number_presented, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
-		
-		for (i = number_presented; i < included; i++)
-			presentation_list[i] = error_reduction[i].movie_id;
 	}
+	
+	qsort(error_reduction + number_presented, included - number_presented, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
+	
+	for (i = number_presented; i < included; i++)
+		presentation_list[i] = error_reduction[i].movie_id;
 	
 	return presentation_list;
 }

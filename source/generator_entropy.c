@@ -106,12 +106,8 @@ CSP_generator_entropy::CSP_generator_entropy(CSP_dataset *dataset) : CSP_generat
 */
 uint64_t *CSP_generator_entropy::generate(uint64_t user, uint64_t number_presented)
 {
-	uint64_t i;
 	UNUSED(user);
 	UNUSED(number_presented);
-	
-	for (i = 0; i < dataset->number_items; i++)
-		presentation_list[i] = most_entropic[i].movie_id;
 	
 	return presentation_list;
 }
