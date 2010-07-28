@@ -2,37 +2,41 @@ SRCDIR = source
 BINDIR = bin
 OBJDIR = bin
 
-NON_RATABLE ?= yes
-TIME_EFFECTS ?= no
-CORR ?= real
+MINUS_D = 
+CFLAGS = -Wall -Wextra -O3 -pedantic -ansi -Wno-long-long $(MINUS_D)
 
-MINUS_D = -DNON_RATABLE
-#MINUS_D = 
-
-ifeq ($(CORR),abs)
+ifdef CORR
 MINUS_D += -DABS_CORR
 endif
-ifeq ($(TIME_EFFECTS),yes)
+
+ifdef TIME_EFFECTS
 MINUS_D += -DTIME_EFFECTS
 endif
 
-LDFLAGS = -lm -fopenmp
+ifndef NONRATABLE
+MINUS_D += -DNON_RATABLE
+endif
 
-# Normal
-CFLAGS = -Wall -Wextra -O3 -pedantic -ansi -Wno-long-long $(MINUS_D) -fopenmp
-## Debugging
-#CFLAGS = -Wall -Wextra -Werror -O2 -pedantic -ansi -g
+ifdef DEBUG
+CFLAGS += -g
+else
+CFLAGS += -fopenmp
+endif
+
+LDFLAGS = -lm -fopenmp
 
 CC = g++
 
 PARTS = \
 	dataset_netflix.o \
+	generator_distance.o \
 	generator_entropy.o \
 	generator_greedy_cheat.o \
 	generator_item_avg.o \
 	generator_naive_bayes.o \
 	generator_popularity.o \
 	generator_random.o \
+	generator_sample.o \
 	metric_mae.o \
 	metric_nmae.o \
 	metric_nrmse.o \

@@ -76,8 +76,10 @@ int main(int argc, char **argv)
 	switch (params->generation_method)
 	{
 		case CSP_generator_factory::BAYESIAN: generator = new CSP_generator_naive_bayes(dataset, coraters); break;
+		case CSP_generator_factory::DISTANCE: generator = new CSP_generator_distance(dataset); break;
 		case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
 		case CSP_generator_factory::GREEDY_CHEAT: generator = new CSP_generator_greedy_cheat(dataset, predictor, metric); break;
+		case CSP_generator_factory::SAMPLE: generator = new CSP_generator_sample(dataset, predictor, metric); break;
 		case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
 		case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;

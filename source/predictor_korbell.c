@@ -59,6 +59,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	user_movie_support_alpha = 90;
 	movie_user_average_alpha = 50;
 	movie_user_support_alpha = 50;
+	scale = 127.0;
+	alpha = 5.0;
 	beta = 500;
 	
 	movie_effect = new double[dataset->number_items];
@@ -560,7 +562,7 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 	uint64_t iterations = 0;
 	
 	/*
-		Initialis weights - small positive.
+		Initialise weights - small positive.
 	*/
 	for (i = 0; i < size; i++)
 		w[i] = 1e-9;
@@ -665,7 +667,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 			neighbours[position].movie_id = dataset->movie(user_ratings[i]);
 			neighbours[position].considered = TRUE;
 			neighbours[position].coraters = coraters[offset];
-			neighbours[position].correlation = (float)((correlation[offset] / 127.0) * (coraters[offset] / (coraters[offset] + 5.0)));
+			neighbours[position].correlation = (float)((correlation[offset] / scale) * (coraters[offset] / (coraters[offset] + alpha)));
 			neighbours[position].data = user_ratings[i];
 			
 			position++;
@@ -691,18 +693,18 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 				min = MIN(neighbours[j].movie_id, neighbours[i].movie_id);
 				max = MAX(neighbours[j].movie_id, neighbours[i].movie_id);
 				offset = tri_offset(min, max);
-				ahat[(i * MIN(k, position)) + j] = (float)(((coraters[offset] * (abar_tri[offset] / 127.0)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
+				ahat[(i * MIN(k, position)) + j] = (float)(((coraters[offset] * (abar_tri[offset] / scale)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
 			}
 	
 	/*
-		Now create the b bar vector
+		Now create the b hat vector
 	*/
 	for (j = 0; j < MIN(k, position); j++)
 	{
 		min = MIN(neighbours[j].movie_id, movie);
 		max = MAX(neighbours[j].movie_id, movie);
 		offset = tri_offset(min, max);
-		bhat[j] = (float)(((coraters[offset] * (bbar[offset] / 127.0)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
+		bhat[j] = (float)(((coraters[offset] * (bbar[offset] / scale)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
 	}
 	
 	/*

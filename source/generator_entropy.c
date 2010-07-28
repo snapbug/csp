@@ -97,7 +97,10 @@ CSP_generator_entropy::CSP_generator_entropy(CSP_dataset *dataset) : CSP_generat
 	qsort(most_entropic, dataset->number_items, sizeof(*most_entropic), CSP_generator_entropy::entropy_cmp);
 	
 	for (i = 0; i < dataset->number_items; i++)
+	{
 		presentation_list[i] = most_entropic[i].movie_id;
+		printf("%lu\n", presentation_list[i]);
+	}
 }
 
 /*

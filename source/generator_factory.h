@@ -5,11 +5,13 @@
 
 #include "generator.h"
 #include "generator_greedy_cheat.h"
+#include "generator_sample.h"
 #include "generator_random.h"
 #include "generator_entropy.h"
 #include "generator_popularity.h"
 #include "generator_item_avg.h"
 #include "generator_naive_bayes.h"
+#include "generator_distance.h"
 
 #ifndef GENERATOR_FACTORY_H_
 #define GENERATOR_FACTORY_H_
@@ -24,7 +26,9 @@ public:
 		POPULARITY,
 		BAYESIAN,
 		ENTROPY,
-		GREEDY_CHEAT
+		DISTANCE,
+		GREEDY_CHEAT,
+		SAMPLE
 	};
 };
 

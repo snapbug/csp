@@ -26,7 +26,7 @@ CSP_param_block::CSP_param_block(int argc, char **argv)
 	dataset = D_NETFLIX;
 	testing_method = S_PROP;
 	generation_method = CSP_generator_factory::RANDOM;
-	prediction_method = CSP_predictor_factory::CONSTANT;
+	prediction_method = CSP_predictor_factory::KORBELL;
 	metrics_to_use = CSP_metric_factory::MAE;
 	stats = CSP_stats::NONE;
 }
@@ -75,13 +75,15 @@ void CSP_param_block::help(void)
 	
 	puts("GENERATION");
 	puts("----------");
-	puts("-g[begipr]       Generate lists to present to the user using:");
+	puts("-g[bdegiprs]     Generate lists to present to the user using:");
 	puts("   b             Naive Bayes (dynamic)");
+	puts("   d             Average distance from mean");
 	puts("   e             Entropy0");
 	puts("   g             Greedy Cheat (not to be used for real experiments)");
 	puts("   i             Average");
-	puts("   p             Popularity");
-	puts("   r             Random [default]");
+	puts("   p             Popularity [default]");
+	puts("   r             Random");
+	puts("   s             Sample other greedy");
 	puts("");
 	
 	puts("PREDICTION");
@@ -127,15 +129,17 @@ void CSP_param_block::help(void)
 */
 void CSP_param_block::generation(char *which)
 {
-	generation_method = CSP_generator_factory::RANDOM;
+	generation_method = CSP_generator_factory::POPULARITY;
 	switch (*which)
 	{
 		case 'b': generation_method = CSP_generator_factory::BAYESIAN; break;
+		case 'd': generation_method = CSP_generator_factory::DISTANCE; break;
 		case 'e': generation_method = CSP_generator_factory::ENTROPY; break;
 		case 'g': generation_method = CSP_generator_factory::GREEDY_CHEAT; break;
 		case 'i': generation_method = CSP_generator_factory::ITEM_AVERAGE; break;
 		case 'p': generation_method = CSP_generator_factory::POPULARITY; break;
 		case 'r': generation_method = CSP_generator_factory::RANDOM; break;
+		case 's': generation_method = CSP_generator_factory::SAMPLE; break;
 		default: exit(printf("Unknown generation method: '%c'\n", *which));
 	}
 }
@@ -146,7 +150,7 @@ void CSP_param_block::generation(char *which)
 */
 void CSP_param_block::prediction(char *which)
 {
-	prediction_method = CSP_predictor_factory::ITEM_AVERAGE;
+	prediction_method = CSP_predictor_factory::KORBELL;
 	switch (*which)
 	{
 		case 'c': prediction_method = CSP_predictor_factory::CONSTANT; break;

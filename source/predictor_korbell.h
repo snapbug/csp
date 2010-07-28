@@ -43,7 +43,7 @@ private:
 	
 	uint32_t *coraters;
 	uint64_t k;
-	double beta;
+	double alpha, beta, scale;
 	
 	double predict_statistics(uint64_t user, uint64_t movie, uint64_t day);
 	double predict_neighbour(uint64_t user, uint64_t movie, uint64_t day);
