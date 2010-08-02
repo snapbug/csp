@@ -17,8 +17,6 @@ public:
 
 	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
 	
-	uint64_t *times_in_first;
-
 private:
 	CSP_metric *metric;
 	CSP_predictor *predictor;

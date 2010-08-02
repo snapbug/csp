@@ -79,6 +79,7 @@ int main(int argc, char **argv)
 		case CSP_generator_factory::DISTANCE: generator = new CSP_generator_distance(dataset); break;
 		case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
 		case CSP_generator_factory::GREEDY_CHEAT: generator = new CSP_generator_greedy_cheat(dataset, predictor, metric); break;
+		case CSP_generator_factory::OTHER_GREEDY: generator = new CSP_generator_other_greedy(dataset, predictor, metric); break;
 		case CSP_generator_factory::SAMPLE: generator = new CSP_generator_sample(dataset, predictor, metric); break;
 		case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
 		case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;

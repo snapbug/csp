@@ -75,12 +75,13 @@ void CSP_param_block::help(void)
 	
 	puts("GENERATION");
 	puts("----------");
-	puts("-g[bdegiprs]     Generate lists to present to the user using:");
+	puts("-g[bdegioprs]    Generate lists to present to the user using:");
 	puts("   b             Naive Bayes (dynamic)");
 	puts("   d             Average distance from mean");
 	puts("   e             Entropy0");
 	puts("   g             Greedy Cheat (not to be used for real experiments)");
 	puts("   i             Average");
+	puts("   o             Other greedy");
 	puts("   p             Popularity [default]");
 	puts("   r             Random");
 	puts("   s             Sample other greedy");
@@ -91,11 +92,11 @@ void CSP_param_block::help(void)
 	puts("-p[cgiIkruU]     Use the following method for rating prediction:");
 	puts("   c             Constant");
 	puts("   g             Global average");
-	puts("   i             Item average [default]");
+	puts("   i             Item average");
 	puts("   I             Item k-nearest neighbour");
 	puts("   k             KorBell");
 	puts("   r             Random");
-	puts("   u             User average");
+	puts("   u             User average [default]");
 	puts("   U      *      User k-nearest neighbour");
 	puts("");
 	
@@ -140,6 +141,7 @@ void CSP_param_block::generation(char *which)
 		case 'p': generation_method = CSP_generator_factory::POPULARITY; break;
 		case 'r': generation_method = CSP_generator_factory::RANDOM; break;
 		case 's': generation_method = CSP_generator_factory::SAMPLE; break;
+		case 'o': generation_method = CSP_generator_factory::OTHER_GREEDY; break;
 		default: exit(printf("Unknown generation method: '%c'\n", *which));
 	}
 }
@@ -150,7 +152,7 @@ void CSP_param_block::generation(char *which)
 */
 void CSP_param_block::prediction(char *which)
 {
-	prediction_method = CSP_predictor_factory::KORBELL;
+	prediction_method = CSP_predictor_factory::USER_AVERAGE;
 	switch (*which)
 	{
 		case 'c': prediction_method = CSP_predictor_factory::CONSTANT; break;

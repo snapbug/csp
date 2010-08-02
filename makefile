@@ -34,6 +34,7 @@ PARTS = \
 	generator_greedy_cheat.o \
 	generator_item_avg.o \
 	generator_naive_bayes.o \
+	generator_other_greedy.o \
 	generator_popularity.o \
 	generator_random.o \
 	generator_sample.o \

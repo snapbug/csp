@@ -12,13 +12,7 @@
 */
 CSP_generator_greedy_cheat::CSP_generator_greedy_cheat(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator(dataset), metric(metric), predictor(predictor) 
 {
-	uint64_t i;
-	
-	error_reduction = new movie[1];
-	times_in_first = new uint64_t[dataset->number_items];
-	
-	for (i = 0; i < dataset->number_items; i++)
-		times_in_first[i] = 0;
+	error_reduction = new movie[dataset->number_items];
 }
 
 /*
@@ -44,15 +38,6 @@ uint64_t *CSP_generator_greedy_cheat::generate(uint64_t user, uint64_t number_pr
 	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
 	
-	/*
-		If we have a new user, reset the error_reduction array.
-	*/
-	if (number_presented == 0)
-	{
-		delete [] error_reduction;
-		error_reduction = new movie[user_count];
-	}
-	
 	for (i = 0; i < user_count; i++)
 	{
 		/*
@@ -77,9 +62,6 @@ uint64_t *CSP_generator_greedy_cheat::generate(uint64_t user, uint64_t number_pr
 	
 	for (i = number_presented; i < included; i++)
 		presentation_list[i] = error_reduction[i].movie_id;
-	
-	if (number_presented < 5)
-		times_in_first[presentation_list[number_presented]]++;
 	
 	return presentation_list;
 }

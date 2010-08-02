@@ -462,6 +462,9 @@ void CSP_predictor_korbell::added_rating(uint64_t *key)
 */
 void CSP_predictor_korbell::removed_rating(uint64_t *key)
 {
+	if (dataset->included(key))
+		return;
+	
 	uint64_t movie = dataset->movie(key), user = dataset->user(key), rating = dataset->rating(key);
 	double pred = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_movie_average(user, movie);
 	
