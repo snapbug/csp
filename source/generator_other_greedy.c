@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "generator_other_greedy.h"
+#define NUMCONSIDER 1
 
 /*
 	CSP_GENERATOR_OTHER_GREEDY::CSP_GENERATOR_OTHER_GREEDY()
@@ -15,6 +16,10 @@ CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP
 	uint64_t i;
 	
 	number_times_greedy = new movie[dataset->number_items];
+	ones_changed = new uint64_t[NUMCONSIDER];
+	
+	for (i = 0; i < NUMCONSIDER; i++)
+		ones_changed[i] = dataset->number_items;
 	
 	for (i = 0; i < dataset->number_items; i++)
 	{
@@ -26,8 +31,6 @@ CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP
 	
 	for (i = 0; i < dataset->number_items; i++)
 		presentation_list[i] = number_times_greedy[i].movie_id;
-	
-	qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy::movie_id_cmp);
 }
 
 /*
@@ -71,28 +74,36 @@ uint64_t *CSP_generator_other_greedy::generate(uint64_t user, uint64_t number_pr
 		
 		qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy::movie_id_cmp);
 		
-		/*
-			See what the first 5 for this user would have been cheating, and remove them
-			from the count of the most occuring.
-		*/
-		CSP_generator_greedy_cheat::generate(user, 0);
-		number_times_greedy[presentation_list[0]].number_times--;
-		CSP_generator_greedy_cheat::generate(user, 1);
-		number_times_greedy[presentation_list[1]].number_times--;
-		CSP_generator_greedy_cheat::generate(user, 2);
-		number_times_greedy[presentation_list[2]].number_times--;
-		CSP_generator_greedy_cheat::generate(user, 3);
-		number_times_greedy[presentation_list[3]].number_times--;
-		CSP_generator_greedy_cheat::generate(user, 4);
-		number_times_greedy[presentation_list[4]].number_times--;
+		for (i = 0; i < NUMCONSIDER; i++)
+		{
+			/*
+				Undo what we did for the last user.
+			*/
+			if (ones_changed[i] < dataset->number_items)
+				number_times_greedy[ones_changed[i]].number_times++;
+			
+			/*
+				See what the top would have been for this user in this position.
+			*/
+			CSP_generator_greedy_cheat::generate(user, i);
+		
+			/*
+				Make a note of what they were so we can change it back.
+				Remove the count so we can resort properly.
+			*/
+			number_times_greedy[ones_changed[i] = presentation_list[i]].number_times--;
+		}
 		
 		/*
 			Re-remove all the ratings again.
 		*/
 		for (i = 0; i < count; i++)
 		{
-			dataset->remove_rating(&user_ratings[i]);
-			predictor->removed_rating(&user_ratings[i]);
+			if (dataset->included(user_ratings[i]))
+			{
+				dataset->remove_rating(&user_ratings[i]);
+				predictor->removed_rating(&user_ratings[i]);
+			}
 		}
 		
 		qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy::number_times_cmp);

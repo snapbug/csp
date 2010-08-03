@@ -23,6 +23,7 @@ private:
 		uint64_t number_times;
 	} movie;
 	movie *number_times_greedy;
+	uint64_t *ones_changed;
 	
 	CSP_metric *metric;
 	CSP_predictor *predictor;
