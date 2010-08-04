@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "generator_other_greedy.h"
-#define NUMCONSIDER 1
+#define NUMCONSIDER 5
 
 /*
 	CSP_GENERATOR_OTHER_GREEDY::CSP_GENERATOR_OTHER_GREEDY()
@@ -14,6 +14,8 @@
 CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric), metric(metric), predictor(predictor)
 {
 	uint64_t i;
+	movie start[] =
+#include "init.greedy.dat"
 	
 	number_times_greedy = new movie[dataset->number_items];
 	ones_changed = new uint64_t[NUMCONSIDER];
@@ -23,14 +25,9 @@ CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP
 	
 	for (i = 0; i < dataset->number_items; i++)
 	{
-		number_times_greedy[i].movie_id = i;
-		number_times_greedy[i].number_times = dataset->number_items - i;
+		number_times_greedy[i].movie_id = start[i].movie_id;
+		number_times_greedy[i].number_times = start[i].number_times;
 	}
-	
-	qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy::number_times_cmp);
-	
-	for (i = 0; i < dataset->number_items; i++)
-		presentation_list[i] = number_times_greedy[i].movie_id;
 }
 
 /*
@@ -54,7 +51,7 @@ int CSP_generator_other_greedy::number_times_cmp(const void *a, const void *b)
 	movie *x = (movie *)a;
 	movie *y = (movie *)b;
 	
-	return (x->number_times > y->number_times) - (x->number_times < y->number_times);
+	return (x->number_times < y->number_times) - (x->number_times > y->number_times);
 }
 
 /*

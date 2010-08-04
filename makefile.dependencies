@@ -8,7 +8,7 @@ bin/generator_entropy.o: source/generator_entropy.h source/generator.h source/cs
 bin/generator_greedy_cheat.o: source/generator_greedy_cheat.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h source/predictor.h source/metric.h
 bin/generator_item_avg.o: source/generator_item_avg.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h
 bin/generator_naive_bayes.o: source/generator_naive_bayes.h source/generator_entropy.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h
-bin/generator_other_greedy.o: source/generator_other_greedy.h source/generator_greedy_cheat.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h source/predictor.h source/metric.h
+bin/generator_other_greedy.o: source/generator_other_greedy.h source/generator_greedy_cheat.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h source/predictor.h source/metric.h source/init.greedy.dat
 bin/generator_popularity.o: source/generator_popularity.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h
 bin/generator_random.o: source/generator_random.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h
 bin/generator_sample.o: source/generator_sample.h source/generator.h source/csp_types.h source/dataset.h source/param_block.h source/predictor.h source/metric.h

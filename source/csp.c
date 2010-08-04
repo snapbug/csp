@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 	{
 		user = strtoull(argv[last_param], (char **)NULL, 10);
 		//if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		//fprintf(stderr, "\r%6lu", user);
+		fprintf(stderr, "\r%6lu", user);
 		
 		/*
 			Reset things for this user.
