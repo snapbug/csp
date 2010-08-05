@@ -7,6 +7,9 @@
 #include "generator_other_greedy.h"
 #define NUMCONSIDER 5
 
+static uint64_t number_times_start[] =
+#include "init.greedy.dat"
+
 /*
 	CSP_GENERATOR_OTHER_GREEDY::CSP_GENERATOR_OTHER_GREEDY()
 	--------------------------------------------------------
@@ -14,8 +17,6 @@
 CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric), metric(metric), predictor(predictor)
 {
 	uint64_t i;
-	movie start[] =
-#include "init.greedy.dat"
 	
 	number_times_greedy = new movie[dataset->number_items];
 	ones_changed = new uint64_t[NUMCONSIDER];
@@ -25,8 +26,8 @@ CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP
 	
 	for (i = 0; i < dataset->number_items; i++)
 	{
-		number_times_greedy[i].movie_id = start[i].movie_id;
-		number_times_greedy[i].number_times = start[i].number_times;
+		number_times_greedy[i].movie_id = i;
+		number_times_greedy[i].number_times = number_times_start[i];
 	}
 }
 
@@ -71,24 +72,23 @@ uint64_t *CSP_generator_other_greedy::generate(uint64_t user, uint64_t number_pr
 		
 		qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy::movie_id_cmp);
 		
+		/*
+			Reset the counts for the number of times we counted it
+		*/
+		for (i = 0; i < dataset->number_items; i++)
+			number_times_greedy[i].number_times = number_times_start[number_times_greedy[i].movie_id];
+		
 		for (i = 0; i < NUMCONSIDER; i++)
 		{
-			/*
-				Undo what we did for the last user.
-			*/
-			if (ones_changed[i] < dataset->number_items)
-				number_times_greedy[ones_changed[i]].number_times++;
-			
 			/*
 				See what the top would have been for this user in this position.
 			*/
 			CSP_generator_greedy_cheat::generate(user, i);
 		
 			/*
-				Make a note of what they were so we can change it back.
 				Remove the count so we can resort properly.
 			*/
-			number_times_greedy[ones_changed[i] = presentation_list[i]].number_times--;
+			number_times_greedy[presentation_list[i]].number_times--;
 		}
 		
 		/*
