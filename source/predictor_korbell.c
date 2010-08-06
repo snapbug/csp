@@ -395,7 +395,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	*/
 	bar_avg_tri = bar_avg_dia = 0;
 	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; i++)
-		bar_avg_tri += abar_tri[i] / 127.0;
+		bar_avg_tri += abar_tri[i] / scale;
 	bar_avg_tri /= tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1;
 	for (i = 0; i < dataset->number_items; i++)
 		bar_avg_dia += abar_dia[i];
