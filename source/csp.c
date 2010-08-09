@@ -145,7 +145,7 @@ int main(int argc, char **argv)
 		/*
 			While the user can still add more ratings.
 		*/
-		while (number_seen < (count))
+		while (number_seen < count)
 		{
 			if (number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			
