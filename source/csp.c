@@ -36,13 +36,11 @@ int main(int argc, char **argv)
 	CSP_stats *stats;
 	CSP_metric *metric;
 	uint64_t *key, *ratings;
-	uint64_t position_up_to, last_presented_and_seen, number_seen, count, user, item, presented, rating, size;
+	uint64_t position_up_to, last_presented_and_seen, number_seen, count, user, item, presented, rating, size, next_movie;
 	uint32_t *coraters = NULL;
 	uint64_t last_param;
 	double last_prediction_error, auc;
 	double *error_presented, *error_rated;
-	uint64_t *count_presented, *count_rated;
-	uint64_t this_one;
 	
 	last_param = params->parse();
 	stats = new CSP_stats(params->stats);
@@ -90,14 +88,9 @@ int main(int argc, char **argv)
 	
 	error_presented = new double[dataset->number_items + 1];
 	error_rated = new double[dataset->number_items + 1];
-	count_presented = new uint64_t[dataset->number_items + 1];
-	count_rated = new uint64_t[dataset->number_items + 1];
 	
 	for (item = 0; item <= dataset->number_items; item++)
-	{
 		error_presented[item] = error_rated[item] = 0;
-		count_presented[item] = count_rated[item] = 0;
-	}
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
@@ -132,15 +125,9 @@ int main(int argc, char **argv)
 		if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
 			last_prediction_error = metric->score(user);
 		if (stats->stats & CSP_stats::ERROR_RATED)
-		{
 			error_rated[number_seen] += last_prediction_error;
-			count_rated[number_seen]++;
-		}
 		if (stats->stats & CSP_stats::ERROR_PRESENTED)
-		{
 			error_presented[presented] += last_prediction_error;
-			count_presented[presented]++;
-		}
 		
 		/*
 			While the user can still add more ratings.
@@ -152,12 +139,12 @@ int main(int argc, char **argv)
 			/*
 				Get the next movie to rate.
 			*/
-			this_one = generator->next_movie(user, presented, key);
+			next_movie = generator->next_movie(user, presented, key);
 			
 			/*
 				If they can see it, do some shit.
 			*/
-			if ((key = (uint64_t *)bsearch(&this_one, ratings, count, sizeof(*ratings), movie_search)) != NULL)
+			if ((key = (uint64_t *)bsearch(&next_movie, ratings, count, sizeof(*ratings), movie_search)) != NULL)
 			{
 				if (stats->stats & CSP_stats::AUC)
 					auc += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen / count);
@@ -179,11 +166,11 @@ int main(int argc, char **argv)
 					Update the error as function of number rated.
 				*/
 				if (stats->stats & CSP_stats::ERROR_RATED)
-				{
 					error_rated[number_seen] += last_prediction_error;
-					count_rated[number_seen]++;
-				}
 				
+				/*
+					Make a note of the last movie we saw, for AUC
+				*/
 				last_presented_and_seen = presented;
 			}
 			
@@ -191,11 +178,11 @@ int main(int argc, char **argv)
 				Update the error as function of number presented.
 			*/
 			if (stats->stats & CSP_stats::ERROR_PRESENTED)
-			{
 				error_presented[presented + 1] += last_prediction_error;
-				count_presented[presented + 1]++;
-			}
 			
+			/*
+				Move onto the next movie.
+			*/
 			presented++;
 		}
 		
@@ -210,25 +197,20 @@ int main(int argc, char **argv)
 		*/
 		for (item = number_seen + 1; item <= dataset->number_items; item++)
 			if (stats->stats & CSP_stats::ERROR_RATED)
-			{
 				error_rated[item] += last_prediction_error;
-				count_rated[item]++;
-			}
+		
 		for (item = presented + 1; item <= dataset->number_items; item++)
 			if (stats->stats & CSP_stats::ERROR_PRESENTED)
-			{
 				error_presented[item] += last_prediction_error;
-				count_presented[item]++;
-			}
 	}
 	
 	fprintf(stderr, "\n");
 	if (stats->stats & CSP_stats::ERROR_PRESENTED)
 		for (item = 0; item <= dataset->number_items; item++)
-			printf("P %lu %f\n", item, error_presented[item] / count_presented[item]);
+			printf("P %lu %f\n", item, error_presented[item] / dataset->number_items);
 	if (stats->stats & CSP_stats::ERROR_RATED)
 		for (item = 0; item <= dataset->number_items; item++)
-			printf("R %lu %f\n", item, error_rated[item] / count_rated[item]);
+			printf("R %lu %f\n", item, error_rated[item] / dataset->number_items);
 	
 	/*
 		Clean up.
