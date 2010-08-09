@@ -11,12 +11,14 @@ CC = @cl
 
 PARTS = \
 	$(OBJDIR)\dataset_netflix.obj \
-	$(OBJDIR)\dataset_netflix_orig.obj \
+	$(OBJDIR)\generator_distance.obj \
 	$(OBJDIR)\generator_entropy.obj \
 	$(OBJDIR)\generator_greedy_cheat.obj \
 	$(OBJDIR)\generator_item_avg.obj \
-	$(OBJDIR)\generator_popularity.obj \
 	$(OBJDIR)\generator_naive_bayes.obj \
+	$(OBJDIR)\generator_other_greedy.obj \
+	$(OBJDIR)\generator_other_greedy_pers.obj \
+	$(OBJDIR)\generator_popularity.obj \
 	$(OBJDIR)\generator_random.obj \
 	$(OBJDIR)\metric_mae.obj \
 	$(OBJDIR)\metric_nmae.obj \

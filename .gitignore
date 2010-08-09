@@ -1,6 +1,6 @@
 bin
 data
 output
-vc90.pdb
+vc*.pdb
 cscope.*
 *.swp
