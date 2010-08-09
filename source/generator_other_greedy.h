@@ -15,7 +15,7 @@ public:
 	CSP_generator_other_greedy(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric);
 	virtual ~CSP_generator_other_greedy() {}
 
-	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
+	virtual uint64_t next_movie(uint64_t user, uint64_t which_one, uint64_t *key);
 	
 private:
 	typedef struct {

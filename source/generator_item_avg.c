@@ -52,19 +52,16 @@ CSP_generator_item_avg::CSP_generator_item_avg(CSP_dataset *dataset) : CSP_gener
 		most_liked[i].average /= most_liked[i].count;
 	
 	qsort(most_liked, dataset->number_items, sizeof(*most_liked), CSP_generator_item_avg::average_cmp);
-	
-	for (i = 0; i < dataset->number_items; i++)
-		presentation_list[i] = most_liked[i].movie_id;
 }
 
 /*
-	CSP_GENERATOR_ITEM_AVG::GENERATE()
-	----------------------------------
+	CSP_GENERATOR_ITEM_AVG::NEXT_MOVIE()
+	------------------------------------
 */
-uint64_t *CSP_generator_item_avg::generate(uint64_t user, uint64_t number_presented)
+uint64_t CSP_generator_item_avg::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
+	UNUSED(key);
 	UNUSED(user);
-	UNUSED(number_presented);
 	
-	return presentation_list;
+	return most_liked[which_one].movie_id;
 }

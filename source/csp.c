@@ -35,13 +35,14 @@ int main(int argc, char **argv)
 	CSP_predictor *predictor;
 	CSP_stats *stats;
 	CSP_metric *metric;
-	uint64_t *presentation_list, *key, *ratings;
+	uint64_t *key, *ratings;
 	uint64_t position_up_to, last_presented_and_seen, number_seen, count, user, item, presented, rating, size;
 	uint32_t *coraters = NULL;
 	uint64_t last_param;
 	double last_prediction_error, auc;
 	double *error_presented, *error_rated;
 	uint64_t *count_presented, *count_rated;
+	uint64_t this_one;
 	
 	last_param = params->parse();
 	stats = new CSP_stats(params->stats);
@@ -80,7 +81,7 @@ int main(int argc, char **argv)
 		case CSP_generator_factory::ENTROPY: generator = new CSP_generator_entropy(dataset); break;
 		case CSP_generator_factory::GREEDY_CHEAT: generator = new CSP_generator_greedy_cheat(dataset, predictor, metric); break;
 		case CSP_generator_factory::OTHER_GREEDY: generator = new CSP_generator_other_greedy(dataset, predictor, metric); break;
-		case CSP_generator_factory::SAMPLE: generator = new CSP_generator_sample(dataset, predictor, metric); break;
+		case CSP_generator_factory::OTHER_GREEDY_PERS: generator = new CSP_generator_other_greedy_pers(dataset, predictor, metric); break;
 		case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
 		case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
@@ -106,7 +107,7 @@ int main(int argc, char **argv)
 	{
 		user = strtoull(argv[last_param], (char **)NULL, 10);
 		//if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		fprintf(stderr, "\r%6lu", user);
+		//fprintf(stderr, "\r%6lu", user);
 		
 		/*
 			Reset things for this user.
@@ -144,71 +145,58 @@ int main(int argc, char **argv)
 		/*
 			While the user can still add more ratings.
 		*/
-		while (number_seen < count)
+		while (number_seen < (count))
 		{
-			//if (number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
-			/*
-				Generate the list of movies to present to the user.
-			*/
-			presentation_list = generator->generate(user, position_up_to);
+			if (number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			
 			/*
-				Find the next rating that the person can rate.
+				Get the next movie to rate.
 			*/
-			for (presented = position_up_to; presented < dataset->number_items; presented++)
+			this_one = generator->next_movie(user, presented, key);
+			
+			/*
+				If they can see it, do some shit.
+			*/
+			if ((key = (uint64_t *)bsearch(&this_one, ratings, count, sizeof(*ratings), movie_search)) != NULL)
 			{
-				if ((key = (uint64_t *)bsearch(&presentation_list[presented], ratings, count, sizeof(*ratings), movie_search)) != NULL)
-				{
-					assert(!dataset->included(key));
-					if (stats->stats & CSP_stats::AUC)
-						auc += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen / count);
-					number_seen++;
-					
-					/*
-						Add the rating we came across.
-					*/
-					dataset->add_rating(key);
-					predictor->added_rating(key);
-					
-					/*
-						Now check our error for this user.
-					*/
-					if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
-						last_prediction_error = metric->score(user);
-					
-					/*
-						Update the error as function of number rated.
-					*/
-					if (stats->stats & CSP_stats::ERROR_RATED)
-					{
-						error_rated[number_seen] += last_prediction_error;
-						count_rated[number_seen]++;
-					}
-				}
+				if (stats->stats & CSP_stats::AUC)
+					auc += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen / count);
+				number_seen++;
 				
 				/*
-					Update the error as function of number presented.
+					Add the rating we came across.
 				*/
-				if (stats->stats & CSP_stats::ERROR_PRESENTED)
+				dataset->add_rating(key);
+				predictor->added_rating(key);
+				
+				/*
+					Now check our error for this user.
+				*/
+				if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
+					last_prediction_error = metric->score(user);
+				
+				/*
+					Update the error as function of number rated.
+				*/
+				if (stats->stats & CSP_stats::ERROR_RATED)
 				{
-					error_presented[presented + 1] += last_prediction_error;
-					count_presented[presented + 1]++;
+					error_rated[number_seen] += last_prediction_error;
+					count_rated[number_seen]++;
 				}
 				
-				if (key != NULL)
-				{
-					/*
-						Make a note of where we are up to.
-					*/
-					last_presented_and_seen = presented++;
-					position_up_to = presented;
-					
-					/*
-						Stop looking for the next rating so we can re-generate presentation list.
-					*/
-					break;
-				}
+				last_presented_and_seen = presented;
 			}
+			
+			/*
+				Update the error as function of number presented.
+			*/
+			if (stats->stats & CSP_stats::ERROR_PRESENTED)
+			{
+				error_presented[presented + 1] += last_prediction_error;
+				count_presented[presented + 1]++;
+			}
+			
+			presented++;
 		}
 		
 		/*

@@ -13,7 +13,7 @@ public:
 	CSP_generator_distance(CSP_dataset *dataset);
 	virtual ~CSP_generator_distance() {}
 
-	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
+	virtual uint64_t next_movie(uint64_t user, uint64_t which_one, uint64_t *key);
 
 private:
 	static int distance_cmp(const void *a, const void *b);

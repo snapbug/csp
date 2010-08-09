@@ -75,16 +75,16 @@ void CSP_param_block::help(void)
 	
 	puts("GENERATION");
 	puts("----------");
-	puts("-g[bdegioprs]    Generate lists to present to the user using:");
+	puts("-g[bdegioOpr]    Generate lists to present to the user using:");
 	puts("   b             Naive Bayes (dynamic)");
 	puts("   d             Average distance from mean");
 	puts("   e             Entropy0");
 	puts("   g             Greedy Cheat (not to be used for real experiments)");
 	puts("   i             Average");
 	puts("   o             Other greedy");
+	puts("   O             Other greedy personalised");
 	puts("   p             Popularity [default]");
 	puts("   r             Random");
-	puts("   s             Sample other greedy");
 	puts("");
 	
 	puts("PREDICTION");
@@ -140,8 +140,8 @@ void CSP_param_block::generation(char *which)
 		case 'i': generation_method = CSP_generator_factory::ITEM_AVERAGE; break;
 		case 'p': generation_method = CSP_generator_factory::POPULARITY; break;
 		case 'r': generation_method = CSP_generator_factory::RANDOM; break;
-		case 's': generation_method = CSP_generator_factory::SAMPLE; break;
 		case 'o': generation_method = CSP_generator_factory::OTHER_GREEDY; break;
+		case 'O': generation_method = CSP_generator_factory::OTHER_GREEDY_PERS; break;
 		default: exit(printf("Unknown generation method: '%c'\n", *which));
 	}
 }

@@ -52,19 +52,16 @@ CSP_generator_distance::CSP_generator_distance(CSP_dataset *dataset) : CSP_gener
 	}
 	
 	qsort(most_distant, dataset->number_items, sizeof(*most_distant), CSP_generator_distance::distance_cmp);
-	
-	for (i = 0; i < dataset->number_items; i++)
-		presentation_list[i] = most_distant[i].movie_id;
 }
 
 /*
-	CSP_GENERATOR_DISTANCE::GENERATE()
-	----------------------------------
+	CSP_GENERATOR_DISTANCE::NEXT_MOVIE()
+	------------------------------------
 */
-uint64_t *CSP_generator_distance::generate(uint64_t user, uint64_t number_presented)
+uint64_t CSP_generator_distance::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
+	UNUSED(key);
 	UNUSED(user);
-	UNUSED(number_presented);
 	
-	return presentation_list;
+	return most_distant[which_one].movie_id;
 }

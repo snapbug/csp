@@ -27,10 +27,10 @@
 #endif
 
 #ifndef MIN
-	#define MIN(a, b) ((a) < (b) ? (a) : (b))
+	#define MIN(a, b) ((b) < (a) ? (b) : (a))
 #endif
 #ifndef MAX
-	#define MAX(a, b) ((a) > (b) ? (a) : (b))
+	#define MAX(a, b) ((b) > (a) ? (b) : (a))
 #endif
 
 #define clip(x, low, high) (low > x ? low : x < high ? x : high)

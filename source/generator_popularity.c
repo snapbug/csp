@@ -41,19 +41,16 @@ CSP_generator_popularity::CSP_generator_popularity(CSP_dataset *dataset) : CSP_g
 		most_popular[dataset->movie(ratings[i])].number_ratings++;
 		
 	qsort(most_popular, dataset->number_items, sizeof(*most_popular), CSP_generator_popularity::number_ratings_cmp);
-	
-	for (i = 0; i < dataset->number_items; i++)
-		presentation_list[i] = most_popular[i].movie_id;
 }
 
 /*
-	CSP_GENERATOR_POPULARITY::GENERATE()
-	------------------------------------
+	CSP_GENERATOR_POPULARITY::NEXT_MOVIE()
+	--------------------------------------
 */
-uint64_t *CSP_generator_popularity::generate(uint64_t user, uint64_t number_presented)
+uint64_t CSP_generator_popularity::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
+	UNUSED(key);
 	UNUSED(user);
-	UNUSED(number_presented);
 	
-	return presentation_list;
+	return most_popular[which_one].movie_id;
 }

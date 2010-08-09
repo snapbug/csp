@@ -56,39 +56,39 @@ int CSP_generator_other_greedy::number_times_cmp(const void *a, const void *b)
 }
 
 /*
-	CSP_GENERATOR_OTHER_GREEDY::GENERATE()
-	--------------------------------------
+	CSP_GENERATOR_OTHER_GREEDY::NEXT_MOVIE()
+	----------------------------------------
 */
-uint64_t *CSP_generator_other_greedy::generate(uint64_t user, uint64_t number_presented)
+uint64_t CSP_generator_other_greedy::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
-	uint64_t i, count;
+	UNUSED(key);
+	uint64_t i, count, next;
 	uint64_t *user_ratings;
 	
-	UNUSED(user);
-	
-	if (number_presented == 0)
+	if (which_one == 0)
 	{
 		user_ratings = dataset->ratings_for_user(user, &count);
-		
-		qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy::movie_id_cmp);
 		
 		/*
 			Reset the counts for the number of times we counted it
 		*/
 		for (i = 0; i < dataset->number_items; i++)
-			number_times_greedy[i].number_times = number_times_start[number_times_greedy[i].movie_id];
+		{
+			number_times_greedy[i].movie_id = i;
+			number_times_greedy[i].number_times = number_times_start[i];
+		}
 		
 		for (i = 0; i < NUMCONSIDER; i++)
 		{
 			/*
 				See what the top would have been for this user in this position.
 			*/
-			CSP_generator_greedy_cheat::generate(user, i);
+			next = CSP_generator_greedy_cheat::next_movie(user, i, key);
 		
 			/*
 				Remove the count so we can resort properly.
 			*/
-			number_times_greedy[presentation_list[i]].number_times--;
+			number_times_greedy[next].number_times--;
 		}
 		
 		/*
@@ -104,10 +104,7 @@ uint64_t *CSP_generator_other_greedy::generate(uint64_t user, uint64_t number_pr
 		}
 		
 		qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy::number_times_cmp);
-		
-		for (i = 0; i < dataset->number_items; i++)
-			presentation_list[i] = number_times_greedy[i].movie_id;
 	}
 	
-	return presentation_list;
+	return number_times_greedy[which_one].movie_id;
 }

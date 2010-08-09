@@ -13,11 +13,11 @@ public:
 	CSP_generator_naive_bayes(CSP_dataset *dataset, uint32_t *coraters);
 	virtual ~CSP_generator_naive_bayes() {}
 
-	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
+	virtual uint64_t next_movie(uint64_t user, uint64_t which_one, uint64_t *key);
 
 private:
 	static int probability_cmp(const void *a, const void *b);
-	double calculate_probability(uint64_t movie, uint64_t non_ratable, uint64_t ratable);
+	double calculate_probability(uint64_t movie, uint64_t other, uint64_t *key);
 	
 	uint32_t *coraters;
 	uint64_t last_presented_and_seen;
@@ -27,7 +27,7 @@ private:
 		double probability;
 	} movie;
 	
-	movie *movies;
+	movie *most_probable;
 };
 
 #endif /* GENERATOR_NAIVE_BAYES_H_ */

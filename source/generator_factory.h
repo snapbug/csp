@@ -10,9 +10,9 @@
 #include "generator_item_avg.h"
 #include "generator_naive_bayes.h"
 #include "generator_other_greedy.h"
+#include "generator_other_greedy_pers.h"
 #include "generator_popularity.h"
 #include "generator_random.h"
-#include "generator_sample.h"
 
 #ifndef GENERATOR_FACTORY_H_
 #define GENERATOR_FACTORY_H_
@@ -28,9 +28,9 @@ public:
 		ITEM_AVERAGE,
 		NONE,
 		OTHER_GREEDY,
+		OTHER_GREEDY_PERS,
 		POPULARITY,
-		RANDOM,
-		SAMPLE
+		RANDOM
 	};
 };
 

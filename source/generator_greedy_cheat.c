@@ -28,13 +28,14 @@ int CSP_generator_greedy_cheat::error_cmp(const void *a, const void *b)
 }
 
 /*
-	CSP_GENERATOR_GREEDY_CHEAT::GENERATE()
-	--------------------------------------
+	CSP_GENERATOR_OTHER_GREEDY::NEXT_MOVIE()
+	----------------------------------------
 */
-uint64_t *CSP_generator_greedy_cheat::generate(uint64_t user, uint64_t number_presented)
+uint64_t CSP_generator_greedy_cheat::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
+	UNUSED(key);
 	uint64_t *user_ratings, user_count;
-	uint64_t included = number_presented, i;
+	uint64_t included = 0, i;
 	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
 	
@@ -58,10 +59,7 @@ uint64_t *CSP_generator_greedy_cheat::generate(uint64_t user, uint64_t number_pr
 		}
 	}
 	
-	qsort(error_reduction + number_presented, included - number_presented, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
+	qsort(error_reduction, included, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
 	
-	for (i = number_presented; i < included; i++)
-		presentation_list[i] = error_reduction[i].movie_id;
-	
-	return presentation_list;
+	return error_reduction[which_one].movie_id;
 }

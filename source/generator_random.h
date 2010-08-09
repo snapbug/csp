@@ -13,10 +13,11 @@ public:
 	CSP_generator_random(CSP_dataset *dataset);
 	virtual ~CSP_generator_random() {}
 
-	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
+	virtual uint64_t next_movie(uint64_t user, uint64_t which_one, uint64_t *key);
 
 private:
 	void shuffle(uint64_t *start, uint64_t number);
+	uint64_t *mids;
 
 };
 

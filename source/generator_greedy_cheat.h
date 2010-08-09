@@ -15,7 +15,7 @@ public:
 	CSP_generator_greedy_cheat(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric);
 	virtual ~CSP_generator_greedy_cheat() {}
 
-	virtual uint64_t *generate(uint64_t user, uint64_t number_presented);
+	virtual uint64_t next_movie(uint64_t user, uint64_t which_one, uint64_t *key);
 	
 private:
 	CSP_metric *metric;
