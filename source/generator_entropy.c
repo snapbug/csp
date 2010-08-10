@@ -18,9 +18,9 @@ int CSP_generator_entropy::entropy_cmp(const void *a, const void *b)
 	movie *y = (movie *)b;
 	
 	return (x->entropy < y->entropy) - (x->entropy > y->entropy);
-	if (x->entropy < y->entropy) return 1;
-	if (x->entropy > y->entropy) return -1;
-	return 0;
+//	if (x->entropy < y->entropy) return 1;
+//	if (x->entropy > y->entropy) return -1;
+//	return 0;
 }
 
 /*
