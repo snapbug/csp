@@ -70,7 +70,6 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 	return probability;
 }
 
-
 /*
 	CSP_GENERATOR_NAIVE_BAYES::NEXT_MOVIE()
 	---------------------------------------
@@ -95,9 +94,7 @@ uint64_t CSP_generator_naive_bayes::next_movie(uint64_t user, uint64_t which_one
 			For each remaining item, need to update the probabilities we've seen them.
 		*/
 		for (i = which_one; i < dataset->number_items; i++)
-		{
 			most_probable[i].probability += calculate_probability(most_probable[i].movie_id, most_probable[which_one - 1].movie_id, key);
-		}
 	}
 	
 	qsort(most_probable + which_one, dataset->number_items - which_one, sizeof(*most_probable), CSP_generator_naive_bayes::probability_cmp);

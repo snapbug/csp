@@ -6,8 +6,13 @@
 #include "predictor.h"
 #include "metric.h"
 
+#define NUMCONSIDER 5
+
 #ifndef GENERATOR_OTHER_GREEDY_H_
 #define GENERATOR_OTHER_GREEDY_H_
+
+static uint64_t number_times_start[] =
+#include "init.greedy.dat"
 
 class CSP_generator_other_greedy : public CSP_generator_greedy_cheat
 {
@@ -28,7 +33,6 @@ private:
 	CSP_metric *metric;
 	CSP_predictor *predictor;
 	
-	static int movie_id_cmp(const void *a, const void *b);
 	static int number_times_cmp(const void *a, const void *b);
 
 };

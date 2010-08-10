@@ -11,8 +11,6 @@
 #include "stats.h"
 #include "param_block.h"
 
-#define puts(x) printf(x "\n")
-
 /*
 	CSP_PARAM_BLOCK::CSP_PARAM_BLOCK()
 	----------------------------------
@@ -22,11 +20,11 @@ CSP_param_block::CSP_param_block(int argc, char **argv)
 	this->argc = argc;
 	this->argv = argv;
 	
-	load_extra = FALSE;
+	load_extra = TRUE;
 	dataset = D_NETFLIX;
 	testing_method = S_PROP;
-	generation_method = CSP_generator_factory::RANDOM;
-	prediction_method = CSP_predictor_factory::KORBELL;
+	generation_method = CSP_generator_factory::POPULARITY;
+	prediction_method = CSP_predictor_factory::USER_AVERAGE;
 	metrics_to_use = CSP_metric_factory::MAE;
 	stats = CSP_stats::NONE;
 }
@@ -63,7 +61,7 @@ void CSP_param_block::help(void)
 	puts("--------");
 	puts("-d[n]            Use the following dataset for testing:");
 	puts("   n             Netflix [default]");
-	puts("-e               Load extra data (same data sorted by movie)");
+	puts("-e               Don't load extra data (same data sorted by movie)");
 	puts("");
 	
 	puts("TESTING");
@@ -130,7 +128,6 @@ void CSP_param_block::help(void)
 */
 void CSP_param_block::generation(char *which)
 {
-	generation_method = CSP_generator_factory::POPULARITY;
 	switch (*which)
 	{
 		case 'b': generation_method = CSP_generator_factory::BAYESIAN; break;
@@ -152,7 +149,6 @@ void CSP_param_block::generation(char *which)
 */
 void CSP_param_block::prediction(char *which)
 {
-	prediction_method = CSP_predictor_factory::USER_AVERAGE;
 	switch (*which)
 	{
 		case 'c': prediction_method = CSP_predictor_factory::CONSTANT; break;
@@ -173,7 +169,6 @@ void CSP_param_block::prediction(char *which)
 */
 void CSP_param_block::metrics(char *which)
 {
-	metrics_to_use = CSP_metric_factory::MAE;
 	do
 	{
 		switch (*which)
@@ -196,7 +191,6 @@ void CSP_param_block::metrics(char *which)
 */
 void CSP_param_block::statistics(char *which)
 {
-	stats = CSP_stats::NONE;
 	do
 	{
 		switch (*which)
@@ -237,7 +231,7 @@ uint64_t CSP_param_block::parse(void)
 					testing_method = S_FIXED;
 			}
 			else if (*command == 'e')
-				load_extra = TRUE;
+				load_extra = FALSE;
 			else if (*command == 'g')
 				generation(command + 1);
 			else if (*command == 'p')

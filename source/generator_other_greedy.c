@@ -5,10 +5,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "generator_other_greedy.h"
-#define NUMCONSIDER 5
-
-static uint64_t number_times_start[] =
-#include "init.greedy.dat"
 
 /*
 	CSP_GENERATOR_OTHER_GREEDY::CSP_GENERATOR_OTHER_GREEDY()
@@ -29,18 +25,6 @@ CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP
 		number_times_greedy[i].movie_id = i;
 		number_times_greedy[i].number_times = number_times_start[i];
 	}
-}
-
-/*
-	CSP_GENERATOR_OTHER_GREEDY::MOVIE_ID_CMP()
-	------------------------------------------
-*/
-int CSP_generator_other_greedy::movie_id_cmp(const void *a, const void *b)
-{
-	movie *x = (movie *)a;
-	movie *y = (movie *)b;
-	
-	return (x->movie_id > y->movie_id) - (x->movie_id < y->movie_id);
 }
 
 /*

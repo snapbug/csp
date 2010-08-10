@@ -12,14 +12,26 @@
 class CSP_generator_other_greedy_pers : public CSP_generator_other_greedy
 {
 public:
-	CSP_generator_other_greedy_pers(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric);
+	CSP_generator_other_greedy_pers(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric, uint32_t *coraters);
 	virtual ~CSP_generator_other_greedy_pers() {}
 
 	virtual uint64_t next_movie(uint64_t user, uint64_t which_one, uint64_t *key);
 	
 private:
+	typedef struct {
+		uint64_t movie_id;
+		double number_times;
+		double probability;
+	} movie;
+	movie *number_times_greedy;
+	uint64_t *ones_changed;
+	
 	CSP_metric *metric;
 	CSP_predictor *predictor;
+	
+	uint32_t *coraters;
+	static int prob_times_cmp(const void *a, const void *b);
+	double calculate_probability(uint64_t movie, uint64_t other, uint64_t *key);
 
 };
 
