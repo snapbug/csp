@@ -26,6 +26,8 @@ private:
 	movie *number_times_greedy;
 	uint64_t *ones_changed;
 	
+	double *movie_average, *movie_stddev;
+	
 	CSP_metric *metric;
 	CSP_predictor *predictor;
 	

@@ -43,7 +43,7 @@ CSP_dataset_netflix::CSP_dataset_netflix(CSP_param_block *params) : CSP_dataset(
 	size = fread(&testing_index, sizeof(*testing_index), number_users, fopen(strcat(testing_filename, ".idx"), "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
 	
-	if (!params->load_extra)
+	if (params->load_extra)
 	{
 		loaded_extra = TRUE;
 		fprintf(stderr, "Loading extra data... "); fflush(stderr);

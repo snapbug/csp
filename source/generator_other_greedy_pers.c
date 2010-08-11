@@ -13,14 +13,29 @@
 */
 CSP_generator_other_greedy_pers::CSP_generator_other_greedy_pers(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric, uint32_t *coraters) : CSP_generator_other_greedy(dataset, predictor, metric), metric(metric), predictor(predictor), coraters(coraters)
 {
-	uint64_t i;
+	uint64_t i, count, rating;
+	uint64_t *movie_ratings;
 	
 	number_times_greedy = new movie[dataset->number_items];
 	ones_changed = new uint64_t[NUMCONSIDER];
 	
+	movie_average = new double[dataset->number_items];
+	movie_stddev = new double[dataset->number_items];
+	
 	for (i = 0; i < NUMCONSIDER; i++)
 		ones_changed[i] = dataset->number_items;
 	
+	for (i = 0; i < dataset->number_items; i++)
+	{
+		movie_average[i] = movie_stddev[i] = 0;
+		movie_ratings = dataset->ratings_for_movie(i, &count);
+		for (rating = 0; rating < count; rating++)
+			movie_average[i] += dataset->rating(movie_ratings[rating]);
+		movie_average[i] /= count;
+		for (rating = 0; rating < count; rating++)
+			movie_stddev[i] += pow(dataset->rating(movie_ratings[rating]) - movie_average[i], 2);
+		movie_stddev[i] = sqrt(movie_stddev[i] / count);
+	}
 }
 
 /*
@@ -103,7 +118,8 @@ double CSP_generator_other_greedy_pers::calculate_probability(uint64_t movie, ui
 uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
 	UNUSED(key);
-	uint64_t i, count;
+	uint64_t i, count, movie, rating;
+	uint64_t next_window = (which_one + NUMCONSIDER) < dataset->number_items ? NUMCONSIDER : (dataset->number_items - which_one);
 	int64_t index;
 	
 	if (which_one == 0)
@@ -140,10 +156,14 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 	{
 		/*
 			If they could see the last one we gave them, keep going with the list we already worked out.
-			---
-			Probably want something here depending on the rating they gave?
 		*/
-		qsort(number_times_greedy + which_one, dataset->number_items - which_one, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::number_times_cmp);
+		movie = dataset->movie(key);
+		rating = dataset->rating(key);
+		// if they rated as 'normal' then keep going down the list
+		if ((rating > (movie_average[movie] - movie_stddev[movie])) && (rating < (movie_average[movie] + movie_stddev[movie])))
+			qsort(number_times_greedy + which_one, dataset->number_items - which_one, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::number_times_cmp);
+		else
+			qsort(number_times_greedy + which_one, next_window, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp);
 	}
 	else
 	{
@@ -151,7 +171,7 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 			Otherwise, we want to see if we can get a comparably information content movie,
 			that they are more likely to rate.
 		*/
-		qsort(number_times_greedy + which_one, (which_one + NUMCONSIDER < dataset->number_items ? NUMCONSIDER : dataset->number_items - NUMCONSIDER), sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp);
+		qsort(number_times_greedy + which_one, next_window, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp);
 	}
 	
 	return number_times_greedy[which_one].movie_id;
