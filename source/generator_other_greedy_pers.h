@@ -20,21 +20,21 @@ public:
 private:
 	typedef struct {
 		uint64_t movie_id;
-		double number_times;
-		double probability;
+		uint64_t number_times;
+		double top;
+		double bot;
 	} movie;
 	movie *number_times_greedy;
 	uint64_t *ones_changed;
-	
-	double *movie_average, *movie_stddev;
 	
 	CSP_metric *metric;
 	CSP_predictor *predictor;
 	
 	uint32_t *coraters;
-	static int prob_times_cmp(const void *a, const void *b);
+	
 	static int number_times_cmp(const void *a, const void *b);
 	static int probability_cmp(const void *a, const void *b);
+	
 	double calculate_probability(uint64_t movie, uint64_t other, uint64_t *key);
 
 };
