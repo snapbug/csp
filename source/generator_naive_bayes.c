@@ -83,8 +83,8 @@ uint64_t CSP_generator_naive_bayes::next_movie(uint64_t user, uint64_t which_one
 		{
 			dataset->ratings_for_movie(i, &most_probable[i].count);
 			most_probable[i].movie_id = i;
-			most_probable[i].top = 1e100;
-			most_probable[i].bot = 1e100;
+			most_probable[i].top = 1e300;
+			most_probable[i].bot = 1e300;
 		}
 		qsort(most_probable, dataset->number_items, sizeof(*most_probable), CSP_generator_naive_bayes::count_cmp);
 	}
