@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 			if (number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			
 			/*
-				Get the next movie to rate.
+				Get the next movie to present.
 			*/
 			next_movie = generator->next_movie(user, presented, key);
 			

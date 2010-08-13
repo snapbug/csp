@@ -20,6 +20,18 @@ CSP_generator_naive_bayes::CSP_generator_naive_bayes(CSP_dataset *dataset, uint3
 }
 
 /*
+	CSP_GENERATOR_NAIVE_BAYES::COUNT_CMP()
+	--------------------------------------
+*/
+int CSP_generator_naive_bayes::count_cmp(const void *a, const void *b)
+{
+	movie *x = (movie *)a;
+	movie *y = (movie *)b;
+	
+	return (x->count > y->count) - (x->count < y->count);
+}
+
+/*
 	CSP_GENERATOR_NAIVE_BAYES::PROBABILITY_CMP()
 	--------------------------------------------
 */
@@ -62,37 +74,34 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 uint64_t CSP_generator_naive_bayes::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
 	UNUSED(user);
-	uint64_t i, count;
+	uint64_t i;
 	double probability;
 	
 	if (which_one == 0)
 	{
 		for (i = 0; i < dataset->number_items; i++)
 		{
-			dataset->ratings_for_movie(i, &count);
+			dataset->ratings_for_movie(i, &most_probable[i].count);
 			most_probable[i].movie_id = i;
-			most_probable[i].top = count;
-			most_probable[i].bot = 1;
+			most_probable[i].top = 1e100;
+			most_probable[i].bot = 1e100;
 		}
+		qsort(most_probable, dataset->number_items, sizeof(*most_probable), CSP_generator_naive_bayes::count_cmp);
 	}
 	else
 	{
-		if (which_one == 1)
-			for (i = which_one; i < dataset->number_items; i++)
-				most_probable[i].top = most_probable[i].bot = 0;
-		
 		/*
 			For each remaining item, need to update the probabilities we've seen them.
 		*/
 		for (i = which_one; i < dataset->number_items; i++)
 		{
 			probability = calculate_probability(most_probable[i].movie_id, most_probable[which_one - 1].movie_id, key);
-			most_probable[i].top += probability;
-			most_probable[i].bot += 1 - probability;
+			most_probable[i].top *= probability;
+			most_probable[i].bot *= 1 - probability;
 		}
+		qsort(most_probable + which_one, dataset->number_items - which_one, sizeof(*most_probable), CSP_generator_naive_bayes::probability_cmp);
 	}
 	
-	qsort(most_probable + which_one, dataset->number_items - which_one, sizeof(*most_probable), CSP_generator_naive_bayes::probability_cmp);
 	
 	return most_probable[which_one].movie_id;
 }

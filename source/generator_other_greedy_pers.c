@@ -91,8 +91,8 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 			dataset->ratings_for_movie(i, &count);
 			number_times_greedy[i].movie_id = i;
 			number_times_greedy[i].number_times = number_times_start[i];
-			number_times_greedy[i].top = 1;
-			number_times_greedy[i].bot = 1;
+			number_times_greedy[i].top = 1e100;
+			number_times_greedy[i].bot = 1e100;
 		}
 		
 		/*
