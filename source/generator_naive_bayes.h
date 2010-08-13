@@ -24,7 +24,8 @@ private:
 	
 	typedef struct {
 		uint64_t movie_id;
-		double probability;
+		double top;
+		double bot;
 	} movie;
 	
 	movie *most_probable;

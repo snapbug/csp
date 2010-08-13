@@ -27,8 +27,10 @@ int CSP_generator_naive_bayes::probability_cmp(const void *a, const void *b)
 {
 	movie *x = (movie *)a;
 	movie *y = (movie *)b;
+	double prob_x = x->top / (x->top + x->bot);
+	double prob_y = y->top / (y->top + y->bot);
 	
-	return (x->probability < y->probability) - (x->probability > y->probability);
+	return (prob_x < prob_y) - (prob_x > prob_y);
 }
 
 /*
@@ -37,37 +39,20 @@ int CSP_generator_naive_bayes::probability_cmp(const void *a, const void *b)
 */
 double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t other, uint64_t *key)
 {
-	double probability = 0, prob_yes, prob_no;
 	uint64_t min, max, count, other_count;
 	
 	dataset->ratings_for_movie(movie, &count);
+	dataset->ratings_for_movie(other, &other_count);
+	min = MIN(movie, other);
+	max = MAX(movie, other);
 	
-	if (key != NULL) // means it was found in user list
-	{
-		dataset->ratings_for_movie(other, &other_count);
-		min = MIN(movie, other);
-		max = MAX(movie, other);
-		
-		prob_yes = (1.0 * coraters[tri_offset(min, max)] + 1) / (other_count + 1);
-		prob_no = (1.0 * other_count - coraters[tri_offset(min, max)]) / other_count;
-		
-		probability += log(prob_yes / prob_no);
-	}
+	if (key) // means it was found in user list
+		return (1.0 * coraters[tri_offset(min, max)]) / dataset->number_users;
 	else
-	{
 #ifdef NON_RATABLE
-		dataset->ratings_for_movie(other, &other_count);
-		min = MIN(movie, other);
-		max = MAX(movie, other);
-		
-		prob_yes = (1.0 * count + 1 - coraters[tri_offset(min, max)]) / (1 + dataset->number_users - other_count);
-		prob_no = (1.0 * dataset->number_users - other_count - count + coraters[tri_offset(min, max)]) / (dataset->number_users - other_count);
-		
-		probability += log(prob_yes / prob_no);
+		return (1.0 * (count - coraters[tri_offset(min, max)])) / dataset->number_users;
 #endif
-	}
-	
-	return probability;
+	return 0;
 }
 
 /*
@@ -78,6 +63,7 @@ uint64_t CSP_generator_naive_bayes::next_movie(uint64_t user, uint64_t which_one
 {
 	UNUSED(user);
 	uint64_t i, count;
+	double probability;
 	
 	if (which_one == 0)
 	{
@@ -85,16 +71,25 @@ uint64_t CSP_generator_naive_bayes::next_movie(uint64_t user, uint64_t which_one
 		{
 			dataset->ratings_for_movie(i, &count);
 			most_probable[i].movie_id = i;
-			most_probable[i].probability = log(1.0 * count / (dataset->number_users - count));
+			most_probable[i].top = count;
+			most_probable[i].bot = 1;
 		}
 	}
 	else
 	{
+		if (which_one == 1)
+			for (i = which_one; i < dataset->number_items; i++)
+				most_probable[i].top = most_probable[i].bot = 0;
+		
 		/*
 			For each remaining item, need to update the probabilities we've seen them.
 		*/
 		for (i = which_one; i < dataset->number_items; i++)
-			most_probable[i].probability += calculate_probability(most_probable[i].movie_id, most_probable[which_one - 1].movie_id, key);
+		{
+			probability = calculate_probability(most_probable[i].movie_id, most_probable[which_one - 1].movie_id, key);
+			most_probable[i].top += probability;
+			most_probable[i].bot += 1 - probability;
+		}
 	}
 	
 	qsort(most_probable + which_one, dataset->number_items - which_one, sizeof(*most_probable), CSP_generator_naive_bayes::probability_cmp);

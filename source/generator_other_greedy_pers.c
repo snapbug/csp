@@ -20,7 +20,6 @@ CSP_generator_other_greedy_pers::CSP_generator_other_greedy_pers(CSP_dataset *da
 	
 	for (i = 0; i < NUMCONSIDER; i++)
 		ones_changed[i] = dataset->number_items;
-	puts("Created!");
 }
 
 /*
