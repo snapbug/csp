@@ -54,20 +54,14 @@ int CSP_generator_other_greedy_pers::probability_cmp(const void *a, const void *
 */
 double CSP_generator_other_greedy_pers::calculate_probability(uint64_t movie, uint64_t other, uint64_t *key)
 {
-	uint64_t min, max, count, other_count;
+	uint64_t count, other_count;
 	
 	dataset->ratings_for_movie(movie, &count);
 	dataset->ratings_for_movie(other, &other_count);
-	min = MIN(movie, other);
-	max = MAX(movie, other);
 	
-	if (key) // means it was found in user list
-		return (1.0 * coraters[tri_offset(min, max)]) / dataset->number_users;
-	else
-#ifdef NON_RATABLE
-		return (1.0 * (count - coraters[tri_offset(min, max)])) / dataset->number_users;
-#endif
-	return 0;
+	if (key)
+		return (1.0 * coraters[tri_offset(MIN(movie, other), MAX(movie, other))] + 1.0) / (count + 1.0);
+	return (1.0 * other_count - coraters[tri_offset(MIN(movie, other), MAX(movie, other))] + 1.0) / (1.0 + dataset->number_users - count);
 }
 
 /*
@@ -91,8 +85,8 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 			dataset->ratings_for_movie(i, &count);
 			number_times_greedy[i].movie_id = i;
 			number_times_greedy[i].number_times = number_times_start[i];
-			number_times_greedy[i].top = 1e300;
-			number_times_greedy[i].bot = 1e300;
+			number_times_greedy[i].top = 1e100;
+			number_times_greedy[i].bot = 1e100;
 		}
 		
 		/*
@@ -107,12 +101,15 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 		/*
 			For each remaining item, need to update the probabilities we've seen them.
 		*/
-		#pragma omp parallel for private(probability)
+		#pragma omp parallel for private(probability, i)
 		for (index = (int64_t)which_one; index < (int64_t)dataset->number_items; index++)
 		{
-			probability = calculate_probability(number_times_greedy[index].movie_id, number_times_greedy[which_one - 1].movie_id, key);
-			number_times_greedy[index].top *= probability;
-			number_times_greedy[index].bot *= 1 - probability;
+			i = index;
+			probability = calculate_probability(number_times_greedy[i].movie_id, number_times_greedy[which_one - 1].movie_id, key);
+			if ((number_times_greedy[i].top * probability) > 1e-310)
+				number_times_greedy[i].top *= probability;
+			if ((number_times_greedy[i].bot * (1 - probability)) > 1e-310)
+				number_times_greedy[i].bot *= 1 - probability;
 		}
 	}
 	
@@ -135,6 +132,8 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 		*/
 		qsort(number_times_greedy + which_one, MIN(NUMCONSIDER, dataset->number_items - which_one), sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp);
 	}
+	
+//	printf("%6lu %13g %13g %13g\n", number_times_greedy[which_one].movie_id, number_times_greedy[which_one].top, number_times_greedy[which_one].bot, number_times_greedy[which_one].top / (number_times_greedy[which_one].top + number_times_greedy[which_one].bot));
 	
 	return number_times_greedy[which_one].movie_id;
 }

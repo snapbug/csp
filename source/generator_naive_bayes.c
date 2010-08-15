@@ -75,6 +75,7 @@ uint64_t CSP_generator_naive_bayes::next_movie(uint64_t user, uint64_t which_one
 {
 	UNUSED(user);
 	uint64_t i;
+	int64_t index;
 	double probability;
 	
 	if (which_one == 0)
@@ -93,15 +94,18 @@ uint64_t CSP_generator_naive_bayes::next_movie(uint64_t user, uint64_t which_one
 		/*
 			For each remaining item, need to update the probabilities we've seen them.
 		*/
-		for (i = which_one; i < dataset->number_items; i++)
+		#pragma omp parallel for private(probability, i)
+		for (index = (int64_t)which_one; index < (int64_t)dataset->number_items; index++)
 		{
+			i = index;
 			probability = calculate_probability(most_probable[i].movie_id, most_probable[which_one - 1].movie_id, key);
-			most_probable[i].top *= probability;
-			most_probable[i].bot *= 1 - probability;
+			if ((most_probable[i].top * probability) > 1e-310)
+				most_probable[i].top *= probability;
+			if ((most_probable[i].bot * (1 - probability)) > 1e-310)
+				most_probable[i].bot *= 1 - probability;
 		}
 		qsort(most_probable + which_one, dataset->number_items - which_one, sizeof(*most_probable), CSP_generator_naive_bayes::probability_cmp);
 	}
-	
 	
 	return most_probable[which_one].movie_id;
 }
