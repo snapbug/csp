@@ -14,7 +14,7 @@
 CSP_generator_naive_bayes::CSP_generator_naive_bayes(CSP_dataset *dataset, uint32_t *coraters) : CSP_generator_entropy(dataset), coraters(coraters)
 {
 	if (!dataset->loaded_extra)
-		exit(puts("Need to load data sorted by movie (-e) to use Naive Bayes"));
+		exit(puts("Need to load data sorted by movie to use Naive Bayes"));
 	
 	most_probable = new movie[dataset->number_items];
 }
@@ -31,6 +31,19 @@ int CSP_generator_naive_bayes::count_cmp(const void *a, const void *b)
 	return (x->count > y->count) - (x->count < y->count);
 }
 
+/*
+	CSP_GENERATOR_NAIVE_BAYES::PROBABILITY_CMP2()
+	---------------------------------------------
+*/
+int CSP_generator_naive_bayes::probability_cmp2(const void *a, const void *b)
+{
+	movie *x = (movie *)a;
+	movie *y = (movie *)b;
+	double prob_x = x->top / (x->top + x->bot);
+	double prob_y = y->top / (y->top + y->bot);
+	
+	return (prob_x > prob_y) - (prob_x < prob_y);
+}
 /*
 	CSP_GENERATOR_NAIVE_BAYES::PROBABILITY_CMP()
 	--------------------------------------------
@@ -64,7 +77,7 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 #ifdef NON_RATABLE
 		return (1.0 * (count - coraters[tri_offset(min, max)])) / dataset->number_users;
 #endif
-	return 0;
+	return 1;
 }
 
 /*
@@ -84,8 +97,8 @@ uint64_t CSP_generator_naive_bayes::next_movie(uint64_t user, uint64_t which_one
 		{
 			dataset->ratings_for_movie(i, &most_probable[i].count);
 			most_probable[i].movie_id = i;
-			most_probable[i].top = 1e300;
-			most_probable[i].bot = 1e300;
+			most_probable[i].top = 0;
+			most_probable[i].bot = 0;
 		}
 		qsort(most_probable, dataset->number_items, sizeof(*most_probable), CSP_generator_naive_bayes::count_cmp);
 	}
@@ -99,13 +112,13 @@ uint64_t CSP_generator_naive_bayes::next_movie(uint64_t user, uint64_t which_one
 		{
 			i = index;
 			probability = calculate_probability(most_probable[i].movie_id, most_probable[which_one - 1].movie_id, key);
-			if ((most_probable[i].top * probability) > 1e-310)
-				most_probable[i].top *= probability;
-			if ((most_probable[i].bot * (1 - probability)) > 1e-310)
-				most_probable[i].bot *= 1 - probability;
+			most_probable[i].top += log(probability);
+			most_probable[i].bot += log(1 - probability);
 		}
-		qsort(most_probable + which_one, dataset->number_items - which_one, sizeof(*most_probable), CSP_generator_naive_bayes::probability_cmp);
+		qsort(most_probable + which_one, dataset->number_items - which_one, sizeof(*most_probable), CSP_generator_naive_bayes::probability_cmp2);
 	}
+	
+//	printf("%7lu: t:%7g b:%7g p:%7g\n", most_probable[which_one].movie_id, most_probable[which_one].top, most_probable[which_one].bot, most_probable[which_one].top / (most_probable[which_one].top + most_probable[which_one].bot));
 	
 	return most_probable[which_one].movie_id;
 }

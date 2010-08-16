@@ -49,6 +49,20 @@ int CSP_generator_other_greedy_pers::probability_cmp(const void *a, const void *
 }
 
 /*
+	CSP_GENERATOR_OTHER_GREEDY_PERS::PROBABILITY_CMP2()
+	---------------------------------------------------
+*/
+int CSP_generator_other_greedy_pers::probability_cmp2(const void *a, const void *b)
+{
+	movie *x = (movie *)a;
+	movie *y = (movie *)b;
+	double prob_x = x->top / (x->top + x->bot);
+	double prob_y = y->top / (y->top + y->bot);
+	
+	return (prob_x > prob_y) - (prob_x < prob_y);
+}
+
+/*
 	CSP_GENERATOR_OTHER_GREEDY_PERS::CALCULATE_PROBABILITY()
 	--------------------------------------------------------
 */
@@ -85,8 +99,8 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 			dataset->ratings_for_movie(i, &count);
 			number_times_greedy[i].movie_id = i;
 			number_times_greedy[i].number_times = number_times_start[i];
-			number_times_greedy[i].top = 1e100;
-			number_times_greedy[i].bot = 1e100;
+			number_times_greedy[i].top = 0;
+			number_times_greedy[i].bot = 0;
 		}
 		
 		/*
@@ -106,10 +120,8 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 		{
 			i = index;
 			probability = calculate_probability(number_times_greedy[i].movie_id, number_times_greedy[which_one - 1].movie_id, key);
-			if ((number_times_greedy[i].top * probability) > 1e-310)
-				number_times_greedy[i].top *= probability;
-			if ((number_times_greedy[i].bot * (1 - probability)) > 1e-310)
-				number_times_greedy[i].bot *= 1 - probability;
+			number_times_greedy[i].top += log(probability);
+			number_times_greedy[i].bot += log(1 - probability);
 		}
 	}
 	
@@ -130,10 +142,12 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 			Otherwise, we want to see if we can get a comparably information content movie,
 			that they are more likely to rate.
 		*/
-		qsort(number_times_greedy + which_one, MIN(NUMCONSIDER, dataset->number_items - which_one), sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp);
+		//qsort(number_times_greedy + which_one, MIN(NUMCONSIDER, dataset->number_items - which_one), sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp2);
+		qsort(number_times_greedy + which_one, dataset->number_items - which_one, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp2);
 	}
 	
 //	printf("%6lu %13g %13g %13g\n", number_times_greedy[which_one].movie_id, number_times_greedy[which_one].top, number_times_greedy[which_one].bot, number_times_greedy[which_one].top / (number_times_greedy[which_one].top + number_times_greedy[which_one].bot));
 	
+	printf("%lu\n", number_times_greedy[which_one].movie_id);
 	return number_times_greedy[which_one].movie_id;
 }

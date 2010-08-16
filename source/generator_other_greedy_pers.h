@@ -34,6 +34,7 @@ private:
 	
 	static int number_times_cmp(const void *a, const void *b);
 	static int probability_cmp(const void *a, const void *b);
+	static int probability_cmp2(const void *a, const void *b);
 	
 	double calculate_probability(uint64_t movie, uint64_t other, uint64_t *key);
 
