@@ -148,6 +148,5 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 	
 //	printf("%6lu %13g %13g %13g\n", number_times_greedy[which_one].movie_id, number_times_greedy[which_one].top, number_times_greedy[which_one].bot, number_times_greedy[which_one].top / (number_times_greedy[which_one].top + number_times_greedy[which_one].bot));
 	
-	printf("%lu\n", number_times_greedy[which_one].movie_id);
 	return number_times_greedy[which_one].movie_id;
 }
