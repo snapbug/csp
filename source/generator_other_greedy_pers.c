@@ -35,10 +35,10 @@ int CSP_generator_other_greedy_pers::number_times_cmp(const void *a, const void 
 }
 
 /*
-	CSP_GENERATOR_OTHER_GREEDY_PERS::PROBABILITY_CMP()
-	--------------------------------------------------
+	CSP_GENERATOR_OTHER_GREEDY_PERS::PROBABILITY_CMP_DESC()
+	-------------------------------------------------------
 */
-int CSP_generator_other_greedy_pers::probability_cmp(const void *a, const void *b)
+int CSP_generator_other_greedy_pers::probability_cmp_desc(const void *a, const void *b)
 {
 	movie *x = (movie *)a;
 	movie *y = (movie *)b;
@@ -49,10 +49,10 @@ int CSP_generator_other_greedy_pers::probability_cmp(const void *a, const void *
 }
 
 /*
-	CSP_GENERATOR_OTHER_GREEDY_PERS::PROBABILITY_CMP2()
-	---------------------------------------------------
+	CSP_GENERATOR_OTHER_GREEDY_PERS::PROBABILITY_CMP_ASC()
+	------------------------------------------------------
 */
-int CSP_generator_other_greedy_pers::probability_cmp2(const void *a, const void *b)
+int CSP_generator_other_greedy_pers::probability_cmp_asc(const void *a, const void *b)
 {
 	movie *x = (movie *)a;
 	movie *y = (movie *)b;
@@ -142,11 +142,9 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 			Otherwise, we want to see if we can get a comparably information content movie,
 			that they are more likely to rate.
 		*/
-		//qsort(number_times_greedy + which_one, MIN(NUMCONSIDER, dataset->number_items - which_one), sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp2);
-		qsort(number_times_greedy + which_one, dataset->number_items - which_one, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp2);
+		qsort(number_times_greedy + which_one, MIN(NUMCONSIDER, dataset->number_items - which_one), sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp_asc);
+		//qsort(number_times_greedy + which_one, dataset->number_items - which_one, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp_asc);
 	}
-	
-//	printf("%6lu %13g %13g %13g\n", number_times_greedy[which_one].movie_id, number_times_greedy[which_one].top, number_times_greedy[which_one].bot, number_times_greedy[which_one].top / (number_times_greedy[which_one].top + number_times_greedy[which_one].bot));
 	
 	return number_times_greedy[which_one].movie_id;
 }
