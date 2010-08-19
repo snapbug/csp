@@ -99,7 +99,7 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 		for (i = 0; i < NUMCONSIDER; i++)
 			number_times_greedy[CSP_generator_greedy_cheat::next_movie(user, i, key)].number_times--;
 		
-		qsort(number_times_greedy + which_one, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::number_times_cmp);
+		qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::number_times_cmp);
 	}
 	else
 	{
