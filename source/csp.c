@@ -190,18 +190,18 @@ int main(int argc, char **argv)
 			}
 			
 			/*
+				Move onto the next movie.
+			*/
+			presented++;
+			
+			/*
 				Update the error as function of number presented.
 			*/
 			if (stats->stats & CSP_stats::ERROR_PRESENTED)
 			{
-				error_presented[presented + 1] += last_prediction_error;
-				count_presented[presented + 1]++;
+				error_presented[presented] += last_prediction_error;
+				count_presented[presented]++;
 			}
-			
-			/*
-				Move onto the next movie.
-			*/
-			presented++;
 		}
 		
 		/*
