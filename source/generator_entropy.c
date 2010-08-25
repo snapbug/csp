@@ -27,7 +27,7 @@ int CSP_generator_entropy::entropy_cmp(const void *a, const void *b)
 */
 CSP_generator_entropy::CSP_generator_entropy(CSP_dataset *dataset) : CSP_generator(dataset)
 {
-	uint64_t i, j, count, rating_index;
+	uint64_t i, j, count, rating;
 	uint64_t *ratings;
 	uint64_t **movie_counts;
 	double *weights;
@@ -73,21 +73,36 @@ CSP_generator_entropy::CSP_generator_entropy(CSP_dataset *dataset) : CSP_generat
 		/*
 			Count the number of 0 ratings
 		*/
-		movie_counts[i][0] = 0;//dataset->number_users - most_entropic[i].ratings;
+#ifndef ENTROPY0
+		movie_counts[i][0] = 0;
+#else
+		movie_counts[i][0] = dataset->number_users - most_entropic[i].ratings;
+#endif
 		
 		/*
 			Calculate the entropy of ratings for this movie.
 		*/
+#ifndef ENTROPY0
 		for (j = dataset->minimum + 1; j < dataset->maximum + 2; j++)
+#else
+		for (j = dataset->minimum; j < dataset->maximum + 2; j++)
+#endif
 		{
-			rating_index = j - dataset->minimum;
-			prob_this_rating = 1.0 * movie_counts[i][rating_index] / (most_entropic[i].ratings + movie_counts[i][0]);
+			rating= j - dataset->minimum;
+			prob_this_rating = 1.0 * movie_counts[i][rating] / (most_entropic[i].ratings + movie_counts[i][0]);
 			
-			//most_entropic[i].entropy += weights[rating_index] * prob_this_rating * (prob_this_rating ? log(prob_this_rating) : 0);
+#ifndef ENTROPY0
 			most_entropic[i].entropy += prob_this_rating * (prob_this_rating ? log(prob_this_rating) : 0);
+#else
+			most_entropic[i].entropy += weights[rating] * prob_this_rating * (prob_this_rating ? log(prob_this_rating) : 0);
+#endif
 		}
-		//most_entropic[i].entropy = -most_entropic[i].entropy / sum_weights;
+		
+#ifdef ENTROPY0
 		most_entropic[i].entropy *= -1;
+#else
+		most_entropic[i].entropy = -most_entropic[i].entropy / sum_weights;
+#endif
 		/*
 			Uncomment for log(pop) * entropy as described in same paper.
 		*/
