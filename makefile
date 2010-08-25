@@ -3,7 +3,6 @@ BINDIR = bin
 OBJDIR = bin
 
 MINUS_D = 
-CFLAGS = -Wall -Wextra -O3 -pedantic -ansi -Wno-long-long $(MINUS_D)
 
 ifdef CORR
 MINUS_D += -DABS_CORR
@@ -17,10 +16,16 @@ ifndef NONRATABLE
 MINUS_D += -DNON_RATABLE
 endif
 
+ifdef ASC
+MINUS_D += -DASC
+endif
+
+CFLAGS = -Wall -Wextra -pedantic -ansi -Wno-long-long $(MINUS_D)
+
 ifdef DEBUG
-CFLAGS += -g
+CFLAGS += -g -O2
 else
-CFLAGS += -fopenmp
+CFLAGS += -fopenmp -O3
 endif
 
 LDFLAGS = -lm -fopenmp

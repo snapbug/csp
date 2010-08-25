@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 	last_param = params->parse();
 	stats = new CSP_stats(params->stats);
 	dataset = new CSP_dataset_netflix(params);
-	
+
 	/*
 		Load the precalculated co-raters if necessary.
 	*/
@@ -130,11 +130,13 @@ int main(int argc, char **argv)
 		*/
 		if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
 			last_prediction_error = metric->score(user);
+		
 		if (stats->stats & CSP_stats::ERROR_RATED)
 		{
 			error_rated[number_seen] += last_prediction_error;
 			count_rated[number_seen]++;
 		}
+		
 		if (stats->stats & CSP_stats::ERROR_PRESENTED)
 		{
 			error_presented[presented] += last_prediction_error;
@@ -142,9 +144,9 @@ int main(int argc, char **argv)
 		}
 		
 		/*
-			While the user can still add more ratings.
+			While the user can still add more ratings, and we can still present some.
 		*/
-		while (number_seen < count)
+		while (number_seen < count && presented < dataset->number_items)
 		{
 			if (stats->stats && number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			
@@ -190,18 +192,18 @@ int main(int argc, char **argv)
 			}
 			
 			/*
+				Move onto the next movie.
+			*/
+			presented++;
+			
+			/*
 				Update the error as function of number presented.
 			*/
 			if (stats->stats & CSP_stats::ERROR_PRESENTED)
 			{
-				error_presented[presented + 1] += last_prediction_error;
-				count_presented[presented + 1]++;
+				error_presented[presented] += last_prediction_error;
+				count_presented[presented]++;
 			}
-			
-			/*
-				Move onto the next movie.
-			*/
-			presented++;
 		}
 		
 		/*

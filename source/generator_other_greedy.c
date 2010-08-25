@@ -46,7 +46,7 @@ int CSP_generator_other_greedy::number_times_cmp(const void *a, const void *b)
 uint64_t CSP_generator_other_greedy::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
 	UNUSED(key);
-	uint64_t i, count, next;
+	uint64_t i, count;
 	uint64_t *user_ratings;
 	
 	if (which_one == 0)
@@ -66,25 +66,9 @@ uint64_t CSP_generator_other_greedy::next_movie(uint64_t user, uint64_t which_on
 		{
 			/*
 				See what the top would have been for this user in this position.
-			*/
-			next = CSP_generator_greedy_cheat::next_movie(user, i, key);
-		
-			/*
 				Remove the count so we can resort properly.
 			*/
-			number_times_greedy[next].number_times--;
-		}
-		
-		/*
-			Re-remove all the ratings again.
-		*/
-		for (i = 0; i < count; i++)
-		{
-			if (dataset->included(user_ratings[i]))
-			{
-				dataset->remove_rating(&user_ratings[i]);
-				predictor->removed_rating(&user_ratings[i]);
-			}
+			number_times_greedy[CSP_generator_greedy_cheat::next_movie(user, i, key)].number_times--;
 		}
 		
 		qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy::number_times_cmp);

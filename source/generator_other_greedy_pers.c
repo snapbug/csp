@@ -44,6 +44,7 @@ int CSP_generator_other_greedy_pers::probability_cmp(const void *a, const void *
 	movie *y = (movie *)b;
 	double prob_x = x->top / (x->top + x->bot);
 	double prob_y = y->top / (y->top + y->bot);
+	
 #ifdef ASC	
 	return (prob_x > prob_y) - (prob_x < prob_y);
 #else
