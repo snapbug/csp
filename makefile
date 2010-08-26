@@ -16,6 +16,10 @@ ifndef NONRATABLE
 MINUS_D += -DNON_RATABLE
 endif
 
+ifdef ENT
+MINUS_D += -DENT
+endif
+
 ifdef ASC
 MINUS_D += -DASC
 endif
