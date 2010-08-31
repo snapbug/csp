@@ -147,7 +147,8 @@ int main(int argc, char **argv)
 		/*
 			While the user can still add more ratings, and we can still present some.
 		*/
-		while (number_seen < count && presented < dataset->number_items)
+		printf("--- %lu ---\n", user);
+		while (number_seen < MIN(5, count))
 		{
 			if (stats->stats && number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			
@@ -155,6 +156,7 @@ int main(int argc, char **argv)
 				Get the next movie to present.
 			*/
 			next_movie = generator->next_movie(user, presented, key);
+			printf("%lu\n", next_movie);
 			
 			/*
 				If they can see it, do some shit.

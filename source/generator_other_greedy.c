@@ -84,12 +84,15 @@ uint64_t CSP_generator_other_greedy::next_movie(uint64_t user, uint64_t which_on
 		}
 		
 		/*
-			Remove all teh ratings again so we can get the measure right
+			Remove all the ratings again so we can get the measure right
 		*/
 		for (i = 0; i < count; i++)
 		{
-			dataset->remove_rating(&user_ratings[i]);
-			predictor->removed_rating(&user_ratings[i]);
+			if (dataset->included(user_ratings[i]))
+			{
+				dataset->remove_rating(&user_ratings[i]);
+				predictor->removed_rating(&user_ratings[i]);
+			}
 		}
 		
 		/*
