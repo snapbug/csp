@@ -12,19 +12,7 @@
 */
 CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric), metric(metric), predictor(predictor)
 {
-	uint64_t i;
-	
 	number_times_greedy = new movie[dataset->number_items];
-	ones_changed = new uint64_t[NUMCONSIDER];
-	
-	for (i = 0; i < NUMCONSIDER; i++)
-		ones_changed[i] = dataset->number_items;
-	
-	for (i = 0; i < dataset->number_items; i++)
-	{
-		number_times_greedy[i].movie_id = i;
-		number_times_greedy[i].number_times = number_times_start[i];
-	}
 }
 
 /*

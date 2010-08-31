@@ -13,6 +13,7 @@
 #include "generator_other_greedy_pers.h"
 #include "generator_popularity.h"
 #include "generator_random.h"
+#include "generator_tree.h"
 
 #ifndef GENERATOR_FACTORY_H_
 #define GENERATOR_FACTORY_H_
@@ -30,7 +31,8 @@ public:
 		OTHER_GREEDY,
 		OTHER_GREEDY_PERS,
 		POPULARITY,
-		RANDOM
+		RANDOM,
+		TREE
 	};
 };
 

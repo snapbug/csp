@@ -47,6 +47,7 @@ PARTS = \
 	generator_other_greedy_pers.o \
 	generator_popularity.o \
 	generator_random.o \
+	generator_tree.o \
 	metric_mae.o \
 	metric_nmae.o \
 	metric_nrmse.o \

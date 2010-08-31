@@ -84,6 +84,7 @@ int main(int argc, char **argv)
 		case CSP_generator_factory::ITEM_AVERAGE: generator = new CSP_generator_item_avg(dataset); break;
 		case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
+		case CSP_generator_factory::TREE: generator = new CSP_generator_tree(dataset, predictor, metric); break;
 		default: exit(puts("Unknown generation method"));
 	}
 	
