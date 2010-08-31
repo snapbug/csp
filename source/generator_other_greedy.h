@@ -29,10 +29,8 @@ private:
 	} movie;
 	movie *number_times_greedy;
 	
-	CSP_metric *metric;
-	CSP_predictor *predictor;
-	
 	static int number_times_cmp(const void *a, const void *b);
+	static int movie_id_search(const void *a, const void *b);
 
 };
 

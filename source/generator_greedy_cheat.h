@@ -17,10 +17,11 @@ public:
 
 	virtual uint64_t next_movie(uint64_t user, uint64_t which_one, uint64_t *key);
 	
-private:
+protected:
 	CSP_metric *metric;
 	CSP_predictor *predictor;
 	
+private:
 	typedef struct {
 		uint64_t movie_id;
 		double prediction_error;

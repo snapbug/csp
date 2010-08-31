@@ -4,13 +4,14 @@
 */
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include "generator_other_greedy.h"
 
 /*
 	CSP_GENERATOR_OTHER_GREEDY::CSP_GENERATOR_OTHER_GREEDY()
 	--------------------------------------------------------
 */
-CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric), metric(metric), predictor(predictor)
+CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric)
 {
 	number_times_greedy = new movie[dataset->number_items];
 }
@@ -28,14 +29,25 @@ int CSP_generator_other_greedy::number_times_cmp(const void *a, const void *b)
 }
 
 /*
+	CSP_GENERATOR_OTHER_GREEDY::MOVIE_ID_SEARCH()
+	---------------------------------------------
+*/
+int CSP_generator_other_greedy::movie_id_search(const void *a, const void *b)
+{
+	uint64_t key = *(uint64_t *)a;
+	uint64_t item = (*(uint64_t *)b) >> 15 & 32767;
+	return (key > item) - (key < item);
+}
+
+/*
 	CSP_GENERATOR_OTHER_GREEDY::NEXT_MOVIE()
 	----------------------------------------
 */
 uint64_t CSP_generator_other_greedy::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
 	UNUSED(key);
-	uint64_t i, count;
-	uint64_t *user_ratings;
+	uint64_t i, count, mov;
+	uint64_t *user_ratings, *rating;
 	
 	if (which_one == 0)
 	{
@@ -54,11 +66,35 @@ uint64_t CSP_generator_other_greedy::next_movie(uint64_t user, uint64_t which_on
 		{
 			/*
 				See what the top would have been for this user in this position.
+			*/
+			mov = CSP_generator_greedy_cheat::next_movie(user, i, key);
+			rating = (uint64_t *)bsearch(&mov, user_ratings, count, sizeof(*user_ratings), movie_id_search);
+			assert(rating);
+			
+			/*
+				Add it in so that the greedy generator can get the correct result for the next position
+			*/
+			dataset->add_rating(rating);
+			predictor->added_rating(rating);
+			
+			/*
 				Remove the count so we can resort properly.
 			*/
-			number_times_greedy[CSP_generator_greedy_cheat::next_movie(user, i, key)].number_times--;
+			number_times_greedy[mov].number_times--;
 		}
 		
+		/*
+			Remove all teh ratings again so we can get the measure right
+		*/
+		for (i = 0; i < count; i++)
+		{
+			dataset->remove_rating(&user_ratings[i]);
+			predictor->removed_rating(&user_ratings[i]);
+		}
+		
+		/*
+			Sort by the number of times it appears.
+		*/
 		qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy::number_times_cmp);
 	}
 	

@@ -9,7 +9,9 @@
 #ifndef GENERATOR_OTHER_GREEDY_PERS_H_
 #define GENERATOR_OTHER_GREEDY_PERS_H_
 
-#define PERTURB 50
+#ifndef PERTURB
+	#define PERTURB 50
+#endif
 
 class CSP_generator_other_greedy_pers : public CSP_generator_other_greedy
 {

@@ -23,8 +23,8 @@ public:
 
 private:
 	static int number_times_cmp(const void *a, const void *b);
-	static int movie_id_cmp(const void *a, const void *b);
-	static int movie_search(const void *a, const void *b);
+	static int movie_user_search(const void *a, const void *b);
+	static int movie_greedy_search(const void *a, const void *b);
 	
 	typedef struct {
 		uint64_t number_times;
@@ -32,6 +32,7 @@ private:
 	} movie;
 	movie *most_greedy;
 	uint64_t *users;
+	
 
 };
 
