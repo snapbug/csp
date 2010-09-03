@@ -102,10 +102,10 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	for (; last_param < (uint64_t)argc; last_param++)
-	//for (user = 0; user < dataset->number_users; user++)
+	//for (; last_param < (uint64_t)argc; last_param++)
+	for (user = 0; user < dataset->number_users; user++)
 	{
-		user = strtoull(argv[last_param], (char **)NULL, 10);
+		//user = strtoull(argv[last_param], (char **)NULL, 10);
 		//if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		//fprintf(stderr, "\r%6lu", user); fflush(stderr);
 		
@@ -147,14 +147,15 @@ int main(int argc, char **argv)
 		/*
 			While the user can still add more ratings, and we can still present some.
 		*/
-		while (number_seen < count)
+		while (number_seen < MIN(5, count))
 		{
-			if (stats->stats && number_seen % 10 == 0) { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
+			/*if (stats->stats && number_seen % 10 == 0)*/ { fprintf(stderr, "\r%6lu%6lu/%6lu", user, number_seen, count); fflush(stderr); }
 			
 			/*
 				Get the next movie to present.
 			*/
 			next_movie = generator->next_movie(user, presented, key);
+			printf("%lu, ", next_movie);
 			
 			/*
 				If they can see it, do some shit.
@@ -206,6 +207,8 @@ int main(int argc, char **argv)
 				count_presented[presented]++;
 			}
 		}
+		printf("\n");
+		fflush(stdout);
 		
 		/*
 			Print out the AUC for this user for this presentation list.

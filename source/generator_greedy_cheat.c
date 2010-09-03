@@ -61,5 +61,5 @@ uint64_t CSP_generator_greedy_cheat::next_movie(uint64_t user, uint64_t which_on
 	
 	qsort(error_reduction, included, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
 	
-	return error_reduction[which_one].movie_id;
+	return error_reduction[0].movie_id;
 }

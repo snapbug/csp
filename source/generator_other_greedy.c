@@ -66,21 +66,17 @@ uint64_t CSP_generator_other_greedy::next_movie(uint64_t user, uint64_t which_on
 		{
 			/*
 				See what the top would have been for this user in this position.
+				Remove the count so we can resort properly.
 			*/
 			mov = CSP_generator_greedy_cheat::next_movie(user, i, key);
-			rating = (uint64_t *)bsearch(&mov, user_ratings, count, sizeof(*user_ratings), movie_id_search);
-			assert(rating);
+			number_times_greedy[mov].number_times--;
 			
 			/*
 				Add it in so that the greedy generator can get the correct result for the next position
 			*/
+			rating = (uint64_t *)bsearch(&mov, user_ratings, count, sizeof(*user_ratings), movie_id_search);
 			dataset->add_rating(rating);
 			predictor->added_rating(rating);
-			
-			/*
-				Remove the count so we can resort properly.
-			*/
-			number_times_greedy[mov].number_times--;
 		}
 		
 		/*
