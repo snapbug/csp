@@ -34,16 +34,17 @@ int CSP_generator_greedy_cheat::error_cmp(const void *a, const void *b)
 uint64_t CSP_generator_greedy_cheat::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
 	UNUSED(key);
+	UNUSED(which_one);
 	uint64_t *user_ratings, user_count;
 	uint64_t included = 0, i;
 	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
 	
+	/*
+		For each rating, if it hasn't been added, see what error we'd get
+	*/
 	for (i = 0; i < user_count; i++)
 	{
-		/*
-			If it hasn't been added already, add it, see what error we'd get, then remove it again.
-		*/
 		if (!dataset->included(user_ratings[i]))
 		{
 			dataset->add_rating(&user_ratings[i]);

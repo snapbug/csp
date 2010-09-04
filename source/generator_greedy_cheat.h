@@ -9,6 +9,18 @@
 #ifndef GENERATOR_GREEDY_CHEAT_H_
 #define GENERATOR_GREEDY_CHEAT_H_
 
+#ifndef NUMCONSIDER
+	#define NUMCONSIDER 5
+#endif
+#ifndef NUMDONE
+	#define NUMDONE 5
+#endif
+
+static uint64_t greedy_movies[] = {
+	0,
+	//#include "greedy.first5.txt"
+};
+
 class CSP_generator_greedy_cheat : public CSP_generator
 {
 public:

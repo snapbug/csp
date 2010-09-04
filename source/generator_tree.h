@@ -7,12 +7,6 @@
 #ifndef GENERATOR_TREE_H_
 #define GENERATOR_TREE_H_
 
-static uint64_t number_times[] =
-#include "init.greedy.dat"
-#ifndef NUMCONSIDER
-	#define NUMCONSIDER 5
-#endif
-
 class CSP_generator_tree : public CSP_generator_greedy_cheat
 {
 public:

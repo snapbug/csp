@@ -70,7 +70,7 @@ int CSP_generator_tree::movie_greedy_search(const void *a, const void *b)
 */
 uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
-	uint64_t i, other_user, last_movie, other_movie, count, rating;
+	uint64_t i, other_user, last_movie, other_movie, count;
 	uint64_t *user_ratings, *result;
 	movie *greedy;
 	
@@ -82,22 +82,21 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		for (i = 0; i < dataset->number_items; i++)
 		{
 			most_greedy[i].movie_id = i;
-			most_greedy[i].number_times = number_times[i];
+			most_greedy[i].number_times = 0;
 		}
 		
 		/*
-			Remove the data from this user
-		*/
-		for (i = 0; i < NUMCONSIDER; i++)
-			most_greedy[CSP_generator_greedy_cheat::next_movie(user, i, key)].number_times--;
-		
-		/*
-			Set to consider all users
+			Count all but the user we're currently looking at
 		*/
 		for (i = 0; i < dataset->number_users; i++)
+		{
 			users[i] = TRUE;
+			for (j = 0; j < NUMCONSIDER && i != user; j++)
+				most_greedy[greedy_movies[(NUMDONE * i) + j]].number_times++;
+		}
+		
 		/*
-			Apart from ourselves
+			Consider all users, apart from the current
 		*/
 		users[user] = FALSE;
 		
@@ -143,55 +142,20 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 					users[other_user] = FALSE;
 					
 					/*
-						Remove all the other users ratings so that greedy can do its job
-					*/
-					for (rating = 0; rating < count; rating++)
-					{
-						dataset->remove_rating(&user_ratings[rating]);
-						predictor->removed_rating(&user_ratings[rating]);
-					}
-					
-					/*
 						Remove the ones that greedy would choose for them
 					*/
 					for (i = 0; i < NUMCONSIDER; i++)
 					{
-						other_movie = CSP_generator_greedy_cheat::next_movie(other_user, i, NULL);
-						
 						/*
-							Find the movie in their ratings
+							Get the movie that the other user got for greedy in position
 						*/
-						result = (uint64_t *)bsearch(&other_movie, user_ratings, count, sizeof(*user_ratings), CSP_generator_tree::movie_user_search);
+						other_movie = greedy_movies[(NUMDONE * other_user) + i];
 						
 						/*
-							Add it in so that the next greedy choice will be correct
-						*/
-						dataset->add_rating(result);
-						predictor->added_rating(result);
-						
-						//other_movie = greedy_movies[(NUMCONSIDER * other_user) + i];
-						/*
-							Find it in the most greedy list
+							Find it in the most greedy list and remove if in the second half
 						*/
 						greedy = (movie *)bsearch(&other_movie, most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::movie_greedy_search);
-						
-						/*
-							Have to wrap it in an if, as the movie might have already been presented, and thus not be found in what's left.
-						*/
-						if (greedy)
-							greedy->number_times--;
-					}
-					
-					/*
-						Add their ratings back in
-					*/
-					for (rating = 0; rating < count; rating++)
-					{
-						if (!dataset->included(user_ratings[rating]))
-						{
-							dataset->add_rating(&user_ratings[rating]);
-							predictor->added_rating(&user_ratings[rating]);
-						}
+						if (greedy) greedy->number_times--;
 					}
 				}
 			}

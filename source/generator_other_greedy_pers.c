@@ -11,15 +11,9 @@
 	CSP_GENERATOR_OTHER_GREEDY_PERS::CSP_GENERATOR_OTHER_GREEDY_PERS()
 	------------------------------------------------------------------
 */
-CSP_generator_other_greedy_pers::CSP_generator_other_greedy_pers(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric, uint32_t *coraters) : CSP_generator_other_greedy(dataset, predictor, metric), metric(metric), predictor(predictor), coraters(coraters)
+CSP_generator_other_greedy_pers::CSP_generator_other_greedy_pers(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric, uint32_t *coraters) : CSP_generator_other_greedy(dataset, predictor, metric), coraters(coraters)
 {
-	uint64_t i;
-	
-	number_times_greedy = new movie[dataset->number_items];
-	ones_changed = new uint64_t[NUMCONSIDER];
-	
-	for (i = 0; i < NUMCONSIDER; i++)
-		ones_changed[i] = dataset->number_items;
+	most_greedy_prob = new movie[dataset->number_items];
 }
 
 /*
@@ -31,7 +25,7 @@ int CSP_generator_other_greedy_pers::number_times_cmp(const void *a, const void 
 	movie *x = (movie *)a;
 	movie *y = (movie *)b;
 	
-	return (x->number_times < y->number_times) - (x->number_times > y->number_times);
+	return (x->number_times> y->number_times) - (x->number_times < y->number_times);
 }
 
 /*
@@ -68,6 +62,7 @@ double CSP_generator_other_greedy_pers::calculate_probability(uint64_t movie, ui
 	return (1.0 * other_count - coraters[tri_offset(MIN(movie, other), MAX(movie, other))] + 1.0) / (1.0 + dataset->number_users - count);
 }
 
+
 /*
 	CSP_GENERATOR_OTHER_GREEDY_PERS::NEXT_MOVIE()
 	---------------------------------------------
@@ -75,8 +70,7 @@ double CSP_generator_other_greedy_pers::calculate_probability(uint64_t movie, ui
 uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
 	UNUSED(key);
-	uint64_t i, count;
-	int64_t index;
+	uint64_t i, j;
 	double probability;
 	
 	if (which_one == 0)
@@ -86,38 +80,32 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 		*/
 		for (i = 0; i < dataset->number_items; i++)
 		{
-			dataset->ratings_for_movie(i, &count);
-			number_times_greedy[i].movie_id = i;
-			number_times_greedy[i].number_times = number_times_start[i];
-			number_times_greedy[i].top = 1e300;
-			number_times_greedy[i].bot = 1e300;
+			most_greedy_prob[i].movie_id = i;
+			most_greedy_prob[i].number_times = 0;
+			most_greedy_prob[i].top = 1e300;
+			most_greedy_prob[i].bot = 1e300;
 		}
 		
-		/*
-			For each position we are considering, see what would have been in that position,
-			then remove the count so it re-sorts correctly.
-		*/
-		for (i = 0; i < NUMCONSIDER; i++)
-			number_times_greedy[CSP_generator_greedy_cheat::next_movie(user, i, key)].number_times--;
+		for (i = 0; i < dataset->number_users; i++)
+			for (j = 0; j < NUMCONSIDER && i != user; j++)
+				most_greedy_prob[greedy_movies[(NUMDONE * i) + j]].number_times++;
 		
-		qsort(number_times_greedy, dataset->number_items, sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::number_times_cmp);
+		qsort(most_greedy_prob, dataset->number_items, sizeof(*most_greedy_prob), CSP_generator_other_greedy_pers::number_times_cmp);
 	}
 	else
 	{
 		/*
 			For each remaining item, need to update the probabilities we've seen them.
 		*/
-		#pragma omp parallel for private(probability, i)
-		for (index = (int64_t)which_one; index < (int64_t)dataset->number_items; index++)
+		for (i= which_one; i< dataset->number_items; i++)
 		{
-			i = index;
-			probability = calculate_probability(number_times_greedy[i].movie_id, number_times_greedy[which_one - 1].movie_id, key);
-			number_times_greedy[i].top *= probability;
-			number_times_greedy[i].bot *= 1 - probability;
+			probability = calculate_probability(most_greedy_prob[i].movie_id, most_greedy_prob[which_one - 1].movie_id, key);
+			most_greedy_prob[i].top *= probability;
+			most_greedy_prob[i].bot *= 1 - probability;
 		}
 		
-		qsort(number_times_greedy + which_one, MIN(PERTURB, dataset->number_items - which_one), sizeof(*number_times_greedy), CSP_generator_other_greedy_pers::probability_cmp);
+		qsort(most_greedy_prob + which_one, MIN(PERTURB, dataset->number_items - which_one), sizeof(*most_greedy_prob), CSP_generator_other_greedy_pers::probability_cmp);
 	}
 	
-	return number_times_greedy[which_one].movie_id;
+	return most_greedy_prob[which_one].movie_id;
 }

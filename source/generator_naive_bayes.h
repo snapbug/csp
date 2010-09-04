@@ -15,10 +15,13 @@ public:
 
 	virtual uint64_t next_movie(uint64_t user, uint64_t which_one, uint64_t *key);
 
-private:
+protected:
 	static int probability_cmp(const void *a, const void *b);
 	static int number_times_cmp(const void *a, const void *b);
+	
 	double calculate_probability(uint64_t movie, uint64_t other, uint64_t *key);
+
+private:
 	
 	uint32_t *coraters;
 	uint64_t last_presented_and_seen;
