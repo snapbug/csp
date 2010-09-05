@@ -17,8 +17,7 @@
 #endif
 
 static uint64_t greedy_movies[] = {
-	0,
-	//#include "greedy.first5.txt"
+	#include "greedy.choices.txt"
 };
 
 class CSP_generator_greedy_cheat : public CSP_generator

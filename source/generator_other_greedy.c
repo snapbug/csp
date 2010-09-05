@@ -46,13 +46,10 @@ int CSP_generator_other_greedy::movie_id_search(const void *a, const void *b)
 uint64_t CSP_generator_other_greedy::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
 	UNUSED(key);
-	uint64_t i, j, count;
-	uint64_t *user_ratings;
+	uint64_t i, j;
 	
 	if (which_one == 0)
 	{
-		user_ratings = dataset->ratings_for_user(user, &count);
-		
 		/*
 			Reset all the counts
 		*/

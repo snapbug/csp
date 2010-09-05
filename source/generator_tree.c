@@ -70,7 +70,7 @@ int CSP_generator_tree::movie_greedy_search(const void *a, const void *b)
 */
 uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
-	uint64_t i, other_user, last_movie, other_movie, count;
+	uint64_t i, j, other_user, last_movie, other_movie, count;
 	uint64_t *user_ratings, *result;
 	movie *greedy;
 	
