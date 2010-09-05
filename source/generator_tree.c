@@ -34,10 +34,10 @@ int CSP_generator_tree::number_times_cmp(const void *a, const void *b)
 */
 int CSP_generator_tree::movie_id_cmp(const void *a, const void *b)
 {
-	uint64_t x = *(uint64_t *)a;
-	uint64_t y = *(uint64_t *)b;
+	movie *x = (movie *)a;
+	movie *y = (movie *)b;
 	
-	return (x > y) - (x < y);
+	return (x->movie_id > y->movie_id) - (x->movie_id < y->movie_id);
 }
 
 /*
