@@ -49,6 +49,7 @@ int CSP_generator_tree::movie_user_search(const void *a, const void *b)
 {
 	uint64_t key = *(uint64_t *)a;
 	uint64_t item = (*(uint64_t *)b) >> 15 & 32767;
+	
 	return (key > item) - (key < item);
 }
 
@@ -61,6 +62,7 @@ int CSP_generator_tree::movie_greedy_search(const void *a, const void *b)
 {
 	uint64_t key = *(uint64_t *)a;
 	uint64_t item = ((movie *)b)->movie_id;
+	
 	return (key > item) - (key < item);
 }
 
@@ -91,21 +93,17 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		for (i = 0; i < dataset->number_users; i++)
 		{
 			users[i] = TRUE;
-			for (j = 0; j < NUMCONSIDER && i != user; j++)
-				most_greedy[greedy_movies[(NUMDONE * i) + j]].number_times++;
+			if (i != user)
+				for (j = 0; j < NUMCONSIDER; j++)
+					most_greedy[greedy_movies[(NUMDONE * i) + j]].number_times++;
 		}
 		
 		/*
 			Consider all users, apart from the current
 		*/
 		users[user] = FALSE;
-		
-		/*
-			Sort by the number of times it appeared in other people's greedy lists
-		*/
-		qsort(most_greedy, dataset->number_items, sizeof(*most_greedy), CSP_generator_tree::number_times_cmp);
 	}
-	else
+	else if (which_one < 20)
 	{
 		/*
 			Sort by movie id so we can bsearch later on
@@ -132,7 +130,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 				result = (uint64_t *)bsearch(&last_movie, user_ratings, count, sizeof(*user_ratings), CSP_generator_tree::movie_user_search);
 				
 				/*
-					If they weren't able to rate the same way, then take their results out of consideration
+					They weren't able to rate like us, so take their results out of consideration
 				*/
 				if ((result && !key) || (!result && key))
 				{
@@ -152,20 +150,22 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 						other_movie = greedy_movies[(NUMDONE * other_user) + i];
 						
 						/*
-							Find it in the most greedy list and remove if in the second half
+							Find it in the most greedy list and remove if in non-presented section
 						*/
 						greedy = (movie *)bsearch(&other_movie, most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::movie_greedy_search);
-						if (greedy) greedy->number_times--;
+						
+						if (greedy)
+							greedy->number_times--;
 					}
 				}
 			}
 		}
-		
-		/*
-			Resort by the number of times seen by people who have rated the same way we did
-		*/
-		qsort(most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::number_times_cmp);
 	}
+	
+	/*
+		Sort by the number of times in other people's greedy list
+	*/
+	qsort(most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::number_times_cmp);
 	
 	return most_greedy[which_one].movie_id;
 }

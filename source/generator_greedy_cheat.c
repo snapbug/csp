@@ -35,10 +35,10 @@ uint64_t CSP_generator_greedy_cheat::next_movie(uint64_t user, uint64_t which_on
 {
 	UNUSED(key);
 	UNUSED(which_one);
-	uint64_t *user_ratings, user_count;
+	uint64_t *user_ratings, count;
 	uint64_t included = which_one, i;
 	
-	user_ratings = dataset->ratings_for_user(user, &user_count);
+	user_ratings = dataset->ratings_for_user(user, &count);
 	
 	if (which_one < NUMDONE)
 	{
@@ -49,7 +49,7 @@ uint64_t CSP_generator_greedy_cheat::next_movie(uint64_t user, uint64_t which_on
 		/*
 			For each rating, if it hasn't been added, see what error we'd get
 		*/
-		for (i = 0; i < user_count; i++)
+		for (i = 0; i < count; i++)
 		{
 			if (!dataset->included(user_ratings[i]))
 			{
