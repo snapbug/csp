@@ -39,8 +39,6 @@ private:
 	} movie;
 	static int error_cmp(const void *a, const void *b);
 	movie *error_reduction;
-	
-
 };
 
 #endif /* GENERATOR_GREEDY_CHEAT_H_ */

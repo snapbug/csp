@@ -36,31 +36,38 @@ uint64_t CSP_generator_greedy_cheat::next_movie(uint64_t user, uint64_t which_on
 	UNUSED(key);
 	UNUSED(which_one);
 	uint64_t *user_ratings, user_count;
-	uint64_t included = 0, i;
+	uint64_t included = which_one, i;
 	
 	user_ratings = dataset->ratings_for_user(user, &user_count);
 	
-	/*
-		For each rating, if it hasn't been added, see what error we'd get
-	*/
-	for (i = 0; i < user_count; i++)
+	if (which_one < NUMDONE)
 	{
-		if (!dataset->included(user_ratings[i]))
+		error_reduction[which_one].movie_id = greedy_movies[(user * NUMDONE) + which_one];
+	}
+	else
+	{
+		/*
+			For each rating, if it hasn't been added, see what error we'd get
+		*/
+		for (i = 0; i < user_count; i++)
 		{
-			dataset->add_rating(&user_ratings[i]);
-			predictor->added_rating(&user_ratings[i]);
-			
-			error_reduction[included].movie_id = dataset->movie(user_ratings[i]);
-			error_reduction[included].prediction_error = metric->score(user);
-			
-			dataset->remove_rating(&user_ratings[i]);
-			predictor->removed_rating(&user_ratings[i]);
-			
-			included++;
+			if (!dataset->included(user_ratings[i]))
+			{
+				dataset->add_rating(&user_ratings[i]);
+				predictor->added_rating(&user_ratings[i]);
+				
+				error_reduction[included].movie_id = dataset->movie(user_ratings[i]);
+				error_reduction[included].prediction_error = metric->score(user);
+				
+				dataset->remove_rating(&user_ratings[i]);
+				predictor->removed_rating(&user_ratings[i]);
+				
+				included++;
+			}
 		}
+		
+		qsort(error_reduction + which_one, included, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
 	}
 	
-	qsort(error_reduction, included, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
-	
-	return error_reduction[0].movie_id;
+	return error_reduction[which_one].movie_id;
 }
