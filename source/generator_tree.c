@@ -103,7 +103,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		*/
 		users[user] = FALSE;
 	}
-	else if (which_one < 20)
+	else
 	{
 		/*
 			Sort by movie id so we can bsearch later on
