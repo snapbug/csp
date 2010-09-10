@@ -25,6 +25,8 @@ int CSP_generator_tree::number_times_cmp(const void *a, const void *b)
 	movie *x = (movie *)a;
 	movie *y = (movie *)b;
 	
+	if (x->included && !y->included) return 1;
+	if (!x->included && y->included) return -1;
 	return (x->number_times < y->number_times) - (x->number_times > y->number_times);
 }
 
@@ -74,10 +76,9 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 {
 	uint64_t i, j, other_user, last_movie, other_movie, count;
 	uint64_t *user_ratings, *result;
-	movie *greedy;
-	
 	uint64_t *movie_ratings;
 	uint64_t current_user, index, rating;
+	movie *greedy;
 	
 	/*
 		Reset all the counts
@@ -88,11 +89,12 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	if (which_one == 0)
 	{
 		/*
-			Reset all the counts
+			Reset all the counts and settings
 		*/
 		for (i = 0; i < dataset->number_items; i++)
 		{
 			most_greedy[i].movie_id = i;
+			most_greedy[i].included = FALSE;
 		//	most_greedy[i].number_times = 0;
 		}
 		
@@ -115,17 +117,15 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	else
 	{
 		/*
-			Sort by movie id so we can bsearch later on
+			Sort by movie id
 		*/
-		qsort(most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::movie_id_cmp);
+		qsort(most_greedy, dataset->number_items, sizeof(*most_greedy), CSP_generator_tree::movie_id_cmp);
 		
 		/*
 			The last movie that was presented
 		*/
 		last_movie = most_greedy[which_one - 1].movie_id;
 		movie_ratings = dataset->ratings_for_movie(last_movie, &count);
-		current_user = 0;
-		index = 0;
 		if (key) // find all people who could rate this movie and add them
 		{
 			for (rating = 0; rating < count; rating++)
@@ -134,71 +134,54 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 				for (i = 0; i < NUMCONSIDER; i++)
 				{
 					other_movie = greedy_movies[(NUMDONE * other_user) + i];
-					greedy = (movie *)bsearch(&other_movie, most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::movie_greedy_search);
-					if (greedy)
-						greedy->number_times++;
+					most_greedy[other_movie].number_times++;
 				}
 			}
 		}
 		else // find all people who couldn't rate this movie and add them
 		{
-			while (current_user < dataset->number_users)
+			index = 0;
+			for (current_user = 0; current_user < dataset->number_users; current_user++)
 			{
 				if (current_user < dataset->user(movie_ratings[index]))
 				{
 					for (i = 0; i < NUMCONSIDER; i++)
 					{
 						other_movie = greedy_movies[(NUMDONE * current_user) + i];
-						greedy = (movie *)bsearch(&other_movie, most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::movie_greedy_search);
-						if (greedy)
-							greedy->number_times++;
+						most_greedy[other_movie].number_times++;
 					}
 				}
 				else
 				{
 					index++;
 				}
-				current_user++;
 			}
 		}
 		
 		/*
 			Of the people we're still considering, if they rated the same way keep considering their greedy results
-		*/
 		for (other_user = 0; other_user < dataset->number_users; other_user++)
 		{
 			if (users[other_user])
 			{
 				user_ratings = dataset->ratings_for_user(other_user, &count);
 				
-				/*
 					Search in their ratings for this movie
-				*/
 				result = (uint64_t *)bsearch(&last_movie, user_ratings, count, sizeof(*user_ratings), CSP_generator_tree::movie_user_search);
 				
-				/*
 					They weren't able to rate like us, so take their results out of consideration
-				*/
 				if ((result && key) || (!result && !key))
 				{
-					/*
 						Don't look at them again
-					*/
 					//users[other_user] = FALSE;
 					
-					/*
 						Remove the ones that greedy would choose for them
-					*/
 					for (i = 0; i < NUMCONSIDER; i++)
 					{
-						/*
 							Get the movie that the other user got for greedy in position
-						*/
 						other_movie = greedy_movies[(NUMDONE * other_user) + i];
 						
-						/*
 							Find it in the most greedy list and remove if in non-presented section
-						*/
 						greedy = (movie *)bsearch(&other_movie, most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::movie_greedy_search);
 						
 						if (greedy)
@@ -207,12 +190,17 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 				}
 			}
 		}
+		*/
 	}
 	
 	/*
 		Sort by the number of times in other people's greedy list
 	*/
-	qsort(most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::number_times_cmp);
+	qsort(most_greedy, dataset->number_items, sizeof(*most_greedy), CSP_generator_tree::number_times_cmp);
 	
-	return most_greedy[which_one].movie_id;
+	/*
+		All the non-included are first.
+	*/
+	most_greedy[0].included = TRUE;
+	return most_greedy[0].movie_id;
 }

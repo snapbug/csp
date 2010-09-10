@@ -24,6 +24,7 @@ private:
 	typedef struct {
 		uint64_t number_times;
 		uint64_t movie_id;
+		uint64_t included;
 	} movie;
 	movie *most_greedy;
 	uint64_t *users;
