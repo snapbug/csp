@@ -76,6 +76,15 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	uint64_t *user_ratings, *result;
 	movie *greedy;
 	
+	uint64_t *movie_ratings;
+	uint64_t current_user, index, rating;
+	
+	/*
+		Reset all the counts
+	*/
+	for (i = which_one; i < dataset->number_items; i++)
+		most_greedy[i].number_times = 0;
+	
 	if (which_one == 0)
 	{
 		/*
@@ -84,7 +93,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		for (i = 0; i < dataset->number_items; i++)
 		{
 			most_greedy[i].movie_id = i;
-			most_greedy[i].number_times = 0;
+		//	most_greedy[i].number_times = 0;
 		}
 		
 		/*
@@ -93,9 +102,9 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		for (i = 0; i < dataset->number_users; i++)
 		{
 			users[i] = TRUE;
-			if (i != user)
-				for (j = 0; j < NUMCONSIDER; j++)
-					most_greedy[greedy_movies[(NUMDONE * i) + j]].number_times++;
+		//	if (i != user)
+		//		for (j = 0; j < NUMCONSIDER; j++)
+		//			most_greedy[greedy_movies[(NUMDONE * i) + j]].number_times++;
 		}
 		
 		/*
@@ -114,6 +123,44 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 			The last movie that was presented
 		*/
 		last_movie = most_greedy[which_one - 1].movie_id;
+		movie_ratings = dataset->ratings_for_movie(last_movie, &count);
+		current_user = 0;
+		index = 0;
+		if (key) // find all people who could rate this movie and add them
+		{
+			for (rating = 0; rating < count; rating++)
+			{
+				other_user = dataset->user(movie_ratings[rating]);
+				for (i = 0; i < NUMCONSIDER; i++)
+				{
+					other_movie = greedy_movies[(NUMDONE * other_user) + i];
+					greedy = (movie *)bsearch(&other_movie, most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::movie_greedy_search);
+					if (greedy)
+						greedy->number_times++;
+				}
+			}
+		}
+		else // find all people who couldn't rate this movie and add them
+		{
+			while (current_user < dataset->number_users)
+			{
+				if (current_user < dataset->user(movie_ratings[index]))
+				{
+					for (i = 0; i < NUMCONSIDER; i++)
+					{
+						other_movie = greedy_movies[(NUMDONE * current_user) + i];
+						greedy = (movie *)bsearch(&other_movie, most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::movie_greedy_search);
+						if (greedy)
+							greedy->number_times++;
+					}
+				}
+				else
+				{
+					index++;
+				}
+				current_user++;
+			}
+		}
 		
 		/*
 			Of the people we're still considering, if they rated the same way keep considering their greedy results
@@ -132,12 +179,12 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 				/*
 					They weren't able to rate like us, so take their results out of consideration
 				*/
-				if ((result && !key) || (!result && key))
+				if ((result && key) || (!result && !key))
 				{
 					/*
 						Don't look at them again
 					*/
-					users[other_user] = FALSE;
+					//users[other_user] = FALSE;
 					
 					/*
 						Remove the ones that greedy would choose for them
@@ -155,7 +202,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 						greedy = (movie *)bsearch(&other_movie, most_greedy + which_one, dataset->number_items - which_one, sizeof(*most_greedy), CSP_generator_tree::movie_greedy_search);
 						
 						if (greedy)
-							greedy->number_times--;
+							greedy->number_times++;
 					}
 				}
 			}
