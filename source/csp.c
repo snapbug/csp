@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count)
 		{
-			if (stats->stats && presented % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count, presented); fflush(stderr); }
+			if (stats->stats && presented % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen + 1, count, presented); fflush(stderr); }
 			
 			/*
 				Get the next movie to present.
