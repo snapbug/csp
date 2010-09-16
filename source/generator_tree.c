@@ -11,7 +11,7 @@
 	#define log2(x) (log(1.0 * (x)) / log(2.0))
 #endif
 
-#define TREE_ONCE
+//#define TREE_ONCE
 
 /*
 	CSP_GENERATOR_TREE::CSP_GENERATOR_TREE()
@@ -37,19 +37,14 @@ CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *pred
 		nd = 0;
 		while (j)
 		{
+			if (nd && (j & 1))
+				nm = next_movie(0, nd, &(dud = (j & 2) ? 4 : 3)); // if second bit is set, simulate a 'low' (1,2,3) rating or 'high' rating (4,5)
+			else
+				nm = next_movie(0, nd, NULL); // NULL because it's either the first, or couldn't see the last one
+			
 			sum = 0;
 			for (k = 0; k < dataset->number_users; k++)
 				sum += users[k] ? 1 : 0;
-			
-			if (nd && (j & 1))
-			{
-				dud = (j & 2) ? 4 : 3; // if second bit is set, simulate a 'low' (1,2,3) rating or 'high' rating (4,5)
-				nm = next_movie(0, nd, &dud);
-			}
-			else
-			{
-				nm = next_movie(0, nd, NULL); // NULL because it's either the first, or couldn't see the last one
-			}
 			
 			printf("%lu %lu %lu %lu\n", j & 1, j & 2, nm, sum);
 			
