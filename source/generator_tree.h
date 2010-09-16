@@ -22,14 +22,13 @@ private:
 	static int movie_greedy_search(const void *a, const void *b);
 	
 	typedef struct {
-		uint64_t number_times;
-		uint64_t movie_id;
-		uint64_t included;
+		uint64_t number_times; // the number of times in other peoples greedy
+		uint64_t movie_id; // the movie id
+		uint64_t included; // whether we're counting it or not
 	} movie;
 	movie *most_greedy;
 	uint64_t *users;
 	
-
 };
 
 #endif /* GENERATOR_TREE_H_ */
