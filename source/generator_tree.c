@@ -11,7 +11,7 @@
 	#define log2(x) (log(1.0 * (x)) / log(2.0))
 #endif
 
-//#define TREE_ONCE
+#define TREE_ONCE
 
 /*
 	CSP_GENERATOR_TREE::CSP_GENERATOR_TREE()
@@ -19,41 +19,45 @@
 */
 CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric)
 {
-	uint64_t i, j, k, nm, nd, sum, dud;
-	double level = 5;
-	
 	most_greedy = new movie[dataset->number_items];
 	users = new uint64_t[dataset->number_users];
 	
-#ifdef TREE_ONCE
-	fprintf(stderr, "DOING TREE_ONCE\n");
-#else
-	fprintf(stderr, "DOING SPLIT_ALWYAS\n");
-#endif
-	
-	for (i = (uint64_t)pow(2.0, (2 * level) - 1); i < (uint64_t)pow(2.0, (2 * level)); i++)
-	{
-		j = i << 2; // make a dummy to pass for first instance
-		nd = 0;
-		while (j)
-		{
-			if (nd && (j & 1))
-				nm = next_movie(0, nd, &(dud = (j & 2) ? 4 : 3)); // if second bit is set, simulate a 'low' (1,2,3) rating or 'high' rating (4,5)
-			else
-				nm = next_movie(0, nd, NULL); // NULL because it's either the first, or couldn't see the last one
-			
-			sum = 0;
-			for (k = 0; k < dataset->number_users; k++)
-				sum += users[k] ? 1 : 0;
-			
-			printf("%lu %lu %lu %lu\n", j & 1, j & 2, nm, sum);
-			
-			j >>= 2;
-			nd++;
-		}
-		printf("\n");
-	}
-	exit(EXIT_SUCCESS);
+//	uint64_t i, j, k, nm, nd, sum, dud;
+//	double level = 8;
+//	
+//#ifdef TREE_ONCE
+//	fprintf(stderr, "DOING TREE_ONCE\n");
+//#else
+//	fprintf(stderr, "DOING SPLIT_ALWYAS\n");
+//#endif
+//	
+//	for (i = (uint64_t)pow(2.0, (2 * level) - 1); i < (uint64_t)pow(2.0, (2 * level)); i++)
+//	{
+//		j = i << 2; // make a dummy to pass for first instance
+//		nd = 0;
+//		while (j)
+//		{
+//			if (nd && (j & 1))
+//				nm = next_movie(0, nd, &(dud = (j & 2) ? 4 : 3)); // if second bit is set, simulate a 'low' (1,2,3) rating or 'high' rating (4,5)
+//			else
+//				nm = next_movie(0, nd, NULL); // NULL because it's either the first, or couldn't see the last one
+//			
+//			sum = 0;
+//			for (k = 0; k < dataset->number_users; k++)
+//				sum += users[k] ? 1 : 0;
+//			
+//			if (nd && (j & 1))
+//				printf("%d %lu %lu\n", j & 2 ? 2 : 1, nm, sum); // prints either high seeing, or low seeing
+//			else
+//				printf("%lu %lu %lu\n", j & 1, nm, sum); // prints non seeing
+//			//printf("%lu %lu %lu %lu\n", j & 1, j & 2, nm, sum);
+//			
+//			j >>= 2;
+//			nd++;
+//		}
+//		printf("\n");
+//	}
+//	exit(EXIT_SUCCESS);
 }
 
 /*
@@ -115,6 +119,7 @@ int CSP_generator_tree::movie_greedy_search(const void *a, const void *b)
 uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
 	uint64_t i, j, other_user, last_movie, other_movie, count, index, rating;
+	uint64_t high, other_high;
 	uint64_t *movie_ratings;
 	
 #ifdef TREE_ONCE
@@ -140,10 +145,10 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		for (i = 0; i < dataset->number_users; i++)
 		{
 			users[i] = TRUE;
-			for (j = 0; j < NUMCONSIDER; j++)
+			for (j = 0; j < NUMCONSIDER && i != user; j++)
 				most_greedy[greedy_movies[(i * NUMDONE) + j]].number_times++;
 		}
-		//users[user] = FALSE;
+		users[user] = FALSE;
 	}
 	else
 	{
@@ -167,16 +172,18 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		if (!key) // find people who couldn't rate the same way, remove them
 #endif
 		{
+			high = dataset->rating(key) > 3;
 			for (rating = 0; rating < count; rating++)
 			{
 				other_user = dataset->user(movie_ratings[rating]);
-				if (users[other_user])
+				other_high = dataset->rating(movie_ratings[rating]) > 3;
+				
+				if (users[other_user] && ((high && other_high) || (!high && !other_high)))
 				{
 #ifdef TREE_ONCE
 #else
 					users[other_user] = FALSE; // don't look at them again
 #endif
-					
 					for (i = 0; i < NUMCONSIDER; i++)
 					{
 						other_movie = greedy_movies[(NUMDONE * other_user) + i];
