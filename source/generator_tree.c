@@ -26,11 +26,11 @@ CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *pred
 	uint64_t i, j, k, nm, nd, sum, dud;
 	double level = 8;
 	
-#ifdef TREE_ONCE
+	#ifdef TREE_ONCE
 	fprintf(stderr, "DOING TREE_ONCE\n");
-#else
+	#else
 	fprintf(stderr, "DOING SPLIT_ALWYAS\n");
-#endif
+	#endif
 	
 	for (i = (uint64_t)pow(2.0, (2 * level) - 1); i < (uint64_t)pow(2.0, (2 * level)); i++)
 	{
@@ -150,7 +150,8 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 			for (j = 0; j < NUMCONSIDER && i != user; j++)
 				most_greedy[greedy_movies[(i * NUMDONE) + j]].number_times++;
 		}
-#ifndef SIMULATE
+#ifdef SIMULATE
+#else
 		users[user] = FALSE;
 #endif
 	}
@@ -182,10 +183,12 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 				other_user = dataset->user(movie_ratings[rating]);
 				other_high = dataset->rating(movie_ratings[rating]) > 3;
 				
+#ifdef TREE_ONCE
 				if (users[other_user] && ((high && other_high) || (!high && !other_high)))
 				{
-#ifdef TREE_ONCE
 #else
+				if (users[other_user])
+				{
 					users[other_user] = FALSE; // don't look at them again
 #endif
 					for (i = 0; i < NUMCONSIDER; i++)
@@ -203,15 +206,19 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		else
 		{
 			other_user = index = 0;
+			high = dataset->rating(key) > 3;
+			
 			for (rating = 0; rating < count; rating++)
 			{
 				index = dataset->user(movie_ratings[rating]);
 				while (other_user < index)
 				{
+#ifdef TREE_ONCE
 					if (users[other_user])
 					{
-#ifdef TREE_ONCE
 #else
+					if (users[other_user] && (TRUE))
+					{
 						users[other_user] = FALSE; // don't look at them again
 #endif
 						
@@ -231,10 +238,12 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 			}
 			while (other_user < dataset->number_users)
 			{
+#ifdef TREE_ONCE
 				if (users[other_user])
 				{
-#ifdef TREE_ONCE
 #else
+				if (users[other_user] && (TRUE))
+				{
 					users[other_user] = FALSE; // don't look at them again
 #endif
 					
