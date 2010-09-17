@@ -25,8 +25,8 @@ int CSP_generator_tree::number_times_cmp(const void *a, const void *b)
 	movie *x = (movie *)a;
 	movie *y = (movie *)b;
 	
-	if (x->included && !y->included) return 1;
-	if (!x->included && y->included) return -1;
+	if (x->included && !y->included) return -1;
+	if (!x->included && y->included) return 1;
 	return (x->number_times < y->number_times) - (x->number_times > y->number_times);
 }
 
@@ -74,7 +74,7 @@ int CSP_generator_tree::movie_greedy_search(const void *a, const void *b)
 */
 uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
-	uint64_t i, other_user, last_movie, other_movie, count, index, rating;
+	uint64_t i, j, other_user, last_movie, other_movie, count, index, rating;
 	uint64_t *movie_ratings;
 	
 	/*
@@ -98,7 +98,11 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 			Count all but the user we're currently looking at
 		*/
 		for (i = 0; i < dataset->number_users; i++)
+		{
 			users[i] = TRUE;
+			for (j = 0; j < NUMCONSIDER; j++)
+				most_greedy[greedy_movies[(NUMDONE * i) + j]].number_times++;
+		}
 		users[user] = FALSE;
 	}
 	else
@@ -106,7 +110,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		/*
 			The last movie that was presented
 		*/
-		last_movie = most_greedy[0].movie_id;
+		last_movie = most_greedy[which_one - 1].movie_id;
 		
 		/*
 			Sort by movie id
@@ -161,9 +165,6 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	*/
 	qsort(most_greedy, dataset->number_items, sizeof(*most_greedy), CSP_generator_tree::number_times_cmp);
 	
-	/*
-		All the non-included are first.
-	*/
-	most_greedy[0].included = TRUE;
-	return most_greedy[0].movie_id;
+	most_greedy[which_one].included = TRUE;
+	return most_greedy[which_one].movie_id;
 }

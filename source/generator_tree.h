@@ -23,11 +23,13 @@ private:
 	
 	typedef struct {
 		uint64_t number_times; // the number of times in other peoples greedy
+		uint64_t number_seen; // the number of times seen by other people
 		uint64_t movie_id; // the movie id
 		uint64_t included; // whether we're counting it or not
 	} movie;
 	movie *most_greedy;
 	uint64_t *users;
+	uint32_t *coraters;
 	
 };
 
