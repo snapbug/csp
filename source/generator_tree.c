@@ -7,12 +7,7 @@
 #include <math.h>
 #include "generator_tree.h"
 
-#ifndef log2
-	#define log2(x) (log(1.0 * (x)) / log(2.0))
-#endif
-
-#define TREE_ONCE
-#define SIMULATE
+//#define SIMULATE
 
 /*
 	CSP_GENERATOR_TREE::CSP_GENERATOR_TREE()
@@ -29,11 +24,7 @@ CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *pred
 	uint64_t i, j, k, nm, nd, sum, dud;
 	double level = 7;
 	
-	#ifdef TREE_ONCE
-	fprintf(stderr, "DOING TREE_ONCE\n");
-	#else
-	fprintf(stderr, "DOING SPLIT_ALWYAS\n");
-	#endif
+	fprintf(stderr, "Doing history %lu\n", history_len);
 	
 	for (i = (uint64_t)pow(2.0, (2 * level) - 1); i < (uint64_t)pow(2.0, (2 * level)); i++)
 	{
@@ -98,6 +89,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 {
 	uint64_t i, j, other_user, count, rating, movie_index;
 	uint64_t *movie_ratings;
+	uint64_t replaced_filter = FALSE;
 	
 	/*
 		Reset all the counts and settings
@@ -119,33 +111,32 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		most_greedy[i].number_times = 0;
 	
 	/*
-		Count all but the user we're currently looking at
+		Only update the filter if we're replacing an old filter
 	*/
-	for (i = 0; i < dataset->number_users; i++)
-		users[i] = TRUE;
-#ifndef SIMULATE
-	users[user] = FALSE;
-#endif
-	
-	/*
-		Update history to the last n items
-	*/
-	if (which_one > 0)
+	if (which_one == 0 || dataset->movie(history[(which_one - 1) % history_len]) < dataset->number_items)
 	{
-		if (key)
-		{
-			history[(which_one - 1) % history_len] = (most_greedy[which_one - 1].movie_id << 15) | dataset->rating(key);
-		}
-		else
-		{
-			history[(which_one - 1) % history_len] = most_greedy[which_one - 1].movie_id << 15;
-		}
+		/*
+			Count all but the user we're currently looking at
+		*/
+		for (i = 0; i < dataset->number_users; i++)
+			users[i] = TRUE;
+#ifndef SIMULATE
+		users[user] = FALSE;
+#endif
+		replaced_filter = TRUE;
 	}
 	
 	/*
-		For each movie we've presented in the history, filter the users
+		Update history of the last n items
 	*/
-	for (i = 0; i < history_len; i++)
+	if (which_one > 0)
+		history[(which_one - 1) % history_len] = key ? *key : (most_greedy[which_one - 1].movie_id << 15);
+		
+	/*
+		For each movie we've presented in the history, filter the users
+		If we've not replaced, then only consider the last filter, not all
+	*/
+	for (i = (replaced_filter ? 0 : (which_one - 1) % history_len); i < history_len; i++)
 	{
 		if (dataset->movie(history[i]) < dataset->number_items)
 		{
@@ -158,19 +149,20 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 				/*
 					other_user is now someone that could see the movie
 				*/
-				if (movie_index < count && other_user == dataset->user(movie_ratings[movie_index]))
+				if (movie_index < count && other_user == dataset->user(movie_ratings[movie_index])) // we saw, they saw
 				{
 					/*
 						Only consider if we already are, otherwise could change a FALSE to TRUE
 					*/
 					if (users[other_user])
-						users[other_user] = rating && ((rating > 3) == (dataset->rating(movie_ratings[movie_index]) > 3));
+						users[other_user] = rating && ((rating > 3) == (dataset->rating(movie_ratings[movie_index]) > 3)); // rating 'parity' the same
+					
 					/*
 						Move onto the next person that could see movie
 					*/
 					movie_index++;
 				}
-				else if (rating)
+				else if (rating) // we saw, they didn't
 				{
 					users[other_user] = FALSE;
 				}
