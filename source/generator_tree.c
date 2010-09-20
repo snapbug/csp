@@ -152,7 +152,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		For each movie we've presented in the history, filter the users
 		If we've not replaced a filter, we only need to update to the last one
 	*/
-	for (i = which_one - (replaced_filter ? history_len : 1); i < which_one; i++)
+	for (i = which_one - (replaced_filter ? history_len : 0) - 1; i < which_one; i++)
 	{
 		if (dataset->movie(history[i]) < dataset->number_items)
 		{
