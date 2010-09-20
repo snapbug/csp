@@ -8,6 +8,7 @@
 #include "generator_tree.h"
 
 //#define SIMULATE
+#define HIGH_CUT 3
 
 /*
 	CSP_GENERATOR_TREE::CSP_GENERATOR_TREE()
@@ -15,7 +16,7 @@
 */
 CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric)
 {
-	history_len = 17770;
+	history_len = 1;
 	most_greedy = new movie[dataset->number_items];
 	users = new uint64_t[dataset->number_users];
 	history = new uint64_t[dataset->number_items];
@@ -33,7 +34,7 @@ CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *pred
 		while (j)
 		{
 			if (nd && (j & 1))
-				nm = next_movie(0, nd, &(dud = (j & 2) ? 4 : 3)); // if second bit is set, simulate a 'low' (1,2,3) rating or 'high' rating (4,5)
+				nm = next_movie(0, nd, &(dud = (j & 2) ? HIGH_CUT + 1 : HIGH_CUT)); // if second bit is set, simulate a 'low' (1,2,3) rating or 'high' rating (4,5)
 			else
 				nm = next_movie(0, nd, NULL); // NULL because it's either the first, or couldn't see the last one
 			
@@ -135,8 +136,8 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		{
 			if (movie_index < count && other_user == dataset->user(movie_ratings[movie_index])) // other_user saw it
 			{
-				// they saw it, we didn't so they were filtered out, now we want to reconsider them, alternatively, we saw it and gave a different high/low
-				if (!rating || (rating && ((rating > 3) != (dataset->rating(movie_ratings[movie_index]) > 3))))
+				// they saw it and we didn't, or, we saw it and gave a different high/low
+				if (!rating || (rating && ((rating > HIGH_CUT) != (dataset->rating(movie_ratings[movie_index]) > HIGH_CUT))))
 					users[other_user] = TRUE;
 				movie_index++;
 			}
@@ -170,7 +171,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 						Only check if we already are considering, otherwise we could change FALSE to TRUE
 					*/
 					if (users[other_user]) // check rating 'parity' the same
-						users[other_user] = rating && ((rating > 3) == (dataset->rating(movie_ratings[movie_index]) > 3));
+						users[other_user] = rating && ((rating > HIGH_CUT) == (dataset->rating(movie_ratings[movie_index]) > HIGH_CUT));
 					
 					/*
 						Move onto the next person that could see movie
