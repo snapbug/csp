@@ -16,7 +16,7 @@
 */
 CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric)
 {
-	history_len = 1;
+	history_len = 5;
 	most_greedy = new movie[dataset->number_items];
 	users = new uint64_t[dataset->number_users];
 	history = new uint64_t[dataset->number_items];
@@ -88,7 +88,7 @@ int CSP_generator_tree::movie_id_cmp(const void *a, const void *b)
 */
 uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
-	uint64_t i, j, other_user, count, rating, movie_index;
+	uint64_t i, j, other_user, count, rating, movie_index, sum = 0;
 	uint64_t *movie_ratings;
 	uint64_t replaced_filter = which_one > history_len;
 	
@@ -117,8 +117,18 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	for (i = 0; i < dataset->number_items; i++)
 		most_greedy[i].number_times = 0;
 	
+	//for (i = 0; i < dataset->number_users; i++)
+	//	sum += users[i] ? 1 : 0;
+	//
+	//if (sum < (dataset->number_users / 10.0))
+	//{
+	//	for (i = 0; i < dataset->number_users; i++)
+	//		users[i] = TRUE;
+	//	replaced_filter = FALSE;
+	//}
+	
 	/*
-		Update history of the last n items
+		Update history for the last item
 	*/
 	if (which_one > 0)
 		history[which_one - 1] = (most_greedy[which_one - 1].movie_id << 15) | (key ? dataset->rating(key) : 0);
@@ -128,31 +138,33 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	*/
 	if (replaced_filter)
 	{
-		rating = dataset->rating(history[which_one - history_len - 1]);
-		movie_ratings = dataset->ratings_for_movie(dataset->movie(history[which_one - history_len - 1]), &count);
-		movie_index = 0;
-		
-		for (other_user = 0; other_user < dataset->number_users; other_user++)
-		{
-			if (movie_index < count && other_user == dataset->user(movie_ratings[movie_index])) // other_user saw it
-			{
-				// they saw it and we didn't, or, we saw it and gave a different high/low
-				if (!rating || (rating && ((rating > HIGH_CUT) != (dataset->rating(movie_ratings[movie_index]) > HIGH_CUT))))
-					users[other_user] = TRUE;
-				movie_index++;
-			}
-			else if (rating) // we saw it, they didn't, so now we want to reconsider them
-			{
-				users[other_user] = TRUE;
-			}
-		}
+		for (i = 0; i < dataset->number_users; i++)
+			users[i] = TRUE;
+		//rating = dataset->rating(history[which_one - history_len - 1]);
+		//movie_ratings = dataset->ratings_for_movie(dataset->movie(history[which_one - history_len - 1]), &count);
+		//movie_index = 0;
+		//
+		//for (other_user = 0; other_user < dataset->number_users; other_user++)
+		//{
+		//	if (movie_index < count && other_user == dataset->user(movie_ratings[movie_index])) // other_user saw it
+		//	{
+		//		// they saw it and we didn't, or, we saw it and gave a different high/low
+		//		if (!rating || (rating && ((rating > HIGH_CUT) != (dataset->rating(movie_ratings[movie_index]) > HIGH_CUT))))
+		//			users[other_user] = TRUE;
+		//		movie_index++;
+		//	}
+		//	else if (rating) // we saw it, they didn't, so now we want to reconsider them
+		//	{
+		//		users[other_user] = TRUE;
+		//	}
+		//}
 	}
 	
 	/*
 		For each movie we've presented in the history, filter the users
 		If we've not replaced a filter, we only need to update to the last one
 	*/
-	for (i = which_one - (replaced_filter ? history_len : 0) - 1; i < which_one; i++)
+	for (i = which_one - (replaced_filter ? history_len : 1); i < which_one; i++)
 	{
 		if (dataset->movie(history[i]) < dataset->number_items)
 		{
