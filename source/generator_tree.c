@@ -138,26 +138,24 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	*/
 	if (replaced_filter)
 	{
-		for (i = 0; i < dataset->number_users; i++)
-			users[i] = TRUE;
-		//rating = dataset->rating(history[which_one - history_len - 1]);
-		//movie_ratings = dataset->ratings_for_movie(dataset->movie(history[which_one - history_len - 1]), &count);
-		//movie_index = 0;
-		//
-		//for (other_user = 0; other_user < dataset->number_users; other_user++)
-		//{
-		//	if (movie_index < count && other_user == dataset->user(movie_ratings[movie_index])) // other_user saw it
-		//	{
-		//		// they saw it and we didn't, or, we saw it and gave a different high/low
-		//		if (!rating || (rating && ((rating > HIGH_CUT) != (dataset->rating(movie_ratings[movie_index]) > HIGH_CUT))))
-		//			users[other_user] = TRUE;
-		//		movie_index++;
-		//	}
-		//	else if (rating) // we saw it, they didn't, so now we want to reconsider them
-		//	{
-		//		users[other_user] = TRUE;
-		//	}
-		//}
+		rating = dataset->rating(history[which_one - history_len - 1]);
+		movie_ratings = dataset->ratings_for_movie(dataset->movie(history[which_one - history_len - 1]), &count);
+		movie_index = 0;
+		
+		for (other_user = 0; other_user < dataset->number_users; other_user++)
+		{
+			if (movie_index < count && other_user == dataset->user(movie_ratings[movie_index])) // other_user saw it
+			{
+				// they saw it and we didn't, or, we saw it and gave a different high/low
+				if (!rating || (rating && ((rating > HIGH_CUT) != (dataset->rating(movie_ratings[movie_index]) > HIGH_CUT))))
+					users[other_user] = TRUE;
+				movie_index++;
+			}
+			else if (rating) // we saw it, they didn't, so now we want to reconsider them
+			{
+				users[other_user] = TRUE;
+			}
+		}
 	}
 	
 	/*
