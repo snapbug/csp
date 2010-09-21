@@ -147,7 +147,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 			if (movie_index < count && other_user == dataset->user(movie_ratings[movie_index])) // other_user saw it
 			{
 				// they saw it and we didn't, or, we saw it and gave a different high/low
-				if (!rating || (rating && ((rating > HIGH_CUT) != (dataset->rating(movie_ratings[movie_index]) > HIGH_CUT))))
+				if (!rating || ((rating > HIGH_CUT) != (dataset->rating(movie_ratings[movie_index]) > HIGH_CUT)))
 					users[other_user] = TRUE;
 				movie_index++;
 			}
