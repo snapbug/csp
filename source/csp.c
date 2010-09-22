@@ -42,6 +42,7 @@ int main(int argc, char **argv)
 	double last_prediction_error, auc;
 	double *error_presented, *error_rated;
 	uint64_t *count_presented, *count_rated;
+	uint64_t present_max = 220;
 	
 	last_param = params->parse();
 	stats = new CSP_stats(params->stats);
@@ -88,12 +89,12 @@ int main(int argc, char **argv)
 		default: exit(puts("Unknown generation method"));
 	}
 	
-	error_presented = new double[dataset->number_items + 1];
-	error_rated = new double[dataset->number_items + 1];
-	count_presented = new uint64_t[dataset->number_items + 1];
-	count_rated = new uint64_t[dataset->number_items + 1];
+	error_presented = new double[present_max + 1];
+	error_rated = new double[present_max + 1];
+	count_presented = new uint64_t[present_max + 1];
+	count_rated = new uint64_t[present_max + 1];
 	
-	for (item = 0; item <= dataset->number_items; item++)
+	for (item = 0; item <= present_max; item++)
 	{
 		error_presented[item] = error_rated[item] = 0;
 		count_presented[item] = count_rated[item] = 0;
@@ -147,7 +148,7 @@ int main(int argc, char **argv)
 		/*
 			While the user can still add more ratings, and we can still present some.
 		*/
-		while (number_seen < count && presented <= 220)
+		while (number_seen < count && presented <= present_max)
 		{
 			if (stats->stats && presented % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count - 1, presented); fflush(stderr); }
 			
@@ -162,7 +163,7 @@ int main(int argc, char **argv)
 			if ((key = (uint64_t *)bsearch(&next_movie, ratings, count, sizeof(*ratings), movie_search)) != NULL)
 			{
 				if (stats->stats & CSP_stats::AUC)
-					auc += ((1.0 * presented / dataset->number_items) - (1.0 * last_presented_and_seen / dataset->number_items)) * (1.0 * number_seen / count);
+					auc += ((1.0 * presented / present_max) - (1.0 * last_presented_and_seen / present_max)) * (1.0 * number_seen / count);
 				number_seen++;
 				
 				/*
@@ -211,19 +212,19 @@ int main(int argc, char **argv)
 			Print out the AUC for this user for this presentation list.
 		*/
 		if (stats->stats & CSP_stats::AUC)
-			printf("A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / dataset->number_items)));
+			printf("A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / present_max)));
 	
 		/*
 			Fill in the 'missing' values to give smooth graphs.
 		*/
-		for (item = number_seen + 1; item <= dataset->number_items; item++)
+		for (item = number_seen + 1; item <= present_max; item++)
 			if (stats->stats & CSP_stats::ERROR_RATED)
 			{
 				error_rated[item] += last_prediction_error;
 				count_rated[item]++;
 			}
 		
-		for (item = presented + 1; item <= dataset->number_items; item++)
+		for (item = presented + 1; item <= present_max; item++)
 			if (stats->stats & CSP_stats::ERROR_PRESENTED)
 			{
 				error_presented[item] += last_prediction_error;
@@ -233,10 +234,10 @@ int main(int argc, char **argv)
 	
 	fprintf(stderr, "\n");
 	if (stats->stats & CSP_stats::ERROR_PRESENTED)
-		for (item = 0; item <= dataset->number_items; item++)
+		for (item = 0; item <= present_max; item++)
 			printf("P %lu %f\n", item, error_presented[item] / count_presented[item]);
 	if (stats->stats & CSP_stats::ERROR_RATED)
-		for (item = 0; item <= dataset->number_items; item++)
+		for (item = 0; item <= present_max; item++)
 			printf("R %lu %f\n", item, error_rated[item] / count_rated[item]);
 	
 	/*
