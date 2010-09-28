@@ -9,9 +9,9 @@
 #ifndef GENERATOR_GREEDY_CHEAT_H_
 #define GENERATOR_GREEDY_CHEAT_H_
 
-#ifndef NUMCONSIDER
-	#define NUMCONSIDER 5
-#endif
+//#ifndef NUMCONSIDER
+//	#define NUMCONSIDER 5
+//#endif
 #ifndef NUMDONE
 	#define NUMDONE 5
 #endif
@@ -31,6 +31,8 @@ public:
 protected:
 	CSP_metric *metric;
 	CSP_predictor *predictor;
+	
+	int64_t NUMCONSIDER;
 	
 private:
 	typedef struct {

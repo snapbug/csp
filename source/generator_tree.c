@@ -16,10 +16,11 @@
 */
 CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric)
 {
-	history_len = 5;
+	history_len = 15;
 	most_greedy = new movie[dataset->number_items];
 	users = new uint64_t[dataset->number_users];
 	history = new uint64_t[dataset->number_items];
+	NUMCONSIDER = 1;
 	
 #ifdef SIMULATE
 	uint64_t i, j, k, nm, nd, sum, dud;
@@ -110,6 +111,15 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		users[user] = FALSE;
 #endif
 	}
+	//if (which_one > 30)
+	//{
+	//	if (which_one < 34)
+	//		NUMCONSIDER = 5 - ((which_one - 30)); // 4, 3, 2 step down
+	//	else
+	//		NUMCONSIDER = 1;
+	//}
+	//else
+	//	NUMCONSIDER = 5;
 	
 	/*
 		Reset the number of times for each movie.
