@@ -17,7 +17,7 @@
 #endif
 
 static uint64_t greedy_movies[] = {
-	#include "greedy.choices.txt"
+	#include "greedy.choices.5.txt"
 };
 
 class CSP_generator_greedy_cheat : public CSP_generator
@@ -32,7 +32,7 @@ protected:
 	CSP_metric *metric;
 	CSP_predictor *predictor;
 	
-	int64_t NUMCONSIDER;
+	uint64_t NUMCONSIDER;
 	
 private:
 	typedef struct {
