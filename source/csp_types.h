@@ -35,5 +35,5 @@
 
 #define puts(x) printf(x "\n")
 #define clip(x, low, high) (low > x ? low : x < high ? x : high)
-#define tri_offset(i, j) ((((i) * (35539 - (i))) / 2) + (j) - (i) - 1)
+#define tri_offset(i, j, n) (((((2 * (n)) - 1 - (i)) * (i)) / 2) - (i) + (j) - 1)
 #define UNUSED(x) (x = x)
