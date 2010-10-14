@@ -13,6 +13,7 @@
 CSP_generator_greedy_cheat::CSP_generator_greedy_cheat(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator(dataset), metric(metric), predictor(predictor) 
 {
 	error_reduction = new movie[dataset->number_items];
+	NUMCONSIDER = 10;
 }
 
 /*
@@ -66,7 +67,7 @@ uint64_t CSP_generator_greedy_cheat::next_movie(uint64_t user, uint64_t which_on
 			}
 		}
 		
-		qsort(error_reduction + which_one, included, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
+		qsort(error_reduction + which_one, included - which_one, sizeof(*error_reduction), CSP_generator_greedy_cheat::error_cmp);
 	}
 	
 	return error_reduction[which_one].movie_id;

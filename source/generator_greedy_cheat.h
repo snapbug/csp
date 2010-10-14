@@ -9,15 +9,15 @@
 #ifndef GENERATOR_GREEDY_CHEAT_H_
 #define GENERATOR_GREEDY_CHEAT_H_
 
-#ifndef NUMCONSIDER
-	#define NUMCONSIDER 5
-#endif
+//#ifndef NUMCONSIDER
+//	#define NUMCONSIDER 5
+//#endif
 #ifndef NUMDONE
 	#define NUMDONE 5
 #endif
 
 static uint64_t greedy_movies[] = {
-	#include "greedy.choices.txt"
+	#include "greedy.choices.5.txt"
 };
 
 class CSP_generator_greedy_cheat : public CSP_generator
@@ -31,6 +31,8 @@ public:
 protected:
 	CSP_metric *metric;
 	CSP_predictor *predictor;
+	
+	uint64_t NUMCONSIDER;
 	
 private:
 	typedef struct {
