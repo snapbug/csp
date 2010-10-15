@@ -13,7 +13,7 @@
 CSP_generator_greedy_cheat::CSP_generator_greedy_cheat(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator(dataset), metric(metric), predictor(predictor) 
 {
 	error_reduction = new movie[dataset->number_items];
-	NUMCONSIDER = 10;
+	NUMCONSIDER = 5;
 }
 
 /*

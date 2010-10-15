@@ -13,11 +13,11 @@
 //	#define NUMCONSIDER 5
 //#endif
 #ifndef NUMDONE
-	#define NUMDONE 5
+	#define NUMDONE 11
 #endif
 
 static uint64_t greedy_movies[] = {
-	#include "greedy.choices.5.txt"
+	#include "greedy.choices.10.txt"
 };
 
 class CSP_generator_greedy_cheat : public CSP_generator

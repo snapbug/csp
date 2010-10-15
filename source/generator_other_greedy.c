@@ -63,7 +63,8 @@ uint64_t CSP_generator_other_greedy::next_movie(uint64_t user, uint64_t which_on
 		*/
 		for (i = 0; i < dataset->number_users; i++)
 			for (j = 0; j < NUMCONSIDER && i != user; j++)
-				most_greedy[greedy_movies[(NUMDONE * i) + j]].number_times++;
+				if (greedy_movies[(NUMDONE * i) + j] < dataset->number_items)
+					most_greedy[greedy_movies[(NUMDONE * i) + j]].number_times++;
 		
 		/*
 			Sort by the number of times it appears.

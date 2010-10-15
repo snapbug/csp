@@ -21,7 +21,7 @@ CSP_param_block::CSP_param_block(int argc, char **argv)
 	this->argv = argv;
 	
 	load_extra = TRUE;
-	dataset = D_NETFLIX;
+	dataset_chosen = D_NETFLIX;
 	testing_method = S_PROP;
 	generation_method = CSP_generator_factory::POPULARITY;
 	prediction_method = CSP_predictor_factory::USER_AVERAGE;
@@ -59,7 +59,8 @@ void CSP_param_block::help(void)
 	
 	puts("DATASETS");
 	puts("--------");
-	puts("-d[n]            Use the following dataset for testing:");
+	puts("-d[mn]           Use the following dataset for testing:");
+	puts("   m             MovieLens 10M");
 	puts("   n             Netflix [default]");
 	puts("-e               Don't load extra data (same data sorted by movie)");
 	puts("");
@@ -73,7 +74,7 @@ void CSP_param_block::help(void)
 	
 	puts("GENERATION");
 	puts("----------");
-	puts("-g[bdegioOprt]   Generate lists to present to the user using:");
+	puts("-g[bdegioOpPrt]  Generate lists to present to the user using:");
 	puts("   b             Naive Bayes (dynamic)");
 	puts("   d             Average distance from mean");
 	puts("   e             Entropy0");
@@ -82,6 +83,7 @@ void CSP_param_block::help(void)
 	puts("   o             Other greedy");
 	puts("   O             Other greedy personalised");
 	puts("   p             Popularity [default]");
+	puts("   P             Use the predictor");
 	puts("   r             Random");
 	puts("   t             Tree (Other greedy with split decisions");
 	puts("");
@@ -111,16 +113,29 @@ void CSP_param_block::help(void)
 	
 	puts("STATISTICS");
 	puts("----------");
-	puts("-s[naAeEgp]      Measure and output the following statistics:");
+	puts("-s[naAeE]        Measure and output the following statistics:");
 	puts("   n             None [default]");
 	puts("   a             All statistics");
 	puts("   A             AUC for presentation lists (number rated vs number presented)");
 	puts("   e             Error as function of number presented");
 	puts("   E             Error as function of number rated");
-	puts("   g             Time to generate presentation lists");
-	puts("   p             Time to generate predictions");
 	
 	exit(EXIT_SUCCESS);
+}
+
+/*
+	CSP_PARAM_BLOCK::DATASET()
+	--------------------------
+*/
+void CSP_param_block::dataset(char *which)
+{
+	dataset_chosen = D_NONE;
+	switch (*which)
+	{
+		case 'm': dataset_chosen = D_MOVIELENS; break;
+		case 'n': dataset_chosen = D_NETFLIX; break;
+		default: exit(printf("Unknown dataset: '%c'\n", *which));
+	}
 }
 
 /*
@@ -137,6 +152,7 @@ void CSP_param_block::generation(char *which)
 		case 'g': generation_method = CSP_generator_factory::GREEDY_CHEAT; break;
 		case 'i': generation_method = CSP_generator_factory::ITEM_AVERAGE; break;
 		case 'p': generation_method = CSP_generator_factory::POPULARITY; break;
+		case 'P': generation_method = CSP_generator_factory::PREDICTOR; break;
 		case 'r': generation_method = CSP_generator_factory::RANDOM; break;
 		case 't': generation_method = CSP_generator_factory::TREE; break;
 		case 'o': generation_method = CSP_generator_factory::OTHER_GREEDY; break;
@@ -232,6 +248,8 @@ uint64_t CSP_param_block::parse(void)
 				else
 					testing_method = S_FIXED;
 			}
+			else if (*command == 'd')
+				dataset(command + 1);
 			else if (*command == 'e')
 				load_extra = FALSE;
 			else if (*command == 'g')

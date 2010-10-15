@@ -29,7 +29,7 @@ CFLAGS = -Wall -Wextra -pedantic -ansi -Wno-long-long $(MINUS_D)
 ifdef DEBUG
 CFLAGS += -g -O2
 else
-CFLAGS += -fopenmp -O3
+CFLAGS += -fopenmp -O3 -g
 endif
 
 LDFLAGS = -lm -fopenmp
@@ -38,6 +38,7 @@ CC = g++
 
 PARTS = \
 	dataset_netflix.o \
+	dataset_movielens.o \
 	generator_distance.o \
 	generator_entropy.o \
 	generator_greedy_cheat.o \
@@ -46,6 +47,7 @@ PARTS = \
 	generator_other_greedy.o \
 	generator_other_greedy_pers.o \
 	generator_popularity.o \
+	generator_predictor.o \
 	generator_random.o \
 	generator_tree.o \
 	metric_mae.o \

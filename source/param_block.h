@@ -12,6 +12,7 @@ private:
 	int argc;
 	char **argv;
 
+	void dataset(char *which);
 	void generation(char *which);
 	void prediction(char *which);
 	void metrics(char *which);
@@ -26,14 +27,14 @@ public:
 	uint64_t parse(void);
 
 	uint64_t generation_method; // how are we going to generate the lists to present
-	uint64_t dataset; // which dataset to use
+	uint64_t dataset_chosen; // which dataset to use
 	uint64_t prediction_method; // which prediction method to use
 	uint64_t metrics_to_use; // which metrics we are using
 	uint64_t testing_method; // which testing method to use (proportional/fixed)
 	uint64_t load_extra; // whether to load extra data
 	uint64_t stats; // which stats we are interested in
 	
-	enum { D_NETFLIX };
+	enum { D_NONE, D_NETFLIX, D_MOVIELENS };
 	enum { A_TIME, A_PRES };
 	enum { S_FIXED, S_PROP };
 };

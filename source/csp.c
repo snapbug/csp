@@ -46,8 +46,13 @@ int main(int argc, char **argv)
 	
 	last_param = params->parse();
 	stats = new CSP_stats(params->stats);
-	dataset = new CSP_dataset_netflix(params);
-
+	switch (params->dataset_chosen)
+	{
+		case CSP_param_block::D_NETFLIX: dataset = new CSP_dataset_netflix(params); break;
+		case CSP_param_block::D_MOVIELENS: dataset = new CSP_dataset_movielens(params); break;
+		default: break;
+	}
+	
 	/*
 		Load the precalculated co-raters if necessary.
 	*/
@@ -86,6 +91,7 @@ int main(int argc, char **argv)
 		case CSP_generator_factory::RANDOM: generator = new CSP_generator_random(dataset); break;
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
 		case CSP_generator_factory::TREE: generator = new CSP_generator_tree(dataset, predictor, metric); break;
+		case CSP_generator_factory::PREDICTOR: generator = new CSP_generator_predictor(dataset, predictor, metric); break;
 		default: exit(puts("Unknown generation method"));
 	}
 	
@@ -130,15 +136,13 @@ int main(int argc, char **argv)
 		/*
 			Before we add any ratings, we should see how well we can do.
 		*/
-		if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
-			last_prediction_error = metric->score(user);
+		last_prediction_error = metric->score(user);
 		
 		if (stats->stats & CSP_stats::ERROR_RATED)
 		{
 			error_rated[number_seen] += last_prediction_error;
 			count_rated[number_seen]++;
 		}
-		
 		if (stats->stats & CSP_stats::ERROR_PRESENTED)
 		{
 			error_presented[presented] += last_prediction_error;
@@ -150,7 +154,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count && presented <= present_max)
 		{
-			if (stats->stats && presented % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count - 1, presented); fflush(stderr); }
+			if (/*stats->stats && */presented % 100 == 0){ fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count - 1, presented); fflush(stderr); }
 			
 			/*
 				Get the next movie to present.
@@ -175,8 +179,7 @@ int main(int argc, char **argv)
 				/*
 					Now check our error for this user.
 				*/
-				if (stats->stats & CSP_stats::ERROR_PRESENTED || stats->stats & CSP_stats::ERROR_RATED)
-					last_prediction_error = metric->score(user);
+				last_prediction_error = metric->score(user);
 				
 				/*
 					Update the error as function of number rated.
@@ -192,6 +195,8 @@ int main(int argc, char **argv)
 				*/
 				last_presented_and_seen = presented;
 			}
+			if (presented % 25 == 0)
+				printf("%lu %lu %f\n", user, presented, last_prediction_error);
 			
 			/*
 				Move onto the next movie.
@@ -212,7 +217,8 @@ int main(int argc, char **argv)
 			Print out the AUC for this user for this presentation list.
 		*/
 		if (stats->stats & CSP_stats::AUC)
-			printf("A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / present_max)));
+			if (last_presented_and_seen)
+				printf("A %lu %f\n", user, auc + (1 - (1.0 * last_presented_and_seen / present_max)));
 	
 		/*
 			Fill in the 'missing' values to give smooth graphs.

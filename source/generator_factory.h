@@ -12,6 +12,7 @@
 #include "generator_other_greedy.h"
 #include "generator_other_greedy_pers.h"
 #include "generator_popularity.h"
+#include "generator_predictor.h"
 #include "generator_random.h"
 #include "generator_tree.h"
 
@@ -31,6 +32,7 @@ public:
 		OTHER_GREEDY,
 		OTHER_GREEDY_PERS,
 		POPULARITY,
+		PREDICTOR,
 		RANDOM,
 		TREE
 	};

@@ -38,7 +38,7 @@ private:
 	uint64_t testing_data[10183402]; // the largest test set is the proportional one
 	uint64_t testing_index[480189];
 	uint64_t extra_data[100480507];
-	uint64_t extra_index[480189];
+	uint64_t extra_index[17770];
 };
 
 #endif /* DATASET_NETFLIX_H_ */

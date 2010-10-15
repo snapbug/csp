@@ -21,7 +21,7 @@ CSP_dataset_netflix::CSP_dataset_netflix(CSP_param_block *params) : CSP_dataset(
 	maximum = 5;
 	
 	number_items = 17770; // this might be higher than needed, but not lower than what's possible
-	number_users = 429584; // removed the users that have < 20 ratings, index size is still large enough for original data
+	number_users = 429584; // removed the users that have < 10 ratings, index size is still large enough for original data
 	number_ratings = params->testing_method == CSP_param_block::S_PROP ? 89701538 : 95589100;
 	number_test_ratings = params->testing_method == CSP_param_block::S_PROP ? 10183402 : 4295840;
 	
