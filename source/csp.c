@@ -59,9 +59,16 @@ int main(int argc, char **argv)
 	if (params->generation_method == CSP_generator_factory::BAYESIAN || params->generation_method == CSP_generator_factory::OTHER_GREEDY_PERS || params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items)) + 1];
-		fprintf(stderr, "Loading coraters from file... "); fflush(stderr);
-		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.coraters.item","rb"));
-		fprintf(stderr, "done.\n"); fflush(stderr);
+		if (params->dataset_chosen == CSP_param_block::D_NETFLIX)
+		{
+			fprintf(stderr, "Loading coraters from file... "); fflush(stderr);
+			size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.coraters.item","rb"));
+			fprintf(stderr, "done.\n"); fflush(stderr);
+		}
+		else
+		{
+			exit(printf("Haven't calculated co-raters for MovieLens\n"));
+		}
 	}
 	
 	switch (params->prediction_method)
@@ -70,7 +77,7 @@ int main(int argc, char **argv)
 		case CSP_predictor_factory::GLOBAL_AVERAGE: predictor = new CSP_predictor_global_avg(dataset); break;
 		case CSP_predictor_factory::ITEM_AVERAGE: predictor = new CSP_predictor_item_avg(dataset); break;
 		case CSP_predictor_factory::ITEM_ITEM_KNN: predictor = new CSP_predictor_item_knn(dataset, 20); break;
-		case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 20, coraters); break;
+		case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 20, coraters, params); break;
 		case CSP_predictor_factory::RANDOM: predictor = new CSP_predictor_random(dataset); break;
 		case CSP_predictor_factory::USER_AVERAGE: predictor = new CSP_predictor_user_avg(dataset); break;
 		case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;

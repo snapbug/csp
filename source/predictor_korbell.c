@@ -34,7 +34,7 @@
 	CSP_PREDICTOR_KORBELL::CSP_PREDICTOR_KORBELL()
 	----------------------------------------------
 */
-CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters) : CSP_predictor(dataset), coraters(coraters), k(k)
+CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters, CSP_param_block *params) : CSP_predictor(dataset), coraters(coraters), k(k), params(params)
 {
 	uint64_t i, min, max, movie, user, rating, day;
 	uint64_t *item_ratings, *user_ratings;
@@ -378,17 +378,31 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	/*
 		Load correlations.
 	*/
-	fprintf(stderr, "Loading correlations from file... "); fflush(stderr);
-	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.correlations.byte", "rb"));
-	fprintf(stderr, "done.\n"); fflush(stderr);
+	if (params->dataset_chosen == CSP_param_block::D_NETFLIX)
+	{
+		fprintf(stderr, "Loading correlations from file... "); fflush(stderr);
+		index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.correlations.byte", "rb"));
+		fprintf(stderr, "done.\n"); fflush(stderr);
+	}
+	else
+	{
+		exit(printf("Haven't calculated correlations for MovieLens\n"));
+	}
 	
 	/*
 		Load pre-calculated A-bar.
 	*/
-	fprintf(stderr, "Loading abar from file... ");
-	fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.abar_tri.byte", "rb"));
-	fread(abar_dia, sizeof(*abar_dia), dataset->number_items, fopen("./data/netflix.abar_dia.item.residual", "rb"));
-	fprintf(stderr, "done.\n"); fflush(stderr);
+	if (params->dataset_chosen == CSP_param_block::D_NETFLIX)
+	{
+		fprintf(stderr, "Loading abar from file... ");
+		fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.abar_tri.byte", "rb"));
+		fread(abar_dia, sizeof(*abar_dia), dataset->number_items, fopen("./data/netflix.abar_dia.item.residual", "rb"));
+		fprintf(stderr, "done.\n"); fflush(stderr);
+	}
+	else
+	{
+		exit(printf("Haven't calculated a-bar for MovieLens\n"));
+	}
 	
 	/*
 		Calculate average entries for A-bar.
