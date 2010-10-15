@@ -58,8 +58,8 @@ double CSP_generator_other_greedy_pers::calculate_probability(uint64_t movie, ui
 	dataset->ratings_for_movie(other, &other_count);
 	
 	if (key)
-		return (1.0 * coraters[tri_offset(MIN(movie, other), MAX(movie, other))] + 1.0) / (count + 1.0);
-	return (1.0 * other_count - coraters[tri_offset(MIN(movie, other), MAX(movie, other))] + 1.0) / (1.0 + dataset->number_users - count);
+		return (1.0 * coraters[tri_offset(MIN(movie, other), MAX(movie, other), dataset->number_items)] + 1.0) / (count + 1.0);
+	return (1.0 * other_count - coraters[tri_offset(MIN(movie, other), MAX(movie, other), dataset->number_items)] + 1.0) / (1.0 + dataset->number_users - count);
 }
 
 

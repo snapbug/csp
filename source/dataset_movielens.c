@@ -1,6 +1,6 @@
 /*
 	DATASET_MOVIELENS.C
-	-----------------
+	-------------------
 */
 
 #include <stdio.h>
@@ -29,8 +29,8 @@ CSP_dataset_movielens::CSP_dataset_movielens(CSP_param_block *params) : CSP_data
 	/*
 		Setup the filenames correctly.
 	*/
-	sprintf(training_filename, "./data/ml.user.data");
-	sprintf(testing_filename, "./data/ml.user.test.data");
+	sprintf(training_filename, "./data/ml.data.user");
+	sprintf(testing_filename, "./data/ml.test.user");
 	
 	/*
 		Now actually load the data.
@@ -39,6 +39,7 @@ CSP_dataset_movielens::CSP_dataset_movielens(CSP_param_block *params) : CSP_data
 	size = fread(&data, sizeof(*data), number_ratings, fopen(training_filename, "rb"));
 	size = fread(&index, sizeof(*index), number_users, fopen(strcat(training_filename, ".idx"), "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
+	
 	fprintf(stderr, "Loading testing data... "); fflush(stderr);
 	size = fread(&testing_data, sizeof(*testing_data), number_test_ratings, fopen(testing_filename, "rb"));
 	size = fread(&testing_index, sizeof(*testing_index), number_users, fopen(strcat(testing_filename, ".idx"), "rb"));
@@ -46,10 +47,9 @@ CSP_dataset_movielens::CSP_dataset_movielens(CSP_param_block *params) : CSP_data
 	
 	if (params->load_extra)
 	{
-		exit(printf("Haven't created this files yet!\n"));
 		loaded_extra = TRUE;
 		fprintf(stderr, "Loading extra data... "); fflush(stderr);
-		sprintf(training_filename, "./data/movielens.movie.%s", params->testing_method == CSP_param_block::S_PROP ? "prop" : "fixed");
+		sprintf(training_filename, "./data/ml.data.movie");
 		size = fread(&extra_data, sizeof(*extra_data), number_ratings, fopen(training_filename, "rb"));
 		size = fread(&extra_index, sizeof(*extra_index), number_items, fopen(strcat(training_filename, ".idx"), "rb"));
 		fprintf(stderr, "done.\n"); fflush(stderr);
