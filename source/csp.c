@@ -67,7 +67,24 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			exit(printf("Haven't calculated co-raters for MovieLens\n"));
+			uint64_t i, j, k, this_count, that_count, index;
+			uint64_t *this_one, *that_one;
+			
+			for (i= 0; i < dataset->number_items; i++)
+			{
+				if (i % 100 == 0) { fprintf(stderr, "\r%5lu", i); fflush(stderr); }
+				this_one = dataset->ratings_for_movie(i, &this_count);
+				for (j = 0; j < this_count; j++)
+				{
+					that_one = dataset->ratings_for_user(dataset->user(this_one[j]), &that_count);
+					for (k = 0; k < that_count; k++)
+						if (i < dataset->movie(that_one[k]))
+							coraters[tri_offset(i, dataset->movie(that_one[k]), dataset->number_items)]++;
+				}
+			}
+			printf("FOTR - TTT: %u\n", coraters[tri_offset(4899, 5852, dataset->number_items)]);
+			printf("FOTR - ROTK: %u\n", coraters[tri_offset(4899, 7039, dataset->number_items)]);
+			printf("TTT - ROTK: %u\n", coraters[tri_offset(5852, 7039, dataset->number_items)]);
 		}
 	}
 	
