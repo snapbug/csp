@@ -38,7 +38,7 @@ private:
 	uint64_t testing_data[970538];
 	uint64_t testing_index[69878];
 	uint64_t extra_data[9029516];
-	uint64_t extra_index[10681];
+	uint64_t extra_index[10411];
 };
 
 #endif /* DATASET_MOVIELENS_H_ */

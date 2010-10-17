@@ -98,8 +98,8 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	movie_user_support_bottom = new double[dataset->number_items];
 	movie_user_support_average = new double[dataset->number_items];
 	
-	correlation = new int8_t[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
-	abar_tri = new int8_t[tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1];
+	correlation = new int8_t[tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1];
+	abar_tri = new int8_t[tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1];
 	abar_dia = new float[dataset->number_items];
 	bbar = abar_tri; // bbar's values are the same as abar's, but make this alias to make it look nicer
 	
@@ -379,14 +379,14 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		Load correlations.
 	*/
 	fprintf(stderr, "Loading correlations from file... "); fflush(stderr);
-	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.correlations.byte", "rb"));
+	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.correlations.byte", "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
 	
 	/*
 		Load pre-calculated A-bar.
 	*/
 	fprintf(stderr, "Loading abar from file... ");
-	fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.abar_tri.byte", "rb"));
+	fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.abar_tri.byte", "rb"));
 	fread(abar_dia, sizeof(*abar_dia), dataset->number_items, fopen("./data/netflix.abar_dia.item.residual", "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
 	
@@ -394,9 +394,9 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		Calculate average entries for A-bar.
 	*/
 	bar_avg_tri = bar_avg_dia = 0;
-	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1; i++)
+	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1; i++)
 		bar_avg_tri += abar_tri[i] / scale;
-	bar_avg_tri /= tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1;
+	bar_avg_tri /= tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1;
 	for (i = 0; i < dataset->number_items; i++)
 		bar_avg_dia += abar_dia[i];
 	bar_avg_dia /= dataset->number_items;
@@ -665,7 +665,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 		{
 			min = MIN(movie, dataset->movie(user_ratings[i]));
 			max = MAX(movie, dataset->movie(user_ratings[i]));
-			offset = tri_offset(min, max);
+			offset = tri_offset(min, max, dataset->number_items);
 			
 			neighbours[position].movie_id = dataset->movie(user_ratings[i]);
 			neighbours[position].considered = TRUE;
@@ -695,7 +695,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 			{
 				min = MIN(neighbours[j].movie_id, neighbours[i].movie_id);
 				max = MAX(neighbours[j].movie_id, neighbours[i].movie_id);
-				offset = tri_offset(min, max);
+				offset = tri_offset(min, max, dataset->number_items);
 				ahat[(i * MIN(k, position)) + j] = (float)(((coraters[offset] * (abar_tri[offset] / scale)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
 			}
 	
@@ -706,7 +706,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	{
 		min = MIN(neighbours[j].movie_id, movie);
 		max = MAX(neighbours[j].movie_id, movie);
-		offset = tri_offset(min, max);
+		offset = tri_offset(min, max, dataset->number_items);
 		bhat[j] = (float)(((coraters[offset] * (bbar[offset] / scale)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
 	}
 	

@@ -11,7 +11,8 @@
 #include <omp.h>
 #include "csp_types.h"
 #include "dataset_netflix.h"
-#include "dataset_netflix_orig.h"
+//#include "dataset_netflix_orig.h"
+#include "dataset_movielens.h"
 #include "generator_factory.h"
 #include "predictor_factory.h"
 #include "param_block.h"
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
 	{
 		case CSP_param_block::D_NETFLIX: dataset = new CSP_dataset_netflix(params); break;
 		case CSP_param_block::D_MOVIELENS: dataset = new CSP_dataset_movielens(params); break;
-		default: break;
+		default: exit(printf("Unknown dataset\n"));
 	}
 	
 	/*
@@ -58,9 +59,9 @@ int main(int argc, char **argv)
 	*/
 	if (params->generation_method == CSP_generator_factory::BAYESIAN || params->generation_method == CSP_generator_factory::OTHER_GREEDY_PERS || params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
-		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1)) + 1];
+		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items)) + 1];
 		fprintf(stderr, "Loading coraters from file... "); fflush(stderr);
-		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1) + 1, fopen("./data/netflix.coraters.item","rb"));
+		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.coraters.item","rb"));
 		fprintf(stderr, "done.\n"); fflush(stderr);
 	}
 	
