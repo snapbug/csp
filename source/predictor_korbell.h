@@ -3,6 +3,7 @@
 	-------------------
 */
 
+#include "param_block.h"
 #include "predictor.h"
 
 #ifndef PREDICTOR_KORBELL_H_
@@ -11,7 +12,7 @@
 class CSP_predictor_korbell : public CSP_predictor
 {
 public:
-	CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters);
+	CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters, CSP_param_block *params);
 	virtual ~CSP_predictor_korbell() {}
 	
 	virtual double predict(uint64_t user, uint64_t movie, uint64_t day);
@@ -41,6 +42,7 @@ private:
 	double user_time_user_alpha, user_time_movie_alpha, movie_time_movie_alpha, movie_time_user_alpha;
 #endif
 	
+	CSP_param_block *params;
 	uint32_t *coraters;
 	uint64_t k;
 	double alpha, beta, scale;

@@ -24,7 +24,11 @@
 int movie_search(const void *a, const void *b)
 {
 	uint64_t key = *(uint64_t *)a;
+#ifdef ML
+	uint64_t item = (*(uint64_t *)b) >> 4 & 16383;
+#else
 	uint64_t item = (*(uint64_t *)b) >> 15 & 32767;
+#endif
 	return (key > item) - (key < item);
 }
 
@@ -60,9 +64,31 @@ int main(int argc, char **argv)
 	if (params->generation_method == CSP_generator_factory::BAYESIAN || params->generation_method == CSP_generator_factory::OTHER_GREEDY_PERS || params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items)) + 1];
-		fprintf(stderr, "Loading coraters from file... "); fflush(stderr);
-		size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.coraters.item","rb"));
-		fprintf(stderr, "done.\n"); fflush(stderr);
+		
+		if (params->dataset_chosen == CSP_param_block::D_NETFLIX)
+		{
+			fprintf(stderr, "Loading coraters from file... "); fflush(stderr);
+			size = fread(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.coraters.item","rb"));
+			fprintf(stderr, "done.\n"); fflush(stderr);
+		}
+		else
+		{
+			uint64_t i, j, k;
+			for (i = 0; i < dataset->number_items; i++)
+			{
+				if (i % 100 == 0) { fprintf(stderr, "\r%5lu", i); fflush(stderr); }
+				ratings = dataset->ratings_for_movie(i, &count);
+				for (j = 0; j < count; j++)
+				{
+					key = dataset->ratings_for_user(dataset->user(ratings[j]), &user);
+					for (k = 0; k < user; k++)
+						if (i < dataset->movie(key[k]))
+							coraters[tri_offset(i, dataset->movie(key[k]), dataset->number_items)]++;
+				}
+			}
+			fwrite(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/ml.100k.coraters.item", "wb"));
+			fprintf(stderr, "\n");
+		}
 	}
 	
 	switch (params->prediction_method)
@@ -71,7 +97,7 @@ int main(int argc, char **argv)
 		case CSP_predictor_factory::GLOBAL_AVERAGE: predictor = new CSP_predictor_global_avg(dataset); break;
 		case CSP_predictor_factory::ITEM_AVERAGE: predictor = new CSP_predictor_item_avg(dataset); break;
 		case CSP_predictor_factory::ITEM_ITEM_KNN: predictor = new CSP_predictor_item_knn(dataset, 20); break;
-		case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 20, coraters); break;
+		case CSP_predictor_factory::KORBELL: predictor = new CSP_predictor_korbell(dataset, 20, coraters, params); break;
 		case CSP_predictor_factory::RANDOM: predictor = new CSP_predictor_random(dataset); break;
 		case CSP_predictor_factory::USER_AVERAGE: predictor = new CSP_predictor_user_avg(dataset); break;
 		case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
@@ -110,10 +136,10 @@ int main(int argc, char **argv)
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
 	*/
-	for (; last_param < (uint64_t)argc; last_param++)
-	//for (user = 0; user < dataset->number_users; user++)
+	//for (; last_param < (uint64_t)argc; last_param++)
+	for (user = 0; user < dataset->number_users; user++)
 	{
-		user = strtoull(argv[last_param], (char **)NULL, 10);
+		//user = strtoull(argv[last_param], (char **)NULL, 10);
 		//if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
 		//fprintf(stderr, "\r%6lu", user); fflush(stderr);
 		
@@ -128,6 +154,7 @@ int main(int argc, char **argv)
 			Get the ratings for this user, and then remove them all from the dataset.
 		*/
 		ratings = dataset->ratings_for_user(user, &count);
+		
 		for (rating = 0; rating < count; rating++)
 		{
 			dataset->remove_rating(&ratings[rating]);
@@ -196,8 +223,6 @@ int main(int argc, char **argv)
 				*/
 				last_presented_and_seen = presented;
 			}
-			if (presented % 25 == 0)
-				printf("%lu %lu %f\n", user, presented, last_prediction_error);
 			
 			/*
 				Move onto the next movie.
@@ -213,6 +238,16 @@ int main(int argc, char **argv)
 				count_presented[presented]++;
 			}
 		}
+		
+		/*
+			Go back and readd ratings that we didn't find.
+		*/
+		for (rating = 0; rating < count; rating++)
+			if (!dataset->included(ratings[rating]))
+			{
+				dataset->add_rating(&ratings[rating]);
+				predictor->added_rating(&ratings[rating]);
+			}
 		
 		/*
 			Print out the AUC for this user for this presentation list.

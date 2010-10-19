@@ -9,15 +9,16 @@
 #ifndef GENERATOR_GREEDY_CHEAT_H_
 #define GENERATOR_GREEDY_CHEAT_H_
 
-//#ifndef NUMCONSIDER
-//	#define NUMCONSIDER 5
-//#endif
 #ifndef NUMDONE
-	#define NUMDONE 11
+	#define NUMDONE 10
 #endif
 
 static uint64_t greedy_movies[] = {
+#ifdef ML
+	#include "greedy.ml.10.txt"
+#else
 	#include "greedy.choices.10.txt"
+#endif
 };
 
 class CSP_generator_greedy_cheat : public CSP_generator

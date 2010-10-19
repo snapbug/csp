@@ -16,6 +16,10 @@ ifndef NONRATABLE
 MINUS_D += -DNON_RATABLE
 endif
 
+ifdef MOVIELENS
+MINUS_D += -DML
+endif
+
 ifdef ENT
 MINUS_D += -DENT
 endif

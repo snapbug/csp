@@ -30,7 +30,7 @@ public:
 	inline virtual uint64_t user(uint64_t example) { return example >> 18 & 262143; }
 	inline virtual uint64_t movie(uint64_t example) { return example >> 4 & 16383; }
 	inline virtual uint64_t day(uint64_t example) { return example - example; }
-	inline virtual uint64_t rating(uint64_t example) { return example >> 0 & 31; }
+	inline virtual uint64_t rating(uint64_t example) { return example >> 0 & 15; }
 	
 private:
 	uint64_t data[9029516];
@@ -38,7 +38,7 @@ private:
 	uint64_t testing_data[970538];
 	uint64_t testing_index[69878];
 	uint64_t extra_data[9029516];
-	uint64_t extra_index[10411];
+	uint64_t extra_index[10677];
 };
 
 #endif /* DATASET_MOVIELENS_H_ */

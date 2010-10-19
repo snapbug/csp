@@ -29,17 +29,6 @@ int CSP_generator_other_greedy::number_times_cmp(const void *a, const void *b)
 }
 
 /*
-	CSP_GENERATOR_OTHER_GREEDY::MOVIE_ID_SEARCH()
-	---------------------------------------------
-*/
-int CSP_generator_other_greedy::movie_id_search(const void *a, const void *b)
-{
-	uint64_t key = *(uint64_t *)a;
-	uint64_t item = (*(uint64_t *)b) >> 15 & 32767;
-	return (key > item) - (key < item);
-}
-
-/*
 	CSP_GENERATOR_OTHER_GREEDY::NEXT_MOVIE()
 	----------------------------------------
 */

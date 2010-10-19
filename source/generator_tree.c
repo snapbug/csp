@@ -104,7 +104,12 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		{
 			most_greedy[i].included = FALSE;
 			most_greedy[i].movie_id = i;
+
+#ifdef ML
+			history[i] = dataset->number_items << 4;
+#else
 			history[i] = dataset->number_items << 15;
+#endif
 		}
 		
 		for (i = 0; i < dataset->number_users; i++)
@@ -124,7 +129,11 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		Update history for the last item
 	*/
 	if (which_one > 0)
+#ifdef ML
+		history[which_one - 1] = (most_greedy[which_one - 1].movie_id << 4) | (key ? dataset->rating(key) : 0);
+#else
 		history[which_one - 1] = (most_greedy[which_one - 1].movie_id << 15) | (key ? dataset->rating(key) : 0);
+#endif
 	
 	/*
 		If we've replaced an older filter, add back the people that were affected by the old filter
