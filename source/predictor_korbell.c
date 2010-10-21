@@ -34,7 +34,7 @@
 	CSP_PREDICTOR_KORBELL::CSP_PREDICTOR_KORBELL()
 	----------------------------------------------
 */
-CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters, CSP_param_block *params) : CSP_predictor(dataset), coraters(coraters), params(params), k(k)
+CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters, CSP_param_block *params) : CSP_predictor(dataset), params(params), coraters(coraters), k(k)
 {
 	uint64_t i, min, max, movie, user, rating, day;
 	uint64_t *item_ratings, *user_ratings;
@@ -380,12 +380,13 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		}
 	}
 	
-#define XX 0
-#define X 1
-#define XY 2
-#define Y 3
-#define YY 4
-#define corr(a, b) (((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + XY] / coraters[tri_offset(a, b, dataset->number_items)]) - ((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + X] / coraters[tri_offset(a, b, dataset->number_items)]) * (correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + Y] / coraters[tri_offset(a, b, dataset->number_items)]))) / (sqrt((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + XX] / coraters[tri_offset(a, b, dataset->number_items)]) - pow(correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + X] / coraters[tri_offset(a, b, dataset->number_items)], 2)) * sqrt((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + YY] / coraters[tri_offset(a, b, dataset->number_items)]) - pow(correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + Y] / coraters[tri_offset(a, b, dataset->number_items)], 2))))
+#ifdef ML
+	#define XX 0
+	#define X 1
+	#define XY 2
+	#define Y 3
+	#define YY 4
+	#define corr(a, b) (((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + XY] / coraters[tri_offset(a, b, dataset->number_items)]) - ((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + X] / coraters[tri_offset(a, b, dataset->number_items)]) * (correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + Y] / coraters[tri_offset(a, b, dataset->number_items)]))) / (sqrt((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + XX] / coraters[tri_offset(a, b, dataset->number_items)]) - pow(correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + X] / coraters[tri_offset(a, b, dataset->number_items)], 2)) * sqrt((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + YY] / coraters[tri_offset(a, b, dataset->number_items)]) - pow(correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + Y] / coraters[tri_offset(a, b, dataset->number_items)], 2))))
 	
 	double *correlation_intermediates = new double[5 * (tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1)];
 	for (i = 0; i < 5 * tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1; i++)
@@ -433,6 +434,7 @@ correlation_intermediates[(5 * tri_offset(movie, other, dataset->number_items)) 
 			fwrite(&corr_byte, sizeof(corr_byte), 1, out);
 		}
 	fprintf(stderr, "\nWrote out correlations!\n");
+#endif
 	
 	/*
 		Load correlations.
@@ -447,6 +449,7 @@ correlation_intermediates[(5 * tri_offset(movie, other, dataset->number_items)) 
 	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, correlation_file);
 	fprintf(stderr, "done.\n"); fflush(stderr);
 	
+#ifdef ML
 	double residual_i, residual_j;
 	double *abar_tri_d = new double[tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items)];
 	
@@ -486,7 +489,10 @@ correlation_intermediates[(5 * tri_offset(movie, other, dataset->number_items)) 
 				abar_tri_d[tri_offset(movie, other, dataset->number_items)] = 0;
 		}
 	}
-	FILE *abar = fopen("./data/ml.100k.abar.byte", "wb");
+#endif
+	FILE *abar;
+#ifdef ML
+	abar = fopen("./data/ml.100k.abar.byte", "wb");
 	int8_t abar_byte;
 	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items); i++)
 	{
@@ -510,6 +516,7 @@ correlation_intermediates[(5 * tri_offset(movie, other, dataset->number_items)) 
 	fwrite(abar_dia_d, sizeof(*abar_dia_d), dataset->number_items, abar);
 	fclose(abar);
 	fprintf(stderr, "done.\n"); fflush(stderr);
+#endif
 	
 	/*
 		Load pre-calculated A-bar.

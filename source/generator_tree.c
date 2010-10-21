@@ -42,7 +42,6 @@ CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *pred
 			sum = 0;
 			for (k = 0; k < dataset->number_users; k++)
 				sum += users[k] ? 1 : 0;
-	NUMCONSIDER = 1;
 			
 			if (nd && (j & 1))
 				printf("%d %lu %lu\n", j & 2 ? 2 : 1, nm, sum); // prints either high seeing, or low seeing
@@ -90,7 +89,7 @@ int CSP_generator_tree::movie_id_cmp(const void *a, const void *b)
 */
 uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
-	uint64_t i, j, other_user, count, rating, movie_index, sum = 0;
+	uint64_t i, j, other_user, count, rating, movie_index;
 	uint64_t *movie_ratings;
 	uint64_t replaced_filter = which_one > history_len;
 	uint64_t other_parity, my_parity;
