@@ -3,6 +3,7 @@
 	-------------------
 */
 
+#include "param_block.h"
 #include "predictor.h"
 #include "param_block.h"
 
@@ -42,6 +43,7 @@ private:
 	double user_time_user_alpha, user_time_movie_alpha, movie_time_movie_alpha, movie_time_user_alpha;
 #endif
 	
+	CSP_param_block *params;
 	uint32_t *coraters;
 	uint64_t k;
 	double alpha, beta, scale;

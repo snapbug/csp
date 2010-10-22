@@ -21,16 +21,16 @@ CSP_dataset_movielens::CSP_dataset_movielens(CSP_param_block *params) : CSP_data
 	minimum = 1;
 	maximum = 5;
 	
-	number_items = 10411;
-	number_users = 69878;
-	number_ratings = 9029516;
-	number_test_ratings = 970538;
+	number_items = 1682;
+	number_users = 943;
+	number_ratings = 90404;
+	number_test_ratings = 9596;
 	
 	/*
 		Setup the filenames correctly.
 	*/
-	sprintf(training_filename, "./data/ml.user.data");
-	sprintf(testing_filename, "./data/ml.user.test");
+	sprintf(training_filename, "./data/ml.100k.user.data");
+	sprintf(testing_filename, "./data/ml.100k.user.test");
 	
 	/*
 		Now actually load the data.
@@ -49,7 +49,7 @@ CSP_dataset_movielens::CSP_dataset_movielens(CSP_param_block *params) : CSP_data
 	{
 		loaded_extra = TRUE;
 		fprintf(stderr, "Loading extra data... "); fflush(stderr);
-		sprintf(training_filename, "./data/ml.movie.data");
+		sprintf(training_filename, "./data/ml.100k.movie.data");
 		size = fread(&extra_data, sizeof(*extra_data), number_ratings, fopen(training_filename, "rb"));
 		size = fread(&extra_index, sizeof(*extra_index), number_items, fopen(strcat(training_filename, ".idx"), "rb"));
 		fprintf(stderr, "done.\n"); fflush(stderr);

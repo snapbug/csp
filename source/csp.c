@@ -11,6 +11,7 @@
 #include <omp.h>
 #include "csp_types.h"
 #include "dataset_netflix.h"
+//#include "dataset_netflix_orig.h"
 #include "dataset_movielens.h"
 #include "generator_factory.h"
 #include "predictor_factory.h"
@@ -23,7 +24,11 @@
 int movie_search(const void *a, const void *b)
 {
 	uint64_t key = *(uint64_t *)a;
+#ifdef ML
+	uint64_t item = (*(uint64_t *)b) >> 4 & 16383;
+#else
 	uint64_t item = (*(uint64_t *)b) >> 15 & 32767;
+#endif
 	return (key > item) - (key < item);
 }
 
@@ -50,7 +55,7 @@ int main(int argc, char **argv)
 	{
 		case CSP_param_block::D_NETFLIX: dataset = new CSP_dataset_netflix(params); break;
 		case CSP_param_block::D_MOVIELENS: dataset = new CSP_dataset_movielens(params); break;
-		default: exit(printf("Invalid dataset\n"));
+		default: exit(printf("Unknown dataset\n"));
 	}
 	
 	/*
@@ -67,24 +72,21 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			uint64_t i, j, k, this_count, that_count, index;
-			uint64_t *this_one, *that_one;
-			
-			for (i= 0; i < dataset->number_items; i++)
+			uint64_t i, j, k;
+			for (i = 0; i < dataset->number_items; i++)
 			{
 				if (i % 100 == 0) { fprintf(stderr, "\r%5lu", i); fflush(stderr); }
-				this_one = dataset->ratings_for_movie(i, &this_count);
-				for (j = 0; j < this_count; j++)
+				ratings = dataset->ratings_for_movie(i, &count);
+				for (j = 0; j < count; j++)
 				{
-					that_one = dataset->ratings_for_user(dataset->user(this_one[j]), &that_count);
-					for (k = 0; k < that_count; k++)
-						if (i < dataset->movie(that_one[k]))
-							coraters[tri_offset(i, dataset->movie(that_one[k]), dataset->number_items)]++;
+					key = dataset->ratings_for_user(dataset->user(ratings[j]), &user);
+					for (k = 0; k < user; k++)
+						if (i < dataset->movie(key[k]))
+							coraters[tri_offset(i, dataset->movie(key[k]), dataset->number_items)]++;
 				}
 			}
-			printf("FOTR - TTT: %u\n", coraters[tri_offset(4899, 5852, dataset->number_items)]);
-			printf("FOTR - ROTK: %u\n", coraters[tri_offset(4899, 7039, dataset->number_items)]);
-			printf("TTT - ROTK: %u\n", coraters[tri_offset(5852, 7039, dataset->number_items)]);
+			fwrite(coraters, sizeof(*coraters), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/ml.100k.coraters.item", "wb"));
+			fprintf(stderr, "\n");
 		}
 	}
 	
@@ -151,6 +153,7 @@ int main(int argc, char **argv)
 			Get the ratings for this user, and then remove them all from the dataset.
 		*/
 		ratings = dataset->ratings_for_user(user, &count);
+		
 		for (rating = 0; rating < count; rating++)
 		{
 			dataset->remove_rating(&ratings[rating]);
@@ -219,8 +222,6 @@ int main(int argc, char **argv)
 				*/
 				last_presented_and_seen = presented;
 			}
-			if (presented % 25 == 0)
-				printf("%lu %lu %f\n", user, presented, last_prediction_error);
 			
 			/*
 				Move onto the next movie.
@@ -236,6 +237,16 @@ int main(int argc, char **argv)
 				count_presented[presented]++;
 			}
 		}
+		
+		/*
+			Go back and re-add ratings that we didn't find.
+		*/
+		for (rating = 0; rating < count; rating++)
+			if (!dataset->included(ratings[rating]))
+			{
+				dataset->add_rating(&ratings[rating]);
+				predictor->added_rating(&ratings[rating]);
+			}
 		
 		/*
 			Print out the AUC for this user for this presentation list.

@@ -34,14 +34,18 @@
 	CSP_PREDICTOR_KORBELL::CSP_PREDICTOR_KORBELL()
 	----------------------------------------------
 */
-CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters, CSP_param_block *params) : CSP_predictor(dataset), coraters(coraters), k(k), params(params)
+CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, uint32_t *coraters, CSP_param_block *params) : CSP_predictor(dataset), params(params), coraters(coraters), k(k)
 {
 	uint64_t i, min, max, movie, user, rating, day;
 	uint64_t *item_ratings, *user_ratings;
 	int64_t index;
 	double prediction;
 	
-	global_average = 3.6;
+	item_ratings = dataset->get_ratings(&max);
+	global_average = 0;
+	for (rating = 0; rating < max; rating++)
+		global_average += dataset->rating(item_ratings[rating]);
+	global_average /= max;
 	min = max = 1;
 
 	/*
@@ -59,6 +63,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	user_movie_support_alpha = 90;
 	movie_user_average_alpha = 50;
 	movie_user_support_alpha = 50;
+	
 	scale = 127.0;
 	alpha = 5.0;
 	beta = 500;
@@ -375,34 +380,159 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 		}
 	}
 	
+#ifdef ML
+	#define XX 0
+	#define X 1
+	#define XY 2
+	#define Y 3
+	#define YY 4
+	#define corr(a, b) (((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + XY] / coraters[tri_offset(a, b, dataset->number_items)]) - ((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + X] / coraters[tri_offset(a, b, dataset->number_items)]) * (correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + Y] / coraters[tri_offset(a, b, dataset->number_items)]))) / (sqrt((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + XX] / coraters[tri_offset(a, b, dataset->number_items)]) - pow(correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + X] / coraters[tri_offset(a, b, dataset->number_items)], 2)) * sqrt((correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + YY] / coraters[tri_offset(a, b, dataset->number_items)]) - pow(correlation_intermediates[(5 * tri_offset(a, b, dataset->number_items)) + Y] / coraters[tri_offset(a, b, dataset->number_items)], 2))))
+	
+	double *correlation_intermediates = new double[5 * (tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1)];
+	for (i = 0; i < 5 * tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1; i++)
+		correlation_intermediates[i] = 0;
+	
+	double ri, rj;
+	uint64_t other, j, user_count, item_count;
+	for (movie = 0; movie < dataset->number_items; movie++)
+	{
+		if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
+		item_ratings = dataset->ratings_for_movie(movie, &item_count);
+		for (i = 0; i < item_count; i++)
+		{
+			ri = dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), dataset->movie(item_ratings[i]), dataset->day(item_ratings[i]));
+			
+			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
+			/*
+				For every movie they saw.
+			*/
+			for (j = 0; j < user_count; j++)
+			{
+				other = dataset->movie(user_ratings[j]);
+				if (movie < other)
+				{
+					/*
+						Update the intermediate values.
+					*/
+					rj = dataset->rating(user_ratings[j]) - predict_statistics(dataset->user(user_ratings[j]), other, dataset->day(user_ratings[j]));
+					
+correlation_intermediates[(5 * tri_offset(movie, other, dataset->number_items)) + XX] += ri * ri;
+correlation_intermediates[(5 * tri_offset(movie, other, dataset->number_items)) + X] += ri;
+correlation_intermediates[(5 * tri_offset(movie, other, dataset->number_items)) + XY] += ri * rj;
+correlation_intermediates[(5 * tri_offset(movie, other, dataset->number_items)) + Y] += rj;
+correlation_intermediates[(5 * tri_offset(movie, other, dataset->number_items)) + YY] += rj * rj;
+				}
+			}
+		}
+	}
+	FILE *out = fopen("./data/ml.100k.correlations.byte", "wb");
+	int8_t corr_byte;
+	for (i = 0; i < dataset->number_items; i++)
+		for (j = i + 1; j < dataset->number_items; j++)
+		{
+			corr_byte = (int8_t)((corr(i, j) * scale * coraters[tri_offset(i, j, dataset->number_items)]) / (coraters[tri_offset(i, j, dataset->number_items)] + 5.0));
+			fwrite(&corr_byte, sizeof(corr_byte), 1, out);
+		}
+	fprintf(stderr, "\nWrote out correlations!\n");
+#endif
+	
 	/*
 		Load correlations.
 	*/
+	FILE *correlation_file;
 	if (params->dataset_chosen == CSP_param_block::D_NETFLIX)
-	{
-		fprintf(stderr, "Loading correlations from file... "); fflush(stderr);
-		index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.correlations.byte", "rb"));
-		fprintf(stderr, "done.\n"); fflush(stderr);
-	}
+		correlation_file = fopen("./data/netflix.correlations.byte", "rb");
 	else
+		correlation_file = fopen("./data/ml.100k.correlations.byte", "rb");
+	
+	fprintf(stderr, "Loading correlations from file... "); fflush(stderr);
+	index = fread(correlation, sizeof(*correlation), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, correlation_file);
+	fprintf(stderr, "done.\n"); fflush(stderr);
+	
+#ifdef ML
+	double residual_i, residual_j;
+	double *abar_tri_d = new double[tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items)];
+	
+	fprintf(stderr, "Calculating A bar...\n"); fflush(stderr);
+	for (movie = 0; movie < dataset->number_items; movie++)
 	{
-		exit(printf("Haven't calculated correlations for MovieLens\n"));
+		if (movie % 100 == 0) { fprintf(stderr, "\r%5lu", movie); fflush(stderr); }
+		item_ratings = dataset->ratings_for_movie(movie, &item_count);
+		/*
+			For everyone that watched that movie.
+		*/
+		for (i = 0; i < item_count; i++)
+		{
+			residual_i = dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), movie, dataset->day(item_ratings[i]));
+			
+			user_ratings = dataset->ratings_for_user(dataset->user(item_ratings[i]), &user_count);
+			/*
+				For every movie they saw.
+			*/
+			for (j = 0; j < user_count; j++)
+			{
+				other = dataset->movie(user_ratings[j]);
+				if (movie < other)
+				{
+					/*
+						Update the intermediate values.
+					*/
+					residual_j = dataset->rating(user_ratings[j]) - predict_statistics(dataset->user(user_ratings[j]), other, dataset->day(user_ratings[j]));
+					abar_tri_d[tri_offset(movie, other, dataset->number_items)] += residual_i * residual_j;
+				}
+			}
+		}
+		for (other = movie + 1; other < dataset->number_items; other++)
+		{
+			abar_tri_d[tri_offset(movie, other, dataset->number_items)] /= coraters[tri_offset(movie, other, dataset->number_items)];
+			if (isnan(abar_tri_d[tri_offset(movie, other, dataset->number_items)]) || isinf(abar_tri_d[tri_offset(movie, other, dataset->number_items)]))
+				abar_tri_d[tri_offset(movie, other, dataset->number_items)] = 0;
+		}
 	}
+#endif
+	FILE *abar;
+#ifdef ML
+	abar = fopen("./data/ml.100k.abar.byte", "wb");
+	int8_t abar_byte;
+	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items); i++)
+	{
+		abar_byte = (int8_t)(abar_tri_d[i] * scale);
+		fwrite(&abar_byte, sizeof(abar_byte), 1, abar);
+	}
+	fclose(abar);
+	
+	float *abar_dia_d = new float[dataset->number_items];
+	fprintf(stderr, "\rnon-diagonal done... "); fflush(stderr);
+	for (movie = 0; movie < dataset->number_items; movie++)
+	{
+		item_ratings = dataset->ratings_for_movie(movie, &item_count);
+		for (i = 0; i < item_count; i++)
+			abar_dia_d[movie] += pow(dataset->rating(item_ratings[i]) - predict_statistics(dataset->user(item_ratings[i]), movie, dataset->day(item_ratings[i])), 2);
+		abar_dia_d[movie] /= item_count;
+		if (isnan(abar_dia_d[movie]) || isinf(abar_dia_d[movie]))
+			abar_dia_d[movie] = 0;
+	}
+	abar = fopen("./data/ml.100k.abar_dia", "wb");
+	fwrite(abar_dia_d, sizeof(*abar_dia_d), dataset->number_items, abar);
+	fclose(abar);
+	fprintf(stderr, "done.\n"); fflush(stderr);
+#endif
 	
 	/*
 		Load pre-calculated A-bar.
 	*/
+	fprintf(stderr, "Loading abar from file... ");
 	if (params->dataset_chosen == CSP_param_block::D_NETFLIX)
-	{
-		fprintf(stderr, "Loading abar from file... ");
-		fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, fopen("./data/netflix.abar_tri.byte", "rb"));
-		fread(abar_dia, sizeof(*abar_dia), dataset->number_items, fopen("./data/netflix.abar_dia.item.residual", "rb"));
-		fprintf(stderr, "done.\n"); fflush(stderr);
-	}
+		abar = fopen("./data/netflix.abar_tri.byte", "rb");
 	else
-	{
-		exit(printf("Haven't calculated a-bar for MovieLens\n"));
-	}
+		abar = fopen("./data/ml.100k.abar.byte", "rb");
+	fread(abar_tri, sizeof(*abar_tri), tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1, abar);
+	if (params->dataset_chosen == CSP_param_block::D_NETFLIX)
+		abar = fopen("./data/netflix.abar_dia.item.residual", "rb");
+	else
+		abar = fopen("./data/ml.100k.abar_dia", "rb");
+	fread(abar_dia, sizeof(*abar_dia), dataset->number_items, abar);
+	fprintf(stderr, "done.\n"); fflush(stderr);
 	
 	/*
 		Calculate average entries for A-bar.
@@ -411,6 +541,7 @@ CSP_predictor_korbell::CSP_predictor_korbell(CSP_dataset *dataset, uint64_t k, u
 	for (i = 0; i < tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1; i++)
 		bar_avg_tri += abar_tri[i] / scale;
 	bar_avg_tri /= tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items) + 1;
+	
 	for (i = 0; i < dataset->number_items; i++)
 		bar_avg_dia += abar_dia[i];
 	bar_avg_dia /= dataset->number_items;
@@ -476,9 +607,6 @@ void CSP_predictor_korbell::added_rating(uint64_t *key)
 */
 void CSP_predictor_korbell::removed_rating(uint64_t *key)
 {
-	if (dataset->included(key))
-		return;
-	
 	uint64_t movie = dataset->movie(key), user = dataset->user(key), rating = dataset->rating(key);
 	double pred = global_average + (movie_effect[movie] / (movie_counts[movie] + movie_alpha)) + (user_effect[user] / (user_counts[user] + user_alpha)) + user_movie_average(user, movie);
 	
