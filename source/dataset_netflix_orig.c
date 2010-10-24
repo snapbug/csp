@@ -36,11 +36,11 @@ CSP_dataset_netflix_orig::CSP_dataset_netflix_orig(CSP_param_block *params) : CS
 	*/
 	fprintf(stderr, "Loading training data... "); fflush(stderr);
 	size = fread(&data, sizeof(*data), number_ratings, fopen(training_filename, "rb"));
-	size = fread(&index, sizeof(*index), number_users, fopen(strcat(training_filename, ".index"), "rb"));
+	size = fread(&index, sizeof(*index), number_users, fopen(strcat(training_filename, ".idx"), "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
 	fprintf(stderr, "Loading testing data... "); fflush(stderr);
 	size = fread(&testing_data, sizeof(*testing_data), number_test_ratings, fopen(testing_filename, "rb"));
-	size = fread(&testing_index, sizeof(*testing_index), number_users, fopen(strcat(testing_filename, ".index"), "rb"));
+	size = fread(&testing_index, sizeof(*testing_index), number_users, fopen(strcat(testing_filename, ".idx"), "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
 	
 	if (params->load_extra)
@@ -49,7 +49,7 @@ CSP_dataset_netflix_orig::CSP_dataset_netflix_orig(CSP_param_block *params) : CS
 		fprintf(stderr, "Loading extra data... "); fflush(stderr);
 		sprintf(training_filename, "./data/orig.netflix.movie");
 		size = fread(&extra_data, sizeof(*extra_data), number_ratings, fopen(training_filename, "rb"));
-		size = fread(&extra_index, sizeof(*extra_index), number_items, fopen(strcat(training_filename, ".index"), "rb"));
+		size = fread(&extra_index, sizeof(*extra_index), number_items, fopen(strcat(training_filename, ".idx"), "rb"));
 		fprintf(stderr, "done.\n"); fflush(stderr);
 	}
 }

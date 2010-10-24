@@ -65,8 +65,6 @@ private:
 		uint64_t data;
 	} neighbour;
 	
-	CSP_param_block *params;
-	
 };
 
 #endif /* PREDICTOR_KORBELL_H_ */

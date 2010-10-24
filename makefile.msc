@@ -11,6 +11,7 @@ CC = @cl
 
 PARTS = \
 	$(OBJDIR)\dataset_netflix.obj \
+	$(OBJDIR)\dataset_netflix_orig.obj \
 	$(OBJDIR)\dataset_movielens.obj \
 	$(OBJDIR)\generator_distance.obj \
 	$(OBJDIR)\generator_entropy.obj \
