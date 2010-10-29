@@ -2,7 +2,6 @@
 	METRIC_RMSE.C
 	-------------
 */
-
 #include <math.h>
 #include "metric_rmse.h"
 
@@ -12,19 +11,7 @@
 */
 CSP_metric_rmse::CSP_metric_rmse(CSP_dataset *dataset, CSP_predictor *predictor) : CSP_metric(dataset, predictor)
 {
-//	predictions_made = 0;
-//	sum_sqaured_error = 0;
 }
-
-/*
-	CSP_METRIC_RMSE::UPDATE()
-	-------------------------
-*/
-//void CSP_metric_rmse::update(double predicted, double actual)
-//{
-//	sum_sqaured_error += pow(predicted - actual, 2);
-//	predictions_made++;
-//}
 
 /*
 	CSP_METRIC_RMSE::SCORE()
@@ -46,13 +33,3 @@ double CSP_metric_rmse::score(uint64_t user)
 	}
 	return sqrt(sum_squared_error / count);
 }
-
-/*
-	CSP_METRIC_RMSE::RESET()
-	------------------------
-*/
-//void CSP_metric_rmse::reset(void)
-//{
-//	sum_sqaured_error = 0;
-//	predictions_made = 0;
-//}

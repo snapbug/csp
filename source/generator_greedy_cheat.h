@@ -10,7 +10,11 @@
 #define GENERATOR_GREEDY_CHEAT_H_
 
 #ifndef NUMDONE
-	#define NUMDONE 10
+	#ifdef ML
+		#define NUMDONE 10
+	#else
+		#define NUMDONE 11
+	#endif
 #endif
 
 static uint64_t greedy_movies[] = {

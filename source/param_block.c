@@ -187,20 +187,20 @@ void CSP_param_block::prediction(char *which)
 */
 void CSP_param_block::metrics(char *which)
 {
-	do
-	{
+//	do
+//	{
 		switch (*which)
 		{
 			case 'n': metrics_to_use = CSP_metric_factory::NONE; break;
-			case 'm': metrics_to_use |= CSP_metric_factory::MAE; break;
-			case 'M': metrics_to_use |= CSP_metric_factory::NMAE; break;
-			case 'r': metrics_to_use |= CSP_metric_factory::RMSE; break;
-			case 'R': metrics_to_use |= CSP_metric_factory::NRMSE; break;
+			case 'm': metrics_to_use = CSP_metric_factory::MAE; break;
+			case 'M': metrics_to_use = CSP_metric_factory::NMAE; break;
+			case 'r': metrics_to_use = CSP_metric_factory::RMSE; break;
+			case 'R': metrics_to_use = CSP_metric_factory::NRMSE; break;
 			default: exit(printf("Unknown metric: '%c'\n", *which));
 		}
-		which++;
-	}
-	while (*which != '\0');
+//		which++;
+//	}
+//	while (*which != '\0');
 }
 
 /*
