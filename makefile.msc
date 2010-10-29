@@ -11,6 +11,8 @@ CC = @cl
 
 PARTS = \
 	$(OBJDIR)\dataset_netflix.obj \
+	$(OBJDIR)\dataset_netflix_orig.obj \
+	$(OBJDIR)\dataset_movielens.obj \
 	$(OBJDIR)\generator_distance.obj \
 	$(OBJDIR)\generator_entropy.obj \
 	$(OBJDIR)\generator_greedy_cheat.obj \
@@ -19,6 +21,7 @@ PARTS = \
 	$(OBJDIR)\generator_other_greedy.obj \
 	$(OBJDIR)\generator_other_greedy_pers.obj \
 	$(OBJDIR)\generator_popularity.obj \
+	$(OBJDIR)\generator_predictor.obj \
 	$(OBJDIR)\generator_random.obj \
 	$(OBJDIR)\generator_tree.obj \
 	$(OBJDIR)\metric_mae.obj \

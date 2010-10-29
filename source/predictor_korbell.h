@@ -5,6 +5,7 @@
 
 #include "param_block.h"
 #include "predictor.h"
+#include "param_block.h"
 
 #ifndef PREDICTOR_KORBELL_H_
 #define PREDICTOR_KORBELL_H_

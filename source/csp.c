@@ -65,7 +65,6 @@ int main(int argc, char **argv)
 	if (params->generation_method == CSP_generator_factory::BAYESIAN || params->generation_method == CSP_generator_factory::OTHER_GREEDY_PERS || params->prediction_method == CSP_predictor_factory::KORBELL)
 	{
 		coraters = new uint32_t[(tri_offset(dataset->number_items - 2, dataset->number_items - 1, dataset->number_items)) + 1];
-		
 		if (params->dataset_chosen == CSP_param_block::D_NETFLIX)
 		{
 			fprintf(stderr, "Loading coraters from file... "); fflush(stderr);

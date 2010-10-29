@@ -1,6 +1,6 @@
 /*
 	DATASET_MOVIELENS.C
-	-----------------
+	-------------------
 */
 
 #include <stdio.h>
@@ -39,6 +39,7 @@ CSP_dataset_movielens::CSP_dataset_movielens(CSP_param_block *params) : CSP_data
 	size = fread(&data, sizeof(*data), number_ratings, fopen(training_filename, "rb"));
 	size = fread(&index, sizeof(*index), number_users, fopen(strcat(training_filename, ".idx"), "rb"));
 	fprintf(stderr, "done.\n"); fflush(stderr);
+	
 	fprintf(stderr, "Loading testing data... "); fflush(stderr);
 	size = fread(&testing_data, sizeof(*testing_data), number_test_ratings, fopen(testing_filename, "rb"));
 	size = fread(&testing_index, sizeof(*testing_index), number_users, fopen(strcat(testing_filename, ".idx"), "rb"));
