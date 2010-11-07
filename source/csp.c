@@ -140,8 +140,6 @@ int main(int argc, char **argv)
 	//for (user = 0; user < dataset->number_users; user++)
 	{
 		user = strtoull(argv[last_param], (char **)NULL, 10);
-		//if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		//fprintf(stderr, "\r%6lu", user); fflush(stderr);
 		
 		/*
 			Reset things for this user.
@@ -164,19 +162,18 @@ int main(int argc, char **argv)
 		/*
 			Before we add any ratings, we should see how well we can do.
 		*/
-		last_prediction_error = metric->score(user);
+		if (stats->stats & CSP_stats::ERROR_RATED || stats->stats & CSP_stats::ERROR_PRESENTED)
+			last_prediction_error = metric->score(user);
 		
-		if (stats->stats & CSP_stats::ERROR_RATED)
-			error_rated[number_seen] += last_prediction_error;
-		if (stats->stats & CSP_stats::ERROR_PRESENTED)
-			error_presented[presented] += last_prediction_error;
+		error_rated[number_seen] += last_prediction_error;
+		error_presented[presented] += last_prediction_error;
 		
 		/*
 			While the user can still add more ratings, and we can still present some.
 		*/
 		while (number_seen < count && presented <= present_max)
 		{
-			if (/*stats->stats && */presented % 100 == 0){ fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count - 1, presented); fflush(stderr); }
+			if (presented % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count - 1, presented); fflush(stderr); }
 			
 			/*
 				Get the next movie to present.
@@ -201,13 +198,13 @@ int main(int argc, char **argv)
 				/*
 					Now check our error for this user.
 				*/
-				last_prediction_error = metric->score(user);
+				if (stats->stats & CSP_stats::ERROR_RATED || stats->stats & CSP_stats::ERROR_PRESENTED)
+					last_prediction_error = metric->score(user);
 				
 				/*
 					Update the error as function of number rated.
 				*/
-				if (stats->stats & CSP_stats::ERROR_RATED)
-					error_rated[number_seen] += last_prediction_error;
+				error_rated[number_seen] += last_prediction_error;
 				
 				/*
 					Make a note of the last movie we saw, for AUC
