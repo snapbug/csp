@@ -21,7 +21,7 @@ static uint64_t greedy_movies[] = {
 #ifdef ML
 	#include "greedy.mae.ml.txt"
 #else
-	#ifndef MAE
+	#ifdef RMSE
 		#warning "Using RMSE"
 		#include "greedy.rmse.nf.txt"
 	#else

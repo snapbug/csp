@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 	uint64_t last_param;
 	double last_prediction_error, auc;
 	double *error_presented, *error_rated;
-	uint64_t present_max = 220;
+	uint64_t present_max;// = 220;
 	uint64_t number_users;
 	
 	last_param = params->parse();
@@ -59,6 +59,7 @@ int main(int argc, char **argv)
 		default: exit(printf("Unknown dataset\n"));
 	}
 	
+	present_max = dataset->number_items;
 	/*
 		Load the precalculated co-raters if necessary.
 	*/
@@ -173,7 +174,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count && presented <= present_max)
 		{
-			if (presented % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count - 1, presented); fflush(stderr); }
+			if (presented % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count, presented); fflush(stderr); }
 			
 			/*
 				Get the next movie to present.
@@ -222,6 +223,7 @@ int main(int argc, char **argv)
 			*/
 			error_presented[presented] += last_prediction_error;
 		}
+		printf("F %lu %lu\n", count, presented);
 		
 		/*
 			Go back and re-add ratings that we didn't find.
