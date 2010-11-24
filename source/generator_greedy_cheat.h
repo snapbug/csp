@@ -10,14 +10,24 @@
 #define GENERATOR_GREEDY_CHEAT_H_
 
 #ifndef NUMDONE
-	#define NUMDONE 10
+	#ifdef ML
+		#define NUMDONE 10
+	#else
+		#define NUMDONE 11
+	#endif
 #endif
 
 static uint64_t greedy_movies[] = {
 #ifdef ML
-	#include "greedy.ml.10.txt"
+	#include "greedy.mae.ml.txt"
 #else
-	#include "greedy.choices.10.txt"
+	#ifdef RMSE
+		#warning "Using RMSE"
+		#include "greedy.rmse.nf.txt"
+	#else
+		#warning "Using MAE"
+		#include "greedy.mae.nf.txt"
+	#endif
 #endif
 };
 

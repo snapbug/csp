@@ -46,11 +46,13 @@ int main(int argc, char **argv)
 	uint64_t last_param;
 	double last_prediction_error, auc;
 	double *error_presented, *error_rated;
-	uint64_t *count_presented, *count_rated;
-	uint64_t present_max = 220;
+	uint64_t present_max;// = 220;
+	uint64_t number_users;
 	
 	last_param = params->parse();
+	number_users = argc - last_param;
 	stats = new CSP_stats(params->stats);
+	
 	switch (params->dataset_chosen)
 	{
 		case CSP_param_block::D_NETFLIX: dataset = new CSP_dataset_netflix(params); break;
@@ -59,6 +61,7 @@ int main(int argc, char **argv)
 		default: exit(printf("Unknown dataset\n"));
 	}
 	
+	present_max = dataset->number_items;
 	/*
 		Load the precalculated co-raters if necessary.
 	*/
@@ -104,7 +107,12 @@ int main(int argc, char **argv)
 		default: exit(puts("Unknown prediction method"));
 	}
 	
-	metric = new CSP_metric_mae(dataset, predictor);
+	switch (params->metrics_to_use)
+	{
+		case CSP_metric_factory::MAE: metric = new CSP_metric_mae(dataset, predictor); break;
+		case CSP_metric_factory::RMSE: metric = new CSP_metric_rmse(dataset, predictor); break;
+		default: exit(puts("Unknown metric selected"));
+	}
 	
 	switch (params->generation_method)
 	{
@@ -124,14 +132,9 @@ int main(int argc, char **argv)
 	
 	error_presented = new double[present_max + 1];
 	error_rated = new double[present_max + 1];
-	count_presented = new uint64_t[present_max + 1];
-	count_rated = new uint64_t[present_max + 1];
 	
 	for (item = 0; item <= present_max; item++)
-	{
 		error_presented[item] = error_rated[item] = 0;
-		count_presented[item] = count_rated[item] = 0;
-	}
 	
 	/*
 		For each user we're simulating a coldstart for. (Initial testee = 168)
@@ -140,8 +143,6 @@ int main(int argc, char **argv)
 	//for (user = 0; user < dataset->number_users; user++)
 	{
 		user = strtoull(argv[last_param], (char **)NULL, 10);
-		//if (user % 100 == 0) { fprintf(stderr, "\r%6lu", user); fflush(stderr); }
-		//fprintf(stderr, "\r%6lu", user); fflush(stderr);
 		
 		/*
 			Reset things for this user.
@@ -164,25 +165,18 @@ int main(int argc, char **argv)
 		/*
 			Before we add any ratings, we should see how well we can do.
 		*/
-		last_prediction_error = metric->score(user);
+		if (stats->stats & CSP_stats::ERROR_RATED || stats->stats & CSP_stats::ERROR_PRESENTED)
+			last_prediction_error = metric->score(user);
 		
-		if (stats->stats & CSP_stats::ERROR_RATED)
-		{
-			error_rated[number_seen] += last_prediction_error;
-			count_rated[number_seen]++;
-		}
-		if (stats->stats & CSP_stats::ERROR_PRESENTED)
-		{
-			error_presented[presented] += last_prediction_error;
-			count_presented[presented]++;
-		}
+		error_rated[number_seen] += last_prediction_error;
+		error_presented[presented] += last_prediction_error;
 		
 		/*
 			While the user can still add more ratings, and we can still present some.
 		*/
 		while (number_seen < count && presented <= present_max)
 		{
-			if (/*stats->stats && */presented % 100 == 0){ fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count - 1, presented); fflush(stderr); }
+			if (presented % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count, presented); fflush(stderr); }
 			
 			/*
 				Get the next movie to present.
@@ -207,16 +201,13 @@ int main(int argc, char **argv)
 				/*
 					Now check our error for this user.
 				*/
-				last_prediction_error = metric->score(user);
+				if (stats->stats & CSP_stats::ERROR_RATED || stats->stats & CSP_stats::ERROR_PRESENTED)
+					last_prediction_error = metric->score(user);
 				
 				/*
 					Update the error as function of number rated.
 				*/
-				if (stats->stats & CSP_stats::ERROR_RATED)
-				{
-					error_rated[number_seen] += last_prediction_error;
-					count_rated[number_seen]++;
-				}
+				error_rated[number_seen] += last_prediction_error;
 				
 				/*
 					Make a note of the last movie we saw, for AUC
@@ -232,12 +223,9 @@ int main(int argc, char **argv)
 			/*
 				Update the error as function of number presented.
 			*/
-			if (stats->stats & CSP_stats::ERROR_PRESENTED)
-			{
-				error_presented[presented] += last_prediction_error;
-				count_presented[presented]++;
-			}
+			error_presented[presented] += last_prediction_error;
 		}
+		printf("F %lu %lu\n", count, presented);
 		
 		/*
 			Go back and re-add ratings that we didn't find.
@@ -260,27 +248,19 @@ int main(int argc, char **argv)
 			Fill in the 'missing' values to give smooth graphs.
 		*/
 		for (item = number_seen + 1; item <= present_max; item++)
-			if (stats->stats & CSP_stats::ERROR_RATED)
-			{
-				error_rated[item] += last_prediction_error;
-				count_rated[item]++;
-			}
+			error_rated[item] += last_prediction_error;
 		
 		for (item = presented + 1; item <= present_max; item++)
-			if (stats->stats & CSP_stats::ERROR_PRESENTED)
-			{
-				error_presented[item] += last_prediction_error;
-				count_presented[item]++;
-			}
+			error_presented[item] += last_prediction_error;
 	}
 	
 	fprintf(stderr, "\n");
 	if (stats->stats & CSP_stats::ERROR_PRESENTED)
 		for (item = 0; item <= present_max; item++)
-			printf("P %lu %f\n", item, error_presented[item] / count_presented[item]);
+			printf("P %lu %f\n", item, error_presented[item] / number_users);
 	if (stats->stats & CSP_stats::ERROR_RATED)
 		for (item = 0; item <= present_max; item++)
-			printf("R %lu %f\n", item, error_rated[item] / count_rated[item]);
+			printf("R %lu %f\n", item, error_rated[item] / number_users);
 	
 	/*
 		Clean up.

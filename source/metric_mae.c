@@ -2,10 +2,7 @@
 	METRIC_MAE.C
 	------------
 */
-
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "metric_mae.h"
 
 /*
@@ -14,19 +11,7 @@
 */
 CSP_metric_mae::CSP_metric_mae(CSP_dataset *dataset, CSP_predictor *predictor) : CSP_metric(dataset, predictor)
 {
-//	predictions_made = 0;
-//	sum_absolute_error = 0;
 }
-
-/*
-	CSP_METRIC_MAE::UPDATE()
-	------------------------
-*/
-//void CSP_metric_mae::update(double predicted, double actual)
-//{
-//	sum_absolute_error += fabs(predicted - actual);
-//	predictions_made++;
-//}
 
 /*
 	CSP_METRIC_MAE::SCORE()
@@ -48,13 +33,3 @@ double CSP_metric_mae::score(uint64_t user)
 	}
 	return sum_absolute_error / count;
 }
-
-/*
-	CSP_METRIC_MAE::RESET()
-	-----------------------
-*/
-//void CSP_metric_mae::reset(void)
-//{
-//	sum_absolute_error = 0;
-//	predictions_made = 0;
-//}

@@ -18,6 +18,10 @@ public:
 private:
 	static int entropy_cmp(const void *a, const void *b);
 	
+	uint64_t **movie_counts;
+	double *weights;
+	double sum_weights;
+	
 	typedef struct {
 		double entropy;
 		uint64_t ratings;
