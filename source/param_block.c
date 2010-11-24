@@ -59,9 +59,10 @@ void CSP_param_block::help(void)
 	
 	puts("DATASETS");
 	puts("--------");
-	puts("-d[mn]           Use the following dataset for testing:");
+	puts("-d[mnN]          Use the following dataset for testing:");
 	puts("   m             MovieLens 10M");
 	puts("   n             Netflix [default]");
+	puts("   N             Netflix original");
 	puts("-e               Don't load extra data (same data sorted by movie)");
 	puts("");
 	
@@ -134,6 +135,7 @@ void CSP_param_block::dataset(char *which)
 	{
 		case 'm': dataset_chosen = D_MOVIELENS; break;
 		case 'n': dataset_chosen = D_NETFLIX; break;
+		case 'N': dataset_chosen = D_NETFLIX_ORIG; break;
 		default: exit(printf("Unknown dataset: '%c'\n", *which));
 	}
 }

@@ -11,7 +11,7 @@
 #include <omp.h>
 #include "csp_types.h"
 #include "dataset_netflix.h"
-//#include "dataset_netflix_orig.h"
+#include "dataset_netflix_orig.h"
 #include "dataset_movielens.h"
 #include "generator_factory.h"
 #include "predictor_factory.h"
@@ -54,6 +54,7 @@ int main(int argc, char **argv)
 	switch (params->dataset_chosen)
 	{
 		case CSP_param_block::D_NETFLIX: dataset = new CSP_dataset_netflix(params); break;
+		case CSP_param_block::D_NETFLIX_ORIG: dataset = new CSP_dataset_netflix_orig(params); break;
 		case CSP_param_block::D_MOVIELENS: dataset = new CSP_dataset_movielens(params); break;
 		default: exit(printf("Unknown dataset\n"));
 	}
