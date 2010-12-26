@@ -42,6 +42,7 @@ CC = g++
 
 PARTS = \
 	dataset_netflix.o \
+	dataset_netflix_orig.o \
 	dataset_movielens.o \
 	generator_distance.o \
 	generator_entropy.o \
