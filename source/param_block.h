@@ -34,7 +34,7 @@ public:
 	uint64_t load_extra; // whether to load extra data
 	uint64_t stats; // which stats we are interested in
 	
-	enum { D_NONE, D_NETFLIX, D_MOVIELENS };
+	enum { D_NONE, D_NETFLIX, D_NETFLIX_ORIG, D_MOVIELENS };
 	enum { A_TIME, A_PRES };
 	enum { S_FIXED, S_PROP };
 };
