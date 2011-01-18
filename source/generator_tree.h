@@ -18,6 +18,8 @@ public:
 private:
 	static int number_times_cmp(const void *a, const void *b);
 	static int movie_id_cmp(const void *a, const void *b);
+
+	inline int parity(uint64_t rating);
 	
 	typedef struct {
 		uint64_t number_times; // the number of times in other peoples greedy

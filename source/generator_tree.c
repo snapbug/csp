@@ -8,8 +8,8 @@
 #include "generator_tree.h"
 
 //#define SIMULATE
-#define HIGH_CUT 3
-#define MIDPOINT 3
+//#define P_RESTART (dataset->number_users / 20)
+//#define F_RESTART 10
 
 /*
 	CSP_GENERATOR_TREE::CSP_GENERATOR_TREE()
@@ -17,11 +17,12 @@
 */
 CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric)
 {
-	history_len = 10;
+	history_len = 17770;
 	most_greedy = new movie[dataset->number_items];
 	users = new uint64_t[dataset->number_users];
 	history = new uint64_t[dataset->number_items];
 	
+#if 0
 #ifdef SIMULATE
 	uint64_t i, j, k, nm, nd, sum, dud;
 	double level = 7;
@@ -55,6 +56,22 @@ CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *pred
 	}
 	exit(EXIT_SUCCESS);
 #endif
+#endif
+}
+
+/*
+	CSP_GENERATOR_TREE::PARITY()
+	----------------------------
+*/
+int CSP_generator_tree::parity(uint64_t rating)
+{
+#define HIGH_CUT 3
+#define MIDPOINT 3
+	
+	return rating == 0; // 0 12345
+//	return rating; // 0 1 2 3 4 5
+//	return rating > HIGH_CUT; // 0 123 45
+//	return (rating > MIDPOINT) - (rating < MIDPOINT); // 0 12 3 45
 }
 
 /*
@@ -93,9 +110,19 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	uint64_t *movie_ratings;
 	uint64_t replaced_filter = which_one > history_len;
 	uint64_t other_parity, my_parity;
+
+	/*
+		Filters only get replaced if using history length
+	*/
+#ifdef F_RESTART
+	replaced_filter = FALSE;
+#endif
+#ifdef P_RESTART
+	replaced_filter = FALSE;
+#endif
 	
 	/*
-		Reset all the counts and settings
+		Reset all the settings
 	*/
 	if (which_one == 0)
 	{
@@ -119,12 +146,6 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	}
 	
 	/*
-		Reset the number of times for each movie.
-	*/
-	for (i = 0; i < dataset->number_items; i++)
-		most_greedy[i].number_times = 0;
-	
-	/*
 		Update history for the last item
 	*/
 	if (which_one > 0)
@@ -140,9 +161,8 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 	if (replaced_filter)
 	{
 		rating = dataset->rating(history[which_one - history_len - 1]);
-		//my_parity = rating; // 0 1 2 3 4 5
-		my_parity = rating > HIGH_CUT; // 0 123 45
-		//my_parity = (rating > MIDPOINT) - (rating < MIDPOINT); // 0 12 3 45
+		
+		my_parity = parity(rating);
 		
 		movie_ratings = dataset->ratings_for_movie(dataset->movie(history[which_one - history_len - 1]), &count);
 		movie_index = 0;
@@ -151,9 +171,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		{
 			if (movie_index < count && other_user == dataset->user(movie_ratings[movie_index])) // other_user saw it
 			{
-				//other_parity = dataset->rating(movie_ratings[movie_index]);
-				other_parity = dataset->rating(movie_ratings[movie_index]) > HIGH_CUT;
-				//other_parity = (dataset->rating(movie_ratings[movie_index]) > MIDPOINT) - (dataset->rating(movie_ratings[movie_index]) < MIDPOINT);
+				other_parity = parity(dataset->rating(movie_ratings[movie_index]));
 				
 				// they saw it and we didn't, or, we saw it and gave a different high/low
 				if (!rating || (my_parity != other_parity))
@@ -176,9 +194,8 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 		if (dataset->movie(history[i]) < dataset->number_items)
 		{
 			rating = dataset->rating(history[i]);
-			//my_parity = rating; // 0 1 2 3 4 5
-			my_parity = rating > HIGH_CUT; // 0 123 45
-			//my_parity = (rating > MIDPOINT) - (rating < MIDPOINT); // 0 12 3 45
+			
+			my_parity = parity(rating);
 			
 			movie_ratings = dataset->ratings_for_movie(dataset->movie(history[i]), &count);
 			movie_index = 0;
@@ -193,9 +210,7 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 					/*
 						Only check if we already are considering, otherwise we could change FALSE to TRUE
 					*/
-					//other_parity = dataset->rating(movie_ratings[movie_index]);
-					other_parity = dataset->rating(movie_ratings[movie_index]) > HIGH_CUT;
-					//other_parity = (dataset->rating(movie_ratings[movie_index]) > MIDPOINT) - (dataset->rating(movie_ratings[movie_index]) < MIDPOINT);
+					other_parity = parity(dataset->rating(movie_ratings[movie_index]));
 					
 					if (users[other_user]) // check rating 'parity' the same
 						users[other_user] = rating && (my_parity == other_parity);
@@ -212,6 +227,38 @@ uint64_t CSP_generator_tree::next_movie(uint64_t user, uint64_t which_one, uint6
 			}
 		}
 	}
+	
+#ifdef P_RESTART
+	uint64_t sum = 0;
+	for (i = 0; i < dataset->number_users; i++)
+		sum += users[i] ? 1 : 0;
+	
+	if (sum < P_RESTART)
+	{
+		for (i = 0; i < dataset->number_users; i++)
+			users[i] = TRUE;
+#ifndef SIMULATE
+		users[user] = FALSE;
+#endif
+	}
+#endif
+	
+#ifdef F_RESTART
+	if (which_one % F_RESTART == 0)
+	{
+		for (i = 0; i < dataset->number_users; i++)
+			users[i] = TRUE;
+#ifndef SIMULATE
+		users[user] = FALSE;
+#endif
+	}
+#endif
+	
+	/*
+		Reset the number of times for each movie.
+	*/
+	for (i = 0; i < dataset->number_items; i++)
+		most_greedy[i].number_times = 0;
 	
 	/*
 		Sort by movie id so addition works
