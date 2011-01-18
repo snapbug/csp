@@ -34,17 +34,16 @@ int CSP_generator_greedy_cheat::error_cmp(const void *a, const void *b)
 */
 uint64_t CSP_generator_greedy_cheat::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
-	UNUSED(key);
 	uint64_t *user_ratings, count;
 	uint64_t included = which_one, i;
 	
 	user_ratings = dataset->ratings_for_user(user, &count);
 	
-//	if (which_one < NUMDONE)
-//	{
-//		error_reduction[which_one].movie_id = greedy_movies[(user * NUMDONE) + which_one];
-//	}
-//	else
+	if (which_one < NUMDONE)
+	{
+		error_reduction[which_one].movie_id = greedy_movies[(user * NUMDONE) + which_one];
+	}
+	else
 	{
 		/*
 			For each rating, if it hasn't been added, see what error we'd get
