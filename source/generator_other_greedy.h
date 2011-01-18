@@ -21,10 +21,12 @@ private:
 	typedef struct {
 		uint64_t movie_id;
 		uint64_t number_times;
+		uint64_t included;
 	} movie;
 	movie *most_greedy;
 	
 	static int number_times_cmp(const void *a, const void *b);
+	static int movie_id_cmp(const void *a, const void *b);
 
 };
 
