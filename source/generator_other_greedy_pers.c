@@ -25,7 +25,7 @@ int CSP_generator_other_greedy_pers::number_times_cmp(const void *a, const void 
 	movie *x = (movie *)a;
 	movie *y = (movie *)b;
 	
-	return (x->number_times> y->number_times) - (x->number_times < y->number_times);
+	return (x->number_times < y->number_times) - (x->number_times > y->number_times);
 }
 
 /*
@@ -39,7 +39,7 @@ int CSP_generator_other_greedy_pers::probability_cmp(const void *a, const void *
 	double prob_x = x->top / (x->top + x->bot);
 	double prob_y = y->top / (y->top + y->bot);
 	
-#ifdef ASC	
+#ifndef ASC
 	return (prob_x > prob_y) - (prob_x < prob_y);
 #else
 	return (prob_x < prob_y) - (prob_x > prob_y);
@@ -59,7 +59,8 @@ double CSP_generator_other_greedy_pers::calculate_probability(uint64_t movie, ui
 	
 	if (key)
 		return (1.0 * coraters[tri_offset(MIN(movie, other), MAX(movie, other), dataset->number_items)] + 1.0) / (count + 1.0);
-	return (1.0 * other_count - coraters[tri_offset(MIN(movie, other), MAX(movie, other), dataset->number_items)] + 1.0) / (1.0 + dataset->number_users - count);
+	else
+		return (1.0 * other_count - coraters[tri_offset(MIN(movie, other), MAX(movie, other), dataset->number_items)] + 1.0) / (1.0 + dataset->number_users - count);
 }
 
 
@@ -69,7 +70,6 @@ double CSP_generator_other_greedy_pers::calculate_probability(uint64_t movie, ui
 */
 uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t which_one, uint64_t *key)
 {
-	UNUSED(key);
 	uint64_t i, j;
 	double probability;
 	
@@ -97,7 +97,7 @@ uint64_t CSP_generator_other_greedy_pers::next_movie(uint64_t user, uint64_t whi
 		/*
 			For each remaining item, need to update the probabilities we've seen them.
 		*/
-		for (i= which_one; i< dataset->number_items; i++)
+		for (i = which_one; i < dataset->number_items; i++)
 		{
 			probability = calculate_probability(most_greedy_prob[i].movie_id, most_greedy_prob[which_one - 1].movie_id, key);
 			most_greedy_prob[i].top *= probability;
