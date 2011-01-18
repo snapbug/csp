@@ -11,6 +11,7 @@
 #include <omp.h>
 #include "csp_types.h"
 #include "dataset_netflix.h"
+#include "dataset_netflix_orig.h"
 #include "dataset_movielens.h"
 #include "generator_factory.h"
 #include "predictor_factory.h"
@@ -42,11 +43,9 @@ int main(int argc, char **argv)
 	uint64_t *key, *ratings;
 	uint64_t position_up_to, last_presented_and_seen, number_seen, count, user, item, presented, rating, size, next_movie;
 	uint32_t *coraters = NULL;
-	uint64_t last_param;
 	double last_prediction_error, auc;
 	double *error_presented, *error_rated;
-	uint64_t present_max;// = 220;
-	uint64_t number_users;
+	uint64_t last_param, present_max, number_users;
 	
 	last_param = params->parse();
 	number_users = argc - last_param;
@@ -55,11 +54,16 @@ int main(int argc, char **argv)
 	switch (params->dataset_chosen)
 	{
 		case CSP_param_block::D_NETFLIX: dataset = new CSP_dataset_netflix(params); break;
+		case CSP_param_block::D_NETFLIX_ORIG: dataset = new CSP_dataset_netflix_orig(params); break;
 		case CSP_param_block::D_MOVIELENS: dataset = new CSP_dataset_movielens(params); break;
-		default: exit(printf("Unknown dataset\n"));
+		default: exit(fprintf(stderr, "Unknown dataset\n"));
 	}
 	
-	present_max = dataset->number_items;
+	if (stats->stats & (CSP_stats::FINISH | CSP_stats::HIT_RATE | CSP_stats::AUC))
+		present_max = dataset->number_items;
+	else
+		present_max = 2;
+	
 	/*
 		Load the precalculated co-raters if necessary.
 	*/
@@ -102,14 +106,14 @@ int main(int argc, char **argv)
 		case CSP_predictor_factory::RANDOM: predictor = new CSP_predictor_random(dataset); break;
 		case CSP_predictor_factory::USER_AVERAGE: predictor = new CSP_predictor_user_avg(dataset); break;
 		case CSP_predictor_factory::USER_USER_KNN: predictor = new CSP_predictor_user_knn(dataset, 20); break;
-		default: exit(puts("Unknown prediction method"));
+		default: exit(fprintf(stderr, "Unknown prediction method\n"));
 	}
 	
 	switch (params->metrics_to_use)
 	{
 		case CSP_metric_factory::MAE: metric = new CSP_metric_mae(dataset, predictor); break;
 		case CSP_metric_factory::RMSE: metric = new CSP_metric_rmse(dataset, predictor); break;
-		default: exit(puts("Unknown metric selected"));
+		default: exit(fprintf(stderr, "Unknown metric\n"));
 	}
 	
 	switch (params->generation_method)
@@ -125,7 +129,7 @@ int main(int argc, char **argv)
 		case CSP_generator_factory::POPULARITY: generator = new CSP_generator_popularity(dataset); break;
 		case CSP_generator_factory::TREE: generator = new CSP_generator_tree(dataset, predictor, metric); break;
 		case CSP_generator_factory::PREDICTOR: generator = new CSP_generator_predictor(dataset, predictor, metric); break;
-		default: exit(puts("Unknown generation method"));
+		default: exit(fprintf(stderr, "Unknown generation method\n"));
 	}
 	
 	error_presented = new double[present_max + 1];
@@ -163,7 +167,7 @@ int main(int argc, char **argv)
 		/*
 			Before we add any ratings, we should see how well we can do.
 		*/
-		if (stats->stats & CSP_stats::ERROR_RATED || stats->stats & CSP_stats::ERROR_PRESENTED)
+		if (stats->stats & (CSP_stats::ERROR_RATED | CSP_stats::ERROR_PRESENTED))
 			last_prediction_error = metric->score(user);
 		
 		error_rated[number_seen] += last_prediction_error;
@@ -174,7 +178,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count && presented <= present_max)
 		{
-			if (presented % 100 == 0) { fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count, presented); fflush(stderr); }
+			/*if (presented % 100 == 0) */{ fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count, presented); fflush(stderr); }
 			
 			/*
 				Get the next movie to present.
@@ -184,8 +188,11 @@ int main(int argc, char **argv)
 			/*
 				If they can see it, do some shit.
 			*/
-			if ((key = (uint64_t *)bsearch(&next_movie, ratings, count, sizeof(*ratings), movie_search)) != NULL)
+			if ((key = (uint64_t *)bsearch(&next_movie, ratings, count, sizeof(*ratings), movie_search)))
 			{
+				if (stats->stats & CSP_stats::HIT_RATE)
+					printf("H %lu %lu\n", user, presented + 1);
+				
 				if (stats->stats & CSP_stats::AUC)
 					auc += ((1.0 * presented / present_max) - (1.0 * last_presented_and_seen / present_max)) * (1.0 * number_seen / count);
 				number_seen++;
@@ -222,8 +229,12 @@ int main(int argc, char **argv)
 				Update the error as function of number presented.
 			*/
 			error_presented[presented] += last_prediction_error;
+			
+			if (stats->stats & CSP_stats::TTEST && presented % 25 == 0) 
+				printf("T %lu %f\n", presented, last_prediction_error);
 		}
-		printf("F %lu %lu\n", count, presented);
+		if (stats->stats & CSP_stats::FINISH)
+			printf("F %lu %lu\n", user, presented);
 		
 		/*
 			Go back and re-add ratings that we didn't find.
