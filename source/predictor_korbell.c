@@ -792,7 +792,6 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 */
 double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, uint64_t day)
 {
-	UNUSED(day);
 	uint64_t *user_ratings, user_count, movie_count, i, j, min, max, offset, position = 0;
 	double prediction = 0;
 	double *weights = new double[k];

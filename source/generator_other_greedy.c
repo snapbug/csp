@@ -15,7 +15,19 @@
 */
 CSP_generator_other_greedy::CSP_generator_other_greedy(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric)
 {
+	uint64_t i, j;
+	
 	most_greedy = new movie[dataset->number_items];
+	
+	for (i = 0; i < dataset->number_items; i++)
+		most_greedy[i].movie_id = i;
+	for (i = 0; i < dataset->number_users; i++)
+		for (j = 0; j < NUMCONSIDER; j++)
+			most_greedy[greedy_movies[(NUMDONE * i) + j]].number_times++;
+	qsort(most_greedy, dataset->number_items, sizeof(*most_greedy), CSP_generator_other_greedy::number_times_cmp);
+	for (i = 0; i < 20; i++)
+		printf("%lu\n", most_greedy[i].movie_id);
+	exit(EXIT_SUCCESS);
 }
 
 /*

@@ -46,6 +46,7 @@ int main(int argc, char **argv)
 	double last_prediction_error, auc;
 	double *error_presented, *error_rated;
 	uint64_t last_param, present_max, number_users;
+	clock_t start, end;
 	
 	last_param = params->parse();
 	number_users = argc - last_param;
@@ -62,7 +63,7 @@ int main(int argc, char **argv)
 	if (stats->stats & (CSP_stats::FINISH | CSP_stats::HIT_RATE | CSP_stats::AUC))
 		present_max = dataset->number_items;
 	else
-		present_max = 2;
+		present_max = 220;
 	
 	/*
 		Load the precalculated co-raters if necessary.
@@ -135,11 +136,67 @@ int main(int argc, char **argv)
 	error_presented = new double[present_max + 1];
 	error_rated = new double[present_max + 1];
 	
+#if 0
+	#define NUM 20
+	uint64_t counts[NUM][5] = {0};
+	uint64_t movies[] = {
+		5316, 8781, 9339, 12231, 15204, 7634, 15123, 11148, 1144, 6385, 14312, 6286, 11282, 14239, 14643, 12316, 6971, 4995, 16376, 11520
+		};
+	uint64_t i, j, movie;
+	
+	// for each user
+	for (user = 0; user < dataset->number_users; user++)
+	{
+		ratings = dataset->ratings_for_user(user, &count);
+		// for each of the top 10 greedy movies
+		for (movie = 0; movie < NUM; movie++)
+		{
+			// see if the movie was in this users top 10
+			for (j = 0; j < NUMDONE; j++)
+			{
+				if (greedy_movies[(NUMDONE * user) + j] == movies[movie])
+				{
+					// get the rating they gave it
+					key = (uint64_t *)bsearch(&movies[movie], ratings, count, sizeof(*ratings), movie_search);
+					counts[movie][dataset->rating(key) - 1]++;
+				}
+			}
+		}
+	}
+	
+	for (i = 0; i < NUM; i++)
+	{
+		// first the greedy
+		count = 0;
+		for (j = 0; j < 5; j++)
+			count += counts[i][j];
+		for (j = 0; j < 5; j++)
+		{
+			printf("%f ", 1.0 * counts[i][j] / count);
+			counts[i][j] = 0;
+		}
+		printf("\n");
+		
+		// then the population
+		ratings = dataset->ratings_for_movie(movies[i], &count);
+		for (j = 0; j < count; j++)
+			counts[i][dataset->rating(ratings[j]) - 1]++;
+		
+		for (j = 0; j < 5; j++)
+			printf("%f ", 1.0 * counts[i][j] / count);
+		
+		printf("\n");
+	}
+	
+	return EXIT_SUCCESS;
+#endif
+	
 	for (item = 0; item <= present_max; item++)
 		error_presented[item] = error_rated[item] = 0;
 	
+	start = clock();
 	/*
-		For each user we're simulating a coldstart for. (Initial testee = 168)
+		For each user we're simulating a coldstart for.
 	*/
 	for (; last_param < (uint64_t)argc; last_param++)
 	//for (user = 0; user < dataset->number_users; user++)
@@ -178,7 +235,7 @@ int main(int argc, char **argv)
 		*/
 		while (number_seen < count && presented <= present_max)
 		{
-			/*if (presented % 100 == 0) */{ fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count, presented); fflush(stderr); }
+			if (presented % 100 == 0){ fprintf(stderr, "\r%6lu%6lu/%5lu%6lu", user, number_seen, count, presented); fflush(stderr); }
 			
 			/*
 				Get the next movie to present.
@@ -233,6 +290,7 @@ int main(int argc, char **argv)
 			if (stats->stats & CSP_stats::TTEST && presented % 25 == 0) 
 				printf("T %lu %f\n", presented, last_prediction_error);
 		}
+		
 		if (stats->stats & CSP_stats::FINISH)
 			printf("F %lu %lu\n", user, presented);
 		
@@ -262,8 +320,11 @@ int main(int argc, char **argv)
 		for (item = presented + 1; item <= present_max; item++)
 			error_presented[item] += last_prediction_error;
 	}
+	end = clock();
 	
 	fprintf(stderr, "\n");
+	fprintf(stderr, "Elapsed time: %lf\n", (double)(end - start)/CLOCKS_PER_SEC);
+
 	if (stats->stats & CSP_stats::ERROR_PRESENTED)
 		for (item = 0; item <= present_max; item++)
 			printf("P %lu %f\n", item, error_presented[item] / number_users);

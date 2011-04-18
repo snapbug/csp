@@ -17,45 +17,69 @@
 */
 CSP_generator_tree::CSP_generator_tree(CSP_dataset *dataset, CSP_predictor *predictor, CSP_metric *metric) : CSP_generator_greedy_cheat(dataset, predictor, metric)
 {
-	history_len = 17770;
+#ifdef HISTORY
+	history_len = HISTORY;
+#else
+	history_len = 10;
+#endif
 	most_greedy = new movie[dataset->number_items];
 	users = new uint64_t[dataset->number_users];
 	history = new uint64_t[dataset->number_items];
 	
-#if 0
-#ifdef SIMULATE
-	uint64_t i, j, k, nm, nd, sum, dud;
-	double level = 7;
+#if 0//def SIMULATE
+	/*
+		Tests all combinations of ratings for the tree.
+		There are undoubtedly repeated paths, ie.
+		1, 2 vs. 1, 3 for HIGH_CUT, but this way we can
+		change how we split without worrying about changing
+		the simulation.
+	*/
+	uint64_t i, j, other, present, num_done, num_others, rating;
+	uint64_t valid;
+	double level = 6;
 	
-	fprintf(stderr, "Doing history %lu\n", history_len);
-	
-	for (i = (uint64_t)pow(2.0, (2 * level) - 1); i < (uint64_t)pow(2.0, (2 * level)); i++)
+	for (i = (uint64_t)pow(2.0, (3 * level) - 1); i < (uint64_t)pow(2.0, (3 * level)); i++)
 	{
-		j = i << 2; // make a dummy to pass for first instance
-		nd = 0;
+		valid = TRUE;
+		
+		j = i;
 		while (j)
 		{
-			if (nd && (j & 1))
-				nm = next_movie(0, nd, &(dud = (j & 2) ? HIGH_CUT + 1 : HIGH_CUT)); // if second bit is set, simulate a 'low' (1,2,3) rating or 'high' rating (4,5)
+			valid = valid && ((j & 7) < 6);
+			j >>= 3;
+		}
+		
+		if (!valid)
+			continue;
+		
+		// make a dummy to pass for first instance
+		j = i << 3;
+		
+		num_done = 0;
+		while (j)
+		{
+			present = next_movie(0, num_done, num_done ? &(rating = j & 7) : NULL);
+			
+			num_others = 0;
+			for (other = 0; other < dataset->number_users; other++)
+				num_others += users[other] ? 1 : 0;
+			
+			/*
+				prints the rating given to last movie, the
+				next movie to present, and how many other
+				users follow this path
+			*/
+			if (num_done)
+				printf("%lu %lu %lu\n", rating, present, num_others);
 			else
-				nm = next_movie(0, nd, NULL); // NULL because it's either the first, or couldn't see the last one
+				printf("- %lu %lu\n", present, num_others);
 			
-			sum = 0;
-			for (k = 0; k < dataset->number_users; k++)
-				sum += users[k] ? 1 : 0;
-			
-			if (nd && (j & 1))
-				printf("%d %lu %lu\n", j & 2 ? 2 : 1, nm, sum); // prints either high seeing, or low seeing
-			else
-				printf("%lu %lu %lu\n", j & 1, nm, sum); // prints non seeing
-			
-			j >>= 2;
-			nd++;
+			j >>= 3;
+			num_done++;
 		}
 		printf("\n");
 	}
 	exit(EXIT_SUCCESS);
-#endif
 #endif
 }
 
@@ -67,11 +91,17 @@ int CSP_generator_tree::parity(uint64_t rating)
 {
 #define HIGH_CUT 3
 #define MIDPOINT 3
+
+#ifdef PARITY
+	return PARITY;
+#else
+	return rating; // 0 1 2 3 4 5
+#endif
 	
+	return rating; // 0 1 2 3 4 5
+	return (rating > MIDPOINT) - (rating < MIDPOINT); // 0 12 3 45
+	return rating > HIGH_CUT; // 0 123 45
 	return rating == 0; // 0 12345
-//	return rating; // 0 1 2 3 4 5
-//	return rating > HIGH_CUT; // 0 123 45
-//	return (rating > MIDPOINT) - (rating < MIDPOINT); // 0 12 3 45
 }
 
 /*

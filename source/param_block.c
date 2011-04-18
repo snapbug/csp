@@ -35,7 +35,7 @@ CSP_param_block::CSP_param_block(int argc, char **argv)
 */
 void CSP_param_block::usage(void)
 {
-	printf("Usage: %s [options...]\n", argv[0]);
+	printf("Usage: %s [options...] <users>\n", argv[0]);
 	printf("     : -h for help\n");
 	
 	exit(EXIT_SUCCESS);

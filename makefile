@@ -36,11 +36,17 @@ else
 CFLAGS += -fopenmp -O3 -g
 endif
 
-ifdef PRESTART
-MINUS_D += -DP_RESTART="(dataset->number_users / $(PRESTART))"
+ifdef P_RESTART
+MINUS_D += -DP_RESTART="(dataset->number_users / $(P_RESTART))"
 endif
-ifdef FRESTART
-MINUS_D += -DF_RESTART="$(FRESTART)"
+ifdef F_RESTART
+MINUS_D += -DF_RESTART="$(F_RESTART)"
+endif
+ifdef HISTORY
+MINUS_D += -DHISTORY="${HISTORY}"
+endif
+ifdef PARITY
+MINUS_D += -DPARITY="$(PARITY)"
 endif
 
 LDFLAGS = -lm -fopenmp
