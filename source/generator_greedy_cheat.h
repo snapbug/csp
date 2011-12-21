@@ -19,13 +19,18 @@
 
 static uint64_t greedy_movies[] = {
 #ifdef ML
-	#include "greedy.mae.ml.txt"
+	#ifdef RMSE
+		#error "No RMSE greedy list for MovieLens"
+	#else
+		#warning "Using MAE/ML"
+		#include "greedy.mae.ml.txt"
+	#endif
 #else
 	#ifdef RMSE
-		#warning "Using RMSE"
+		#warning "Using RMSE/NF"
 		#include "greedy.rmse.nf.txt"
 	#else
-		#warning "Using MAE"
+		#warning "Using MAE/NF"
 		#include "greedy.mae.nf.txt"
 	#endif
 #endif

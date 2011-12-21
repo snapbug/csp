@@ -792,7 +792,6 @@ void CSP_predictor_korbell::non_negative_quadratic_opt(float *a, float *b, doubl
 */
 double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, uint64_t day)
 {
-	UNUSED(day);
 	uint64_t *user_ratings, user_count, movie_count, i, j, min, max, offset, position = 0;
 	double prediction = 0;
 	double *weights = new double[k];
@@ -803,6 +802,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 	user_ratings = dataset->ratings_for_user(user, &user_count);
 	
 	for (i = 0; i < user_count; i++)
+	{
 		if (dataset->included(user_ratings[i]))
 		{
 			min = MIN(movie, dataset->movie(user_ratings[i]));
@@ -817,6 +817,7 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 			
 			position++;
 		}
+	}
 	
 	/*
 		Sort to get the closest neighbours at the top.
@@ -827,7 +828,9 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 		Create the A hat matrix here, from precomputed A bar values
 	*/
 	for (i = 0; i < MIN(k, position); i++)
+	{
 		for (j = 0; j < MIN(k, position); j++)
+		{
 			if (i == j)
 			{
 				dataset->ratings_for_movie(neighbours[i].movie_id, &movie_count);
@@ -840,6 +843,8 @@ double CSP_predictor_korbell::predict_neighbour(uint64_t user, uint64_t movie, u
 				offset = tri_offset(min, max, dataset->number_items);
 				ahat[(i * MIN(k, position)) + j] = (float)(((coraters[offset] * (abar_tri[offset] / scale)) + (beta * bar_avg_tri)) / (coraters[offset] + beta));
 			}
+		}
+	}
 	
 	/*
 		Now create the b hat vector

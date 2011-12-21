@@ -11,7 +11,7 @@
 #define GENERATOR_OTHER_GREEDY_PERS_H_
 
 #ifndef PERTURB
-	#define PERTURB 5
+	#define PERTURB 2 
 #endif
 
 class CSP_generator_other_greedy_pers : public CSP_generator_other_greedy
@@ -35,10 +35,8 @@ private:
 	static int probability_cmp(const void *a, const void *b);
 	double calculate_probability(uint64_t movie, uint64_t other, uint64_t *key);
 	
-	CSP_dataset *dataset;
 	uint32_t *coraters;
 
 };
 
 #endif /* GENERATOR_OTHER_GREEDY_H_ */
-

@@ -28,7 +28,7 @@ int CSP_generator_naive_bayes::number_times_cmp(const void *a, const void *b)
 	movie *x = (movie *)a;
 	movie *y = (movie *)b;
 	
-	return (x->count > y->count) - (x->count < y->count);
+	return (x->count < y->count) - (x->count > y->count);
 }
 
 /*
@@ -62,7 +62,8 @@ double CSP_generator_naive_bayes::calculate_probability(uint64_t movie, uint64_t
 	
 	if (key)
 		return (1.0 * coraters[tri_offset(MIN(movie, other), MAX(movie, other), dataset->number_items)] + 1.0) / (count + 1.0);
-	return (1.0 * other_count - coraters[tri_offset(MIN(movie, other), MAX(movie, other), dataset->number_items)] + 1.0) / (1.0 + dataset->number_users - count);
+	else
+		return (1.0 * other_count - coraters[tri_offset(MIN(movie, other), MAX(movie, other), dataset->number_items)] + 1.0) / (1.0 + dataset->number_users - count);
 }
 
 /*

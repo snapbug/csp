@@ -35,7 +35,7 @@ CSP_param_block::CSP_param_block(int argc, char **argv)
 */
 void CSP_param_block::usage(void)
 {
-	printf("Usage: %s [options...]\n", argv[0]);
+	printf("Usage: %s [options...] <users>\n", argv[0]);
 	printf("     : -h for help\n");
 	
 	exit(EXIT_SUCCESS);
@@ -62,7 +62,7 @@ void CSP_param_block::help(void)
 	puts("-d[mnN]          Use the following dataset for testing:");
 	puts("   m             MovieLens 10M");
 	puts("   n             Netflix [default]");
-	puts("   N             Netflix original");
+	puts("   N             Netflix Original");
 	puts("-e               Don't load extra data (same data sorted by movie)");
 	puts("");
 	
@@ -82,7 +82,7 @@ void CSP_param_block::help(void)
 	puts("   g             Greedy Cheat (not to be used for real experiments)");
 	puts("   i             Average");
 	puts("   o             Other greedy");
-	puts("   O             Other greedy personalised");
+	puts("   O             Other greedy perturbed");
 	puts("   p             Popularity [default]");
 	puts("   P             Use the predictor");
 	puts("   r             Random");
@@ -114,12 +114,15 @@ void CSP_param_block::help(void)
 	
 	puts("STATISTICS");
 	puts("----------");
-	puts("-s[naAeE]        Measure and output the following statistics:");
+	puts("-s[naAeEfht]     Measure and output the following statistics:");
 	puts("   n             None [default]");
 	puts("   a             All statistics");
 	puts("   A             AUC for presentation lists (number rated vs number presented)");
 	puts("   e             Error as function of number presented");
 	puts("   E             Error as function of number rated");
+	puts("   f             Finish time (how long till we get all ratings)");
+	puts("   h             Hit Rate (when do we get a movie to rate)");
+	puts("   t             Ttest (output prediction error per person every 25 presents");
 	
 	exit(EXIT_SUCCESS);
 }
@@ -216,12 +219,15 @@ void CSP_param_block::statistics(char *which)
 		switch (*which)
 		{
 			case 'n': stats = CSP_stats::NONE; break;
-			case 'a': statistics("AeEgp"); break;
+			case 'a': statistics("AeEfghpt"); break;
 			case 'A': stats |= CSP_stats::AUC; break;
 			case 'e': stats |= CSP_stats::ERROR_PRESENTED; break;
 			case 'E': stats |= CSP_stats::ERROR_RATED; break;
+			case 'f': stats |= CSP_stats::FINISH; break;
 			case 'g': stats |= CSP_stats::GENERATION_TIME; break;
+			case 'h': stats |= CSP_stats::HIT_RATE; break;
 			case 'p': stats |= CSP_stats::PREDICTION_TIME; break;
+			case 't': stats |= CSP_stats::TTEST; break;
 			default: exit(printf("Unknown statistic: '%c'\n", *which));
 		}
 		which++;

@@ -36,12 +36,26 @@ else
 CFLAGS += -fopenmp -O3 -g
 endif
 
+ifdef P_RESTART
+MINUS_D += -DP_RESTART="(dataset->number_users / $(P_RESTART))"
+endif
+ifdef F_RESTART
+MINUS_D += -DF_RESTART="$(F_RESTART)"
+endif
+ifdef HISTORY
+MINUS_D += -DHISTORY="${HISTORY}"
+endif
+ifdef PARITY
+MINUS_D += -DPARITY="$(PARITY)"
+endif
+
 LDFLAGS = -lm -fopenmp
 
 CC = g++
 
 PARTS = \
 	dataset_netflix.o \
+	dataset_netflix_orig.o \
 	dataset_movielens.o \
 	generator_distance.o \
 	generator_entropy.o \
