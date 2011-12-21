@@ -28,8 +28,8 @@ CSP_dataset_netflix::CSP_dataset_netflix(CSP_param_block *params) : CSP_dataset(
 	/*
 		Setup the filenames correctly.
 	*/
-	sprintf(testing_filename, "./data/netflix.testing.%s", params->testing_method == CSP_param_block::S_PROP ? "prop" : "fixed");
-	sprintf(training_filename, "./data/netflix.training.%s", params->testing_method == CSP_param_block::S_PROP ? "prop" : "fixed");
+	sprintf(testing_filename, "./data/netflix.testing.%s", "prop");//params->testing_method == CSP_param_block::S_PROP ? "prop" : "fixed");
+	sprintf(training_filename, "./data/netflix.training.%s", "prop");//params->testing_method == CSP_param_block::S_PROP ? "prop" : "fixed");
 	
 	/*
 		Now actually load the data.
@@ -47,7 +47,7 @@ CSP_dataset_netflix::CSP_dataset_netflix(CSP_param_block *params) : CSP_dataset(
 	{
 		loaded_extra = TRUE;
 		fprintf(stderr, "Loading extra data... "); fflush(stderr);
-		sprintf(training_filename, "./data/netflix.movie.%s", params->testing_method == CSP_param_block::S_PROP ? "prop" : "fixed");
+		sprintf(training_filename, "./data/netflix.movie.%s", "prop");//params->testing_method == CSP_param_block::S_PROP ? "prop" : "fixed");
 		size = fread(&extra_data, sizeof(*extra_data), number_ratings, fopen(training_filename, "rb"));
 		size = fread(&extra_index, sizeof(*extra_index), number_items, fopen(strcat(training_filename, ".idx"), "rb"));
 		fprintf(stderr, "done.\n"); fflush(stderr);
